@@ -78,6 +78,9 @@ jobs:
             dependencies/prepare.sh --product "$product"
             dependencies/prepare.sh --product "$product" --verify
           done
+          # LLVM source archive consumed by build-apple-gpu.sh (SHA-256 pinned).
+          dependencies/prepare.sh --archive-manifest dependencies/llvm/archives.tsv \
+            --cache "$PWD/.build/dependency-cache"
 
       # -------------------------------------------------------------------
       # 2) Build the iphoneos/15.1 software-renderer GPU dependency variant:
