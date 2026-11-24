@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import Foundation
+import GuestHostCore
 
 /// How the previous process's guest session ended, as the runtime recorded
 /// it (darwin/runtime/session_record.hpp).

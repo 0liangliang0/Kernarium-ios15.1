@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import Foundation
 
 /// A folder of Andarium's own in the temporary directory that holds the files

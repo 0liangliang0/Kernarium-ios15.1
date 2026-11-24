@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// Decides when a running guest is paused for want of space on the device.
 ///

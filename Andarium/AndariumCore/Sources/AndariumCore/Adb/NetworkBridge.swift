@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Darwin
+import GuestHostCore
 import Foundation
 
 /// Opens a stream to the guest's adbd for a computer that reached the

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import Foundation
 
 /// The words of Add to Home Screen. "Android" and "virtual machine", never

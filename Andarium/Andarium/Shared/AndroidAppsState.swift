@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import Combine
 import AppIntents
 import CoreSpotlight
@@ -403,7 +404,7 @@ final class AndroidAppsState: ObservableObject {
 
     private func nextDeadline() -> Date? {
         guard !holdsForever else { return nil }
-        @Published var deadlines: [Date] = []
+        var deadlines: [Date] = []
         if let pending = open.pending, case let .waiting(_, since) = pending.stage {
             deadlines.append(since.addingTimeInterval(AppOpenState.holdLimit))
         }

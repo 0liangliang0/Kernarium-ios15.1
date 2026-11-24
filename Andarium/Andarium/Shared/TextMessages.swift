@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import Combine
 import Foundation
 
@@ -164,7 +165,7 @@ final class TextMessageState: ObservableObject {
     @discardableResult
     func close() -> String? {
         guard progress != .sending else { return nil }
-        @Published var unshown: String?
+        var unshown: String?
         if case .result(let identifier)? = awaiting {
             unshown = identifier
             retries.forget(identifier: identifier)

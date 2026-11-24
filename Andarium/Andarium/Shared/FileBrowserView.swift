@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 
 /// One folder of the guest's internal storage, pushed on the Settings sheet.
 /// A tap goes into a folder and selects a file: there is nothing else a file
 /// can do here, so selecting needs no mode.
 struct FolderPage: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.filesBarHeight) private var barHeight
+    @EnvironmentObject private var model: AppModel@Environment(\.filesBarHeight) private var barHeight
     let browser: FileBrowserModel
     let route: FolderRoute
     let close: () -> Void

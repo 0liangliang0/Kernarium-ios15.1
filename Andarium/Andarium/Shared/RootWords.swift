@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 
 /// Every word of the root switch, in one place. The UI says "Android" or

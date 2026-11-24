@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// One launcher activity of one Android app: the thing a Home Screen icon
 /// opens. It is the only form in which a name from Android reaches a command,

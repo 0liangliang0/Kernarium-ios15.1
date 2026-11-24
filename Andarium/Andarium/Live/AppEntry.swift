@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import Foundation
 import Metal
 import os
-import TipKit
 import UIKit
 
 /// The device application's entry: the guest on disk, this device and the
@@ -48,12 +48,8 @@ struct AppEntry {
         // that checks the first tap on the keys with the tip up.
         let environment = ProcessInfo.processInfo.environment
         if InputProbeLaunch.showsTip(in: environment) {
-            try? Tips.resetDatastore()
-            Tips.showTipsForTesting([SideKeysTip.self])
         } else if InputProbeLaunch.requested(in: environment) {
-            Tips.hideAllTipsForTesting()
         }
-        try? Tips.configure([.displayFrequency(.immediate)])
     }
 
     /// The model for this launch. A copy of Andarium without its system, or

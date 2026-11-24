@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 
 /// Rises over Android's screen while VoiceOver runs and Android's screen reader
@@ -8,8 +9,7 @@ import SwiftUI
 /// screen reader does instead and how to come back to VoiceOver, and asks.
 /// Where the system image has no screen reader it says so, once.
 struct ScreenReaderCard: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.horizontalSizeClass) private var sizeClass
+    @EnvironmentObject private var model: AppModel@Environment(\.horizontalSizeClass) private var sizeClass
     let card: ScreenReaderSession.Card
     /// VoiceOver's focus on the title: the card is what the person is to deal
     /// with, so it takes the focus as it appears, where a screen change posted

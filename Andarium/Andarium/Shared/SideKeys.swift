@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
-import TipKit
 
 /// What the side keys do. The Simulator preview plays them against mock
 /// screens; the device application sends them to Android.
@@ -59,7 +59,7 @@ struct SideKeysOverlay: View {
     /// The tip's popover is up: while the closed keys are on screen and the
     /// tip wants to show.
     @State private var tipShown = false
-    @Environment(AppModel.self) private var model: AppModel?
+    @Environment(\.compatAppModel) private var model: AppModel?
     @AccessibilityFocusState private var focus: SideKeyFocus?
 
     /// `tip` is the tip beside the closed keys. It says where Install APK is
@@ -117,7 +117,7 @@ struct SideKeysOverlay: View {
                 .allowsHitTesting(false)
                 .transition(.opacity)
 
-                GlassEffectContainer(spacing: 4) {
+                CompatGlassEffectContainer(spacing: 4) {
                     HStack(alignment: .top, spacing: KeyMetrics.columnGap) {
                         if leading {
                             powerColumn
@@ -458,7 +458,7 @@ struct KeyRail: View {
     let lit: Bool
     let actions: SideKeyActions
     @State private var keyPresses = 0
-    @Environment(AppModel.self) private var model: AppModel?
+    @Environment(\.compatAppModel) private var model: AppModel?
 
     var body: some View {
         let recovery = mode == .recovery
@@ -554,7 +554,7 @@ struct KeyDeck: View {
 
 /// Shown once Android has booted, pointing at the side keys. It stops once the
 /// keys have been opened or the tip closed, and appears at most three times.
-nonisolated struct SideKeysTip: Tip {
+nonisolated struct SideKeysTip {
     /// The tip's words, which say where Install APK is when Settings has the
     /// row in this session. The tip is the same one either way (its identity
     /// and its count of displays do not change), so a person who closed it is
@@ -580,7 +580,6 @@ nonisolated struct SideKeysTip: Tip {
     }
 
     var image: Image? { Image(systemName: "hand.tap") }
-    var options: [any TipOption] { [MaxDisplayCount(3)] }
 }
 
 /// The tip in its popover, drawn as TipKit draws a popover tip: the popover's
@@ -615,8 +614,8 @@ struct SideKeysTipCard: View {
 
     var body: some View {
         ScrollView {
-            TipView(tip)
-                .tipBackground(.clear)
+            Text(tip.words)
+
         }
         .frame(maxHeight: maxHeight)
         .frame(idealWidth: width, maxWidth: Self.widest)

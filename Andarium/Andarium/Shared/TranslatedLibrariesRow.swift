@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 
 /// The words of Home's AOT row.
@@ -34,9 +35,7 @@ enum TranslatedLibrariesWords {
 /// translated code, the row is dimmed, its switch cannot be changed, and the
 /// line beneath the group says so.
 struct TranslatedLibrariesRow: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         let unused = model.jitInUseForNextStart
         let title = TranslatedLibrariesWords.title
         let spoken: String = "\(title), \(TranslatedLibrariesWords.line(unused: unused))"
@@ -63,9 +62,7 @@ struct TranslatedLibrariesRow: View {
 /// The line beneath the AOT group. The row says it for VoiceOver, so this is
 /// not read again.
 struct TranslatedLibrariesNote: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         SpokenNote(TranslatedLibrariesWords.line(unused: model.jitInUseForNextStart))
     }
 }

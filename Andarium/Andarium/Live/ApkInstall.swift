@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import Foundation
 
 /// Lets a cancel reach a coordinated read that is waiting for iCloud.

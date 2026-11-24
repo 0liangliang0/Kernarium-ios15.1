@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -23,7 +24,7 @@ struct FilesBar: View {
     /// bar's padding would feed its own measurement.
     let bottomInset: CGFloat
     /// Optional: the bar shown without a model is the phone's.
-    @Environment(AppModel.self) private var model: AppModel?
+    @Environment(\.compatAppModel) private var model: AppModel?
     @State private var trailScrolled = false
 
     /// On the folding iPhone's cover the toolbar's buttons stand in a column
@@ -35,7 +36,7 @@ struct FilesBar: View {
     }
 
     var body: some View {
-        GlassEffectContainer(spacing: 10) {
+        CompatGlassEffectContainer(spacing: 10) {
             VStack(spacing: 10) {
                 if browser.conflict != nil || browser.transfer != nil {
                     FileTransferSlot(browser: browser)
@@ -154,7 +155,7 @@ struct FilesBar: View {
                 .font(.footnote.weight(.bold))
                 .monospacedDigit()
                 .foregroundStyle(.white)
-                .contentTransition(.numericText())
+
                 .frame(minWidth: 28, minHeight: 28)
                 .padding(.horizontal, browser.selection.count > 9 ? 4 : 0)
                 .background(Color.accentColor, in: .capsule)
@@ -179,7 +180,7 @@ struct FilesBar: View {
                 } label: {
                     actionLabel("Import", symbol: "square.and.arrow.down")
                 }
-                .buttonStyle(.glass)
+                .buttonStyle(.bordered)
                 .disabled(browser.busy || !browser.canImport(into: browser.current))
             } else {
                 Button {
@@ -187,7 +188,7 @@ struct FilesBar: View {
                 } label: {
                     actionLabel("Export", symbol: "square.and.arrow.up")
                 }
-                .buttonStyle(.glassProminent)
+                .buttonStyle(.borderedProminent)
                 .disabled(browser.busy)
             }
         }
@@ -254,7 +255,7 @@ private extension View {
 struct ImportPickerPresenter: ViewModifier {
     @ObservedObject var browser: FileBrowserModel
     /// Optional: the bar shown without a model is the phone's.
-    @Environment(AppModel.self) private var model: AppModel?
+    @Environment(\.compatAppModel) private var model: AppModel?
 
     func body(content: Content) -> some View {
         if let standIn = browser.backend.importPickerStandIn(deliver: { browser.received($0) }) {
@@ -314,10 +315,6 @@ struct TransferCapsule: View {
         .animation(.snappy, value: transfer.stage)
     }
 
-    private var glass: Glass {
-        transfer.stage == .failed ? .regular.tint(.red.opacity(0.16)) : .regular
-    }
-
     private var summary: some View {
         HStack(spacing: 12) {
             glyph
@@ -339,7 +336,7 @@ struct TransferCapsule: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .monospacedDigit()
-                    .contentTransition(.numericText())
+
             }
             Spacer(minLength: 6)
             actions
@@ -357,7 +354,7 @@ struct TransferCapsule: View {
     @ViewBuilder private var progressFill: some View {
         if transfer.running {
             GeometryReader { geometry in
-                UnevenRoundedRectangle(bottomTrailingRadius: 10, topTrailingRadius: 10, style: .continuous)
+                CompatUnevenRoundedRectangle(bottomTrailingRadius: 10, topTrailingRadius: 10, style: .continuous)
                     .fill(Color.accentColor.opacity(0.2))
                     .frame(width: geometry.size.width * transfer.fraction)
                     .animation(.linear(duration: 0.15), value: transfer.fraction)
@@ -369,7 +366,7 @@ struct TransferCapsule: View {
         Image(systemName: glyphName)
             .font(.system(size: 15, weight: .bold))
             .foregroundStyle(.white)
-            .contentTransition()
+
             .frame(width: 36, height: 36)
             .background(glyphColor.gradient, in: .circle)
             .accessibilityHidden(true)

@@ -12,8 +12,7 @@ import SwiftUI
 /// The boot screen's card while Android starts for a request: what it is for,
 /// when the app opens, and the way to not open it (Android keeps starting).
 struct AppOpenBootCard: View {
-    @Environment(AppModel.self) private var model
-    let request: AppOpenRequest
+    @EnvironmentObject private var model: AppModellet request: AppOpenRequest
     let dimmed: Bool
 
     var body: some View {
@@ -49,8 +48,7 @@ struct AppOpenBootCard: View {
 /// little free space): which app waits, and why. The notice keeps its own
 /// buttons; the close mark here drops the request.
 struct AppOpenWaitingCard: View {
-    @Environment(AppModel.self) private var model
-    let request: AppOpenRequest
+    @EnvironmentObject private var model: AppModellet request: AppOpenRequest
     let hold: AppOpenHold
 
     var body: some View {

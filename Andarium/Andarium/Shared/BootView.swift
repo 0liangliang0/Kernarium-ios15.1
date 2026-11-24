@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
+import UIKit
 
 /// The boot, from Andarium's start to the guest's `sys.boot_completed`: a
 /// status line with a live dot, what is starting and the elapsed time; the
@@ -30,8 +32,7 @@ import SwiftUI
 /// visible, and the screen asks the render server for no blur of it.
 /// Recovery keeps an opaque screen.
 struct BootView: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var model: AppModel@Environment(\.colorScheme) private var colorScheme
     let kind: BootKind
 
     @State private var stage = 0
@@ -194,7 +195,7 @@ struct BootView: View {
                     .font(.system(.subheadline, design: .rounded).weight(.medium))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
-                    .contentTransition(.numericText())
+
                     .accessibilityLabel(Self.spokenElapsed(seconds))
             }
         }
@@ -289,14 +290,15 @@ struct BootView: View {
 
     /// Spoken at once, not after VoiceOver's own speech.
     private static func announce(_ text: String) {
-        var announcement = AttributedString(text)
-        announcement.accessibilitySpeechAnnouncementPriority = .high
-        AccessibilityNotification.Announcement(announcement).post()
+        UIAccessibility.post(notification: .announcement, argument: text)
     }
 
     /// "3 minutes, 12 seconds" in the person's language, for VoiceOver.
     static func spoken(_ seconds: Int) -> String {
-        CompatDuration.seconds(seconds).formatted(.units(allowed: [.minutes, .seconds], width: .wide))
+        {
+            let minutes = seconds / 60, remainder = seconds % 60
+            return minutes > 0 ? "\(minutes) minutes, \(remainder) seconds" : "\(remainder) seconds"
+        }()
     }
 
     private func slowNotice(steps: [Step], current: Int) -> some View {
@@ -324,7 +326,7 @@ struct BootView: View {
                     .foregroundStyle(Color.accentColor)
                     .accessibilityLabel(Text(verbatim: "\(stepTitle), \(Self.spoken(seconds))"))
             }
-            ViewThatFits(in: .horizontal) {
+            CompatViewThatFits(in: .horizontal) {
                 slowButtons(lineLimit: 1, axis: .horizontal)
                 slowButtons(lineLimit: nil, axis: .vertical)
             }
@@ -452,7 +454,12 @@ struct BootView: View {
 
     /// "1 minute 5 seconds" for the elapsed time "1:05".
     static func spokenElapsed(_ seconds: Int) -> String {
-        CompatDuration.seconds(max(seconds, 0)).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .wide))
+        {
+            let total = max(seconds, 0), hours = total / 3600, minutes = (total % 3600) / 60, remainder = total % 60
+            if hours > 0 { return "\(hours) hours \(minutes) minutes \(remainder) seconds" }
+            if minutes > 0 { return "\(minutes) minutes \(remainder) seconds" }
+            return "\(remainder) seconds"
+        }()
     }
 
     // MARK: Content per kind
@@ -531,7 +538,7 @@ struct BootView: View {
 }
 
 /// Buttons side by side at one width: the ideal width of the widest label, so
-/// that `ViewThatFits` stacks them as soon as either needs more than half of
+/// that `CompatViewThatFits` stacks them as soon as either needs more than half of
 /// the row, and a label that changes does not move the other.
 private struct EqualWidthRow: Layout {
     let spacing: CGFloat

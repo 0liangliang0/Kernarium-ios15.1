@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// What a guest keeps on disk, and how the application reaches it: an
 /// instance directory holding the guest's choices (`settings.json`), its data

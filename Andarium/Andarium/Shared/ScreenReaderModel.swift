@@ -59,8 +59,8 @@ final class ScreenReaderSession: ObservableObject {
 
     /// A failed change.
     struct Failure: Equatable {
-        @Published var turningOn: Bool
-        @Published var reason: String
+        var turningOn: Bool
+        var reason: String
     }
 
     /// The card over Android's screen while VoiceOver runs.
@@ -74,8 +74,8 @@ final class ScreenReaderSession: ObservableObject {
     /// Where a read stands: it applies only if no change began or ended since
     /// it started and no newer read has applied.
     struct Ticket: Equatable {
-        @Published fileprivate var generation: Int
-        @Published fileprivate var order: Int
+        fileprivate var generation: Int
+        fileprivate var order: Int
     }
 
     /// Android's state as last read or changed; nil until it has been, and

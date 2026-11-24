@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 
 /// The ribbon in Home's Start bar, just above Start, after an update with
@@ -98,7 +99,7 @@ struct WhatsNewRibbon: View {
     /// and how many more.
     @ViewBuilder private var summary: some View {
         let titles = entries.map { WhatsNewWords.localized($0.title) }
-        ViewThatFits(in: .horizontal) {
+        CompatViewThatFits(in: .horizontal) {
             ForEach(Array(stride(from: titles.count, through: 1, by: -1)), id: \.self) { named in
                 Text(Self.summary(titles, naming: named)).lineLimit(1)
             }

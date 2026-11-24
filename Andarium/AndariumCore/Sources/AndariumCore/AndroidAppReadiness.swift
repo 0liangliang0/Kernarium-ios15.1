@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// Whether Android is ready for an app to be opened after a start. Android's
 /// boot is reported done (`apexd` marks it) before the activity manager has

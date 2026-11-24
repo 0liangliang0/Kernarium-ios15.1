@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 import UIKit
 
@@ -8,8 +9,7 @@ import UIKit
 /// One the person chose, with Stop on the boot screen's notice, says so and
 /// is not drawn as a fault.
 struct EndView: View {
-    @Environment(AppModel.self) private var model
-    @State private var copied = false
+    @EnvironmentObject private var model: AppModel@State private var copied = false
 
     var body: some View {
         let stopped = model.runEnd.stoppedByUser
@@ -47,7 +47,7 @@ struct EndView: View {
                     .frame(height: 44)
                     .padding(.horizontal, 10)
             }
-            .buttonStyle(.glass)
+            .buttonStyle(.bordered)
             .padding(.top, 14)
             .onChange(of: copied) { now in
                 if now { VoiceOver.announce(String(compatLocalized: "Report copied")) }

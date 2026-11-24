@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 import UIKit
 
@@ -117,7 +118,7 @@ final class AndariumSceneDelegate: UIResponder, UIWindowSceneDelegate {
             maximumFramesPerSecond: scene.screen.maximumFramesPerSecond)
         let window = UIWindow(windowScene: scene)
         window.rootViewController = AndariumHostingController(
-            rootView: RootView(entry: entry).environment(model), model: model)
+            rootView: RootView(entry: entry).environmentObject(model).environment(\.compatAppModel, model), model: model)
         self.window = window
         window.makeKeyAndVisible()
     }
@@ -125,8 +126,7 @@ final class AndariumSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 /// Clean power-off returns to Home; a failed run waits for a fresh process.
 struct RootView: View {
-    @Environment(AppModel.self) private var model
-    let entry: AppEntry
+    @EnvironmentObject private var model: AppModellet entry: AppEntry
 
     /// What VoiceOver is told as a run begins (`AppModel.announceRunStart`);
     /// other screens speak for themselves from their first element.
@@ -218,8 +218,7 @@ struct RootView: View {
 /// nothing else closes it. It sits on a view of its own, since a view that
 /// carries two alerts presents only one of them reliably.
 private struct LegacyInstallAlert: ViewModifier {
-    @Environment(AppModel.self) private var model
-    /// The alert is taken away for a moment so that it is presented again.
+    @EnvironmentObject private var model: AppModel/// The alert is taken away for a moment so that it is presented again.
     @State private var withdrawn = false
 
     func body(content: Content) -> some View {

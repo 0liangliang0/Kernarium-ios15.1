@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import Foundation
 
 /// The words of Android's screen reader in the session's Settings, on the card

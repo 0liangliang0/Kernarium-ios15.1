@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// How far the system lets Andarium use this device's cameras, in the terms the
 /// Camera row and the start need. The application reads it from iOS; reading it

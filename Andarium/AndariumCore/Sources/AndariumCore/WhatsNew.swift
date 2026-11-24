@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// One release's notes: the build that first carried them and what is new
 /// in it. The notes are written per release and bundled with the application;

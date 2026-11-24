@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 import Combine
 
 /// The update notice of a sideloaded application: whether a newer version of

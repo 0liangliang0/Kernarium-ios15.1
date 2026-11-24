@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// Why a guest cannot start with the Android this build carries. Only erasing
 /// the guest ends each of these.

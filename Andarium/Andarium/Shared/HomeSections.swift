@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 
 /// A titled section of Home: rows in one glass panel under a small heading,
@@ -166,9 +167,7 @@ struct RowDivider: View {
 /// capacity under a bar, with Resize; Snapshots states how many there are and
 /// the space they use, with Manage opening them.
 struct SystemSection: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         if let guest = model.guest {
             HomeSection(title: "Virtual machine") {
                 SystemRow(
@@ -320,9 +319,7 @@ private struct SpokenLine: ViewModifier {
 /// when none was read, after an operation and when a run ends, not each time
 /// it appears (`SnapshotsModel.reload`).
 struct SnapshotsRow: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         let store = model.snapshots
         SystemRow(
             symbol: "clock.arrow.circlepath", title: SnapshotWords.title,
@@ -345,9 +342,7 @@ struct SnapshotsRow: View {
 /// only while no guest runs; the row is drawn only where the screen can show
 /// it (`AppModel.highRefreshOffered`), in Performance (`HomePerformanceSection`).
 struct HighRefreshRow: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         OptionRow(title: String(compatLocalized: "120 Hz"), symbol: "speedometer") {
             Toggle("120 Hz", isOn: Binding(
                 get: { model.highRefreshOn },
@@ -384,9 +379,7 @@ struct HighRefreshNote: View {
 /// device that has them. The motion sensors are always the guest's where the device
 /// has them, so there is no row for them.
 struct CapabilitiesSection: View {
-    @Environment(AppModel.self) private var model
-
-    /// The rows, top to bottom; VoiceOver reads them in this order.
+    @EnvironmentObject private var model: AppModel/// The rows, top to bottom; VoiceOver reads them in this order.
     enum Row: CaseIterable {
         case location, microphone, camera, haptics
     }
@@ -424,9 +417,7 @@ enum CapabilityWords {
 }
 
 struct MicrophoneRow: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         let denied = model.microphoneState == .denied
         OptionRow(
             title: String(compatLocalized: "Microphone"), symbol: "mic.fill",
@@ -446,9 +437,7 @@ struct MicrophoneRow: View {
 /// start. The switch is read when the guest starts and never during a run, so
 /// it is on Home, which shows only while no guest runs.
 struct CameraRow: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         let access = model.cameraAccess
         OptionRow(
             title: CameraWords.title, symbol: "camera.fill",
@@ -470,9 +459,7 @@ struct CameraRow: View {
 /// and haptic feedback. A game controller's rumble is the controller's and
 /// stays as it is.
 struct HapticsRow: View {
-    @Environment(AppModel.self) private var model
-
-    /// The vibrating phone, which reads as haptics where "waveform" reads as
+    @EnvironmentObject private var model: AppModel/// The vibrating phone, which reads as haptics where "waveform" reads as
     /// sound.
     static let symbol = "iphone.radiowaves.left.and.right"
 
@@ -489,9 +476,7 @@ struct HapticsRow: View {
 }
 
 struct LocationRow: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         let access = model.locationAuthorization
         let shownOn = model.locationShownOn
         let approximate = access.isApproximate && shownOn
@@ -515,9 +500,7 @@ struct LocationRow: View {
 /// When iOS has refused the microphone there is nothing to ask again: say so,
 /// and offer Andarium's page in Settings.
 struct MicrophoneAccessAlert: ViewModifier {
-    @Environment(AppModel.self) private var model
-
-    func body(content: Content) -> some View {
+    @EnvironmentObject private var model: AppModelfunc body(content: Content) -> some View {
         @ObservedObject var model = model
         content.alert(
             "Allow microphone access", isPresented: Binding(
@@ -541,9 +524,7 @@ extension View {
 /// nothing to ask: say why, and offer Andarium's page in Settings where it has
 /// the way out.
 struct LocationAccessAlert: ViewModifier {
-    @Environment(AppModel.self) private var model
-
-    func body(content: Content) -> some View {
+    @EnvironmentObject private var model: AppModelfunc body(content: Content) -> some View {
         @ObservedObject var model = model
         let words = LocationWords.alert(for: model.locationAuthorization)
         content.alert(
@@ -572,9 +553,7 @@ extension View {
 /// nothing to ask: say why, and offer Andarium's page in Settings where it has
 /// the way out.
 struct CameraAccessAlert: ViewModifier {
-    @Environment(AppModel.self) private var model
-
-    func body(content: Content) -> some View {
+    @EnvironmentObject private var model: AppModelfunc body(content: Content) -> some View {
         @ObservedObject var model = model
         let words = CameraWords.alert(for: model.cameraAccess)
         content.alert(
@@ -613,9 +592,7 @@ extension View {
 /// (`AppModel.jitNote`): the ready sentence is there only while the row is on,
 /// so a group with the row off and nothing else to say ends at its panel.
 struct HomePerformanceSection: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         if model.guest != nil,
             model.highRefreshOffered || model.translatedLibrariesAvailable || model.jitAvailable
         {
@@ -648,9 +625,7 @@ struct HomePerformanceSection: View {
 /// attached (StikDebug) makes possible, and what the next start can do about
 /// it. It applies when the guest next starts.
 struct JitRow: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         OptionRow(title: "JIT", symbol: "bolt.fill") {
             Toggle(isOn: Binding(
                 get: { model.jitOn },
@@ -687,9 +662,7 @@ struct BackupNote: View {
 }
 
 struct BackupSection: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         if let guest = model.guest {
             HomeSection(title: "Backup") {
                 BackupOption(isOn: Binding(

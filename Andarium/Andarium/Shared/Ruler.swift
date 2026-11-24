@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 
 /// A ruler with a cyan needle: the whole range as ticks, the chosen value
@@ -55,7 +56,7 @@ struct Ruler: View {
                 if let warnFrom, warnFrom < count {
                     let end = severeFrom.map { min($0, count) } ?? count
                     let endsRuler = end >= count
-                    UnevenRoundedRectangle(
+                    CompatUnevenRoundedRectangle(
                         topLeadingRadius: 4, bottomLeadingRadius: 4,
                         bottomTrailingRadius: endsRuler ? track / 2 : 4, topTrailingRadius: endsRuler ? track / 2 : 4
                     )
@@ -64,13 +65,13 @@ struct Ruler: View {
                         .offset(x: x(warnFrom) - step / 2)
                 }
                 if let severeFrom, severeFrom < count {
-                    UnevenRoundedRectangle(topLeadingRadius: 4, bottomLeadingRadius: 4, bottomTrailingRadius: track / 2, topTrailingRadius: track / 2)
+                    CompatUnevenRoundedRectangle(topLeadingRadius: 4, bottomLeadingRadius: 4, bottomTrailingRadius: track / 2, topTrailingRadius: track / 2)
                         .fill(Color.red.opacity(0.14))
                         .frame(width: geo.size.width - x(severeFrom) + step / 2, height: track)
                         .offset(x: x(severeFrom) - step / 2)
                 }
                 if floor > 0 {
-                    let shape = UnevenRoundedRectangle(topLeadingRadius: track / 2, bottomLeadingRadius: track / 2, bottomTrailingRadius: 4, topTrailingRadius: 4)
+                    let shape = CompatUnevenRoundedRectangle(topLeadingRadius: track / 2, bottomLeadingRadius: track / 2, bottomTrailingRadius: 4, topTrailingRadius: 4)
                     shape
                         .fill(Color.primary.opacity(0.07))
                         .overlay(
@@ -429,7 +430,7 @@ struct ControlHeader: View {
                 .font(.system(size: 20, weight: .semibold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(valueColor)
-                .contentTransition(.numericText())
+
                 .animation(.snappy, value: value)
         }
     }
@@ -494,8 +495,7 @@ struct UsageBar: View {
 /// grows: the sizes below the current one are hatched and out of reach, and
 /// growth applies at the next start.
 struct ResizeSheet: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var model: AppModel@Environment(\.dismiss) private var dismiss
     @State private var capacity = 16
 
     var body: some View {
@@ -507,7 +507,7 @@ struct ResizeSheet: View {
                     Text(Formats.size(gib: capacity))
                         .font(.system(size: 50, weight: .semibold, design: .rounded))
                         .monospacedDigit()
-                        .contentTransition(.numericText(value: Double(capacity)))
+
                     Text(capacity == guest.capacityGiB ? "Current size" : "From \(Formats.size(gib: guest.capacityGiB))")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)

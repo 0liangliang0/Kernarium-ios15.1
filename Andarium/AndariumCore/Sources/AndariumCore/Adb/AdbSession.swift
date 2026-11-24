@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// Ends a connection when the guest has shown no sign of life for too long, or
 /// when the operation is cancelled. Both shut the transport down, which wakes

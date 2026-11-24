@@ -9,6 +9,18 @@
 
 import Foundation
 
+// MARK: - Locking
+
+public extension NSLock {
+    /// `NSLock.withLock` is iOS 16+; this provides the same scoped locking on
+    /// iOS 15 with the same rethrows behaviour.
+    func withLock<T>(_ body: () throws -> T) rethrows -> T {
+        lock()
+        defer { unlock() }
+        return try body()
+    }
+}
+
 // MARK: - Duration
 
 /// Seconds, as a floating-point value. The stdlib `Duration` type is iOS 16+;

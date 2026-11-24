@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// What guest memory the host can honour, at each vCPU count. Every figure is
 /// the runtime's own (`runtime/guest_memory_budget.hpp`), which the application

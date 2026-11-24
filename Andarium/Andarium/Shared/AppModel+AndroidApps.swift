@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import Foundation
 
 /// Add to Home Screen: the list of Android's apps, and a request to open one.
@@ -170,7 +171,7 @@ extension AppModel {
                 } else if attempt == 0 {
                     wait = listNeeded ? .zero : state.startDelay
                 } else {
-                    wait = state.retryInterval * (1 << (attempt - 1))
+                    wait = state.retryInterval * Double(1 << (attempt - 1))
                 }
                 holdingForAnOpen = false
                 if wait > .zero { await state.sleep(wait) }

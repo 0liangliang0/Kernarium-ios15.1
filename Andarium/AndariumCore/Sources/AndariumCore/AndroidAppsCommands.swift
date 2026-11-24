@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import CryptoKit
+import GuestHostCore
 import Foundation
 
 /// Runs one command in the guest's shell with the shell protocol v2 and

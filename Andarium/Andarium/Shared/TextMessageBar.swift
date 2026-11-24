@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 
 /// The text message bar, up over the running session while the model says so
 /// (`TextMessageState.isOpen`). Android stays in sight above it, so the app
 /// that waits for a code can be read while the code is typed.
 struct TextMessageBarOverlay: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         ZStack {
             if model.session.textMessage.isOpen {
                 TextMessageBar()
@@ -53,8 +52,7 @@ private extension Color {
 /// that who the message is from. It is one view so that the edge can change
 /// without the fields under it changing.
 private struct TextMessageBarHeader: View {
-    @Environment(AppModel.self) private var model
-    var focus: FocusState<TextMessageField?>.Binding
+    @EnvironmentObject private var model: AppModelvar focus: FocusState<TextMessageField?>.Binding
     /// VoiceOver starts on the title when the bar comes up.
     var titleFocused: AccessibilityFocusState<Bool>.Binding
 
@@ -117,8 +115,7 @@ private struct TextMessageBarHeader: View {
 /// went between them. What is typed and the send are the run's
 /// (`TextMessageState`), so the bar holds nothing of its own but the focus.
 struct TextMessageBar: View {
-    @Environment(AppModel.self) private var model
-    @FocusState private var focus: TextMessageField?
+    @EnvironmentObject private var model: AppModel@FocusState private var focus: TextMessageField?
     @AccessibilityFocusState private var titleFocused: Bool
     @AccessibilityFocusState private var statusFocused: Bool
 
@@ -163,7 +160,7 @@ struct TextMessageBar: View {
                     }
                     .frame(width: 30, height: 30)
                 }
-                .buttonStyle(.glassProminent)
+                .buttonStyle(.borderedProminent)
                 .buttonBorderShape(.circle)
                 .disabled(sending || !model.canSendTextMessage)
                 .keyboardShortcut(.return, modifiers: .command)

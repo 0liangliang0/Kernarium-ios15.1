@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 import UniformTypeIdentifiers
 
 /// A file Install APK turns away before anything is sent to the guest. The

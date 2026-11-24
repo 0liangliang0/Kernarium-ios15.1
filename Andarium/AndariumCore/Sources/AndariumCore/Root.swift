@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Darwin
+import GuestHostCore
 import Foundation
 
 /// What the Android release Andarium carries holds for root: a copy of its own

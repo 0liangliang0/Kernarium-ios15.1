@@ -10,9 +10,7 @@ import SwiftUI
 /// device is held hot, what is happening now. Every row of the menu applies at
 /// once and asks nothing: the warning is in the menu and the footnote.
 struct PerformanceSection: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         Section {
             Menu {
                 choice(limit: true, title: "Limit frame rate", subtitle: "Lets this device cool down")

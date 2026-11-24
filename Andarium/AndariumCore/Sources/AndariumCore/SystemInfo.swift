@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// The system Andarium carries, as the Info screen and the boot screens name
 /// it. The live app reads it from the release manifest the packaging step

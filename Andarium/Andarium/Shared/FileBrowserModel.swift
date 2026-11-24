@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import Combine
 import Foundation
 
@@ -68,13 +69,13 @@ final class FileTransfer: Identifiable, ObservableObject {
 
     struct Item: Identifiable, Equatable {
         let id = UUID()
-        @Published var name: String
-        @Published var size: UInt64
-        @Published var isFolder = false
-        @Published var moved: UInt64 = 0
-        @Published var state: ItemState = .waiting
+        var name: String
+        var size: UInt64
+        var isFolder = false
+        var moved: UInt64 = 0
+        var state: ItemState = .waiting
         /// Where an imported file goes in the guest.
-        @Published var path: String?
+        var path: String?
     }
 
     let id = UUID()
@@ -325,9 +326,9 @@ final class FileBrowserModel: ObservableObject {
     /// One file of an import: where it goes and whether it takes the place of
     /// a file of that name.
     struct ImportStep {
-        @Published var pick: FilePick
-        @Published var path: String
-        @Published var replacing: Bool
+        var pick: FilePick
+        var path: String
+        var replacing: Bool
     }
 
     /// The picker's result, for the folder on screen. Picks of one name from
@@ -338,7 +339,7 @@ final class FileBrowserModel: ObservableObject {
         let folder = current
         let names = GuestFileNames.distinct(picks.map(\.name))
         let renamed = zip(picks, names).map { pick, name -> FilePick in
-            @Published var copy = pick
+            var copy = pick
             copy.name = name
             return copy
         }
@@ -358,11 +359,11 @@ final class FileBrowserModel: ObservableObject {
         guard let conflict else { return }
         self.conflict = nil
         let clashing = Set(conflict.clashing.map(\.name))
-        @Published var taken = Set(entries(in: conflict.folder).map(\.name)).union(conflict.picks.map(\.name))
-        @Published var plan: [ImportStep] = []
+        var taken = Set(entries(in: conflict.folder).map(\.name)).union(conflict.picks.map(\.name))
+        var plan: [ImportStep] = []
         for pick in conflict.picks {
-            @Published var name = pick.name
-            @Published var replacing = false
+            var name = pick.name
+            var replacing = false
             if clashing.contains(name) {
                 switch choice {
                 case .skip:
@@ -382,7 +383,7 @@ final class FileBrowserModel: ObservableObject {
                     taken.insert(name)
                 }
             }
-            @Published var renamed = pick
+            var renamed = pick
             renamed.name = name
             plan.append(ImportStep(pick: renamed, path: GuestPath.child(name, of: conflict.folder), replacing: replacing))
         }

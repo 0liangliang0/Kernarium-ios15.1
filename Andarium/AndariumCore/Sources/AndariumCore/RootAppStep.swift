@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// The boot screen's Magisk app step: after Android has booted with root, the
 /// application asks the guest whether the official Magisk app is there and puts

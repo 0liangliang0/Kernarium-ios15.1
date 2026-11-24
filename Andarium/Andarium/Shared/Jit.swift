@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 // The JIT's policy and words. They live in the application target, not in
 // AndariumCore.

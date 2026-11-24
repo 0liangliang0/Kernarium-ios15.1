@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// The session's one notice that the frame rate is lowered while the device is
 /// hot. `ThermalPolicy` decides when (once in a run, at the moment the cap

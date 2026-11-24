@@ -5,8 +5,23 @@
 // folder of that target), so it is visible to both GuestHost and Andarium
 // sources.
 
+import Combine
 import SwiftUI
 import GuestHostCore
+
+/// The iOS 17 `@Environment(AppModel.self)` reader has no iOS 15 equivalent.
+/// An optional environment value covers the places that deliberately accept
+/// no model in the environment.
+private struct CompatAppModelKey: EnvironmentKey {
+    static let defaultValue: AppModel? = nil
+}
+
+extension EnvironmentValues {
+    var compatAppModel: AppModel? {
+        get { self[CompatAppModelKey.self] }
+        set { self[CompatAppModelKey.self] = newValue }
+    }
+}
 
 // MARK: - Rounded rectangle shorthand
 
@@ -17,6 +32,80 @@ public extension Shape where Self == RoundedRectangle {
         style: RoundedCornerStyle = .continuous
     ) -> RoundedRectangle {
         RoundedRectangle(cornerRadius: cornerRadius, style: style)
+    }
+}
+
+/// Stand-in for `GlassEffectContainer` (iOS 26+). iOS 15 has no glass
+/// material; the children keep their own layouts and backgrounds.
+public struct CompatGlassEffectContainer<Content: View>: View {
+    private let content: Content
+
+    public init(spacing: CGFloat? = nil, @ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    public var body: some View { content }
+}
+
+// MARK: - iOS 16 view types
+
+/// Stand-in for `ViewThatFits` (iOS 16+). iOS 15 has no way to measure and
+/// choose among alternatives inside a `ViewBuilder`, so the first layout is
+/// used; the alternative remains in the source for a later, richer shim.
+public struct CompatViewThatFits<Content: View>: View {
+    private let content: Content
+
+    public init(in axis: Axis.Set = [.horizontal, .vertical], @ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    public var body: some View { content }
+}
+
+/// Stand-in for `UnevenRoundedRectangle` (iOS 16+) with the same four corner
+/// radii. The path is drawn with per-corner arcs, so it works on iOS 15.
+public struct CompatUnevenRoundedRectangle: Shape {
+    public var topLeadingRadius: CGFloat = 0
+    public var topTrailingRadius: CGFloat = 0
+    public var bottomLeadingRadius: CGFloat = 0
+    public var bottomTrailingRadius: CGFloat = 0
+    public var style: RoundedCornerStyle = .continuous
+
+    public init(
+        topLeadingRadius: CGFloat = 0,
+        bottomLeadingRadius: CGFloat = 0,
+        bottomTrailingRadius: CGFloat = 0,
+        topTrailingRadius: CGFloat = 0,
+        style: RoundedCornerStyle = .continuous
+    ) {
+        self.topLeadingRadius = topLeadingRadius
+        self.bottomLeadingRadius = bottomLeadingRadius
+        self.bottomTrailingRadius = bottomTrailingRadius
+        self.topTrailingRadius = topTrailingRadius
+        self.style = style
+    }
+
+    public func path(in rect: CGRect) -> Path {
+        let tl = min(topLeadingRadius, min(rect.width, rect.height) / 2)
+        let tr = min(topTrailingRadius, min(rect.width, rect.height) / 2)
+        let bl = min(bottomLeadingRadius, min(rect.width, rect.height) / 2)
+        let br = min(bottomTrailingRadius, min(rect.width, rect.height) / 2)
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX + tl, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX - tr, y: rect.minY))
+        path.addArc(tangent1End: CGPoint(x: rect.maxX, y: rect.minY),
+                    tangent2End: CGPoint(x: rect.maxX, y: rect.minY + tr), radius: tr)
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - br))
+        path.addArc(tangent1End: CGPoint(x: rect.maxX, y: rect.maxY),
+                    tangent2End: CGPoint(x: rect.maxX - br, y: rect.maxY), radius: br)
+        path.addLine(to: CGPoint(x: rect.minX + bl, y: rect.maxY))
+        path.addArc(tangent1End: CGPoint(x: rect.minX, y: rect.maxY),
+                    tangent2End: CGPoint(x: rect.minX, y: rect.maxY - bl), radius: bl)
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + tl))
+        path.addArc(tangent1End: CGPoint(x: rect.minX, y: rect.minY),
+                    tangent2End: CGPoint(x: rect.minX + tl, y: rect.minY), radius: tl)
+        path.closeSubpath()
+        return path
     }
 }
 

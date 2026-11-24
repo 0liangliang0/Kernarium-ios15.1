@@ -11,8 +11,7 @@ import SwiftUI
 /// A touch beside the pieces reaches the guest as it does on a phone: every
 /// frame here is only a place, and only the pieces themselves take touches.
 struct FoldSessionOverlay: View {
-    @Environment(AppModel.self) private var model
-    let plan: SessionPlan
+    @EnvironmentObject private var model: AppModellet plan: SessionPlan
     let mode: StartMode
     /// Whether the guest's screen is on, for Power's light.
     let lit: Bool
@@ -98,8 +97,7 @@ struct FoldSessionOverlay: View {
 /// The statistics in the cover's strip: the capsule's figures stacked in a
 /// narrow column, under the camera and above the keys.
 struct RailStats: View {
-    @Environment(AppModel.self) private var model
-    let memoryMiB: Int
+    @EnvironmentObject private var model: AppModellet memoryMiB: Int
     var recovery = false
 
     var body: some View {

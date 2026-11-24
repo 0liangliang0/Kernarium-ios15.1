@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// What becomes of the Magisk app when root is off: it stays installed. The
 /// behaviour is one constant here.

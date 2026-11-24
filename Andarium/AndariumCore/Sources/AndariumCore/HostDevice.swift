@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// What the iPhone, iPad or Mac running Andarium offers.
 public struct HostDevice: Equatable, Sendable {

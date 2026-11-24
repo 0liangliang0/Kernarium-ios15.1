@@ -3,6 +3,7 @@
 #if FOLLOW_X
 
 import SwiftUI
+import GuestHostCore
 import UIKit
 
 /// The logo as a template image: the asset of the build's logo catalog

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// What pausing a guest for space does to the runtime, behind one seam so the
 /// logic is tested without it. The runtime calls run on a serial queue the

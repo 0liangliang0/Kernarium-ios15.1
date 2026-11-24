@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// A clock that counts only the time the guest runs. The application pauses it
 /// while `PauseController` holds the guest paused, so a timeout on an adb

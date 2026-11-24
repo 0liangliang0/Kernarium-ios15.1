@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import Foundation
+import GuestHostCore
 
 /// The guest kernel's own counters that bear on a stall, read over adb when a
 /// bug report is made and added to it: the timers and interrupts it saw, the

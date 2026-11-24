@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// Every sentence of the update notice, in the application's four languages.
 /// They are the application's own: from the version file only the version,

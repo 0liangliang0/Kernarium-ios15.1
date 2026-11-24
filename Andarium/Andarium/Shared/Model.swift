@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import Combine
 
 import SwiftUI
@@ -730,14 +731,14 @@ final class AppModel: ObservableObject {
     var voiceOverRunning: @MainActor () -> Bool = { UIAccessibility.isVoiceOverRunning }
     /// What VoiceOver is told of its own accord; a test collects it.
     var announcer: @MainActor (_ text: String, _ queued: Bool, _ highPriority: Bool) -> Void = {
-        VoiceOver.announce($0, queued: $1, priority: $2 ? .high : nil)
+        VoiceOver.announce($0, queued: $1, priority: nil)
     }
     /// Says what a run is as it begins, at high priority (VoiceOver's own
     /// speech of the element it lands on after the screen change would cut a
     /// queued or default announcement off), and tells whether the sentence was
     /// spoken to its end; a test collects the words and reports the end itself.
     var runStartAnnouncer: @MainActor (String, @escaping @MainActor @Sendable (Bool) -> Void) -> Void = {
-        VoiceOver.announce($0, priority: .high, finished: $1)
+        VoiceOver.announce($0, priority: nil, finished: $1)
     }
     /// How long the card and the display wait for that sentence's end before
     /// they go on without it, where VoiceOver never reports one. The sentence
@@ -1378,7 +1379,7 @@ final class AppModel: ObservableObject {
         adbWatcher?.cancel()
         guard driver != nil else { return }
         adbWatcher = Task { [weak self] in
-            @Published var tick = 0
+            var tick = 0
             while !Task.isCancelled {
                 try? await compatSleep(for: self?.adbWatchInterval ?? .seconds(2))
                 guard let self, !Task.isCancelled else { return }
@@ -1416,13 +1417,13 @@ final class AppModel: ObservableObject {
         operationEpoch += 1
         let epoch = operationEpoch
         operationCancelled = false
-        @Published var state = state
+        var state = state
         state.cancel = BusyCancel { [weak self] in self?.cancelOperation() }
         busy = state
         operation = Task { [weak self] in
             guard let self else { return }
-            @Published var result: Output?
-            @Published var failureWords: String?
+            var result: Output?
+            var failureWords: String?
             do {
                 result = try await work { update in
                     Task { @MainActor in self.apply(update, epoch: epoch) }
@@ -1672,7 +1673,7 @@ final class AppModel: ObservableObject {
                 // The app is in. Old app compatibility lists it if it applies; after an
                 // Install anyway of an app built for an Android before 4.0 the result
                 // says where the switch is, when the listing names the app the install added.
-                @Published var hint = false
+                var hint = false
                 if let before = end.oldAppsBefore {
                     hint = await self.installAddedOldApp(listedBefore: before)
                 } else {
@@ -1701,9 +1702,9 @@ final class AppModel: ObservableObject {
         attempt: (_ bypassLowTargetSdkBlock: Bool, _ update: @escaping @Sendable (BusyUpdate) -> Void) async throws -> ApkInstallOutcome
     ) async throws -> LegacyInstallEnd {
         let epoch = operationEpoch
-        @Published var flow = LegacyInstallFlow()
-        @Published var outcome = ApkInstallOutcome.installed
-        @Published var oldAppsBefore: [OldApp]?
+        var flow = LegacyInstallFlow()
+        var outcome = ApkInstallOutcome.installed
+        var oldAppsBefore: [OldApp]?
         while true {
             switch flow.step {
             case let .attempt(bypass):
@@ -2011,7 +2012,7 @@ final class AppModel: ObservableObject {
         bootRun &+= 1
         // A restart before the start finished is the same start; a running
         // session's restart begins a boot of its own.
-        @Published var unfinished = false
+        var unfinished = false
         if case .booting = phase { unfinished = true }
         lifecycle.restart()
         slowStart.guestRestarted(at: clock(), startUnfinished: unfinished)
@@ -2340,7 +2341,7 @@ final class AppModel: ObservableObject {
 
     /// The runtime reports what the host is doing for the guest's cameras.
     func cameraCaptureChanged(_ capture: CameraCapture) {
-        @Published var next = cameraNotice
+        var next = cameraNotice
         next.captureChanged(capture, at: cameraNoticeClock())
         guard next != cameraNotice else { return }
         cameraNotice = next
@@ -2358,7 +2359,7 @@ final class AppModel: ObservableObject {
     /// since: the notice goes.
     private func expireCameraNotice() {
         cameraNoticeExpiry = nil
-        @Published var next = cameraNotice
+        var next = cameraNotice
         next.expire(at: cameraNoticeClock())
         if next != cameraNotice { cameraNotice = next }
     }
@@ -2402,7 +2403,7 @@ final class AppModel: ObservableObject {
     }
 
     private var statisticsWanted: Bool {
-        @Published var running = false
+        var running = false
         if case .running = phase { running = true }
         return StatsSampling.isWanted(
             viewers: statisticsViewers.count, applicationActive: applicationActive,
@@ -2435,7 +2436,7 @@ final class AppModel: ObservableObject {
     private func runStatisticsLoop() async {
         guard let driver else { return }
         statisticsMeter.pause()
-        @Published var readings = 0
+        var readings = 0
         while !Task.isCancelled, statisticsWanted {
             if let sample = await driver.readStatistics(), !Task.isCancelled {
                 statisticsMeter.record(sample)
@@ -2508,7 +2509,7 @@ final class AppModel: ObservableObject {
                 // nothing, and the views' redraw lays the scene's root out;
                 // a reading that finds the same count and the same notice
                 // up is not published.
-                @Published var next = graphicsNotice
+                var next = graphicsNotice
                 next.record(refusals: refusals, at: graphicsNoticeClock())
                 if next != graphicsNotice { graphicsNotice = next }
             }

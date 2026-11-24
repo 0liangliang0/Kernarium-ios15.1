@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// Counts as the screens say them, in the person's language. A plural is a
 /// variation of the one key in the catalog, so each language has its own

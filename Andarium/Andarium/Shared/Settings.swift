@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
@@ -12,8 +13,7 @@ import UniformTypeIdentifiers
 /// and, last, turn Android's screen reader (TalkBack) on and off. An operation on the guest dismisses
 /// Settings and shows the full-screen progress, and then how it ended.
 struct SessionSettingsSheet: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var model: AppModel@Environment(\.dismiss) private var dismiss
     @State private var importing = false
     @State private var copied = false
     @State private var confirmingStop = false
@@ -101,13 +101,7 @@ struct SessionSettingsSheet: View {
         }
         .environment(\.filesBarHeight, filesBarHeight)
         // The bar is outside the pages, so folders slide under it.
-        .safeAreaBar(edge: .bottom) {
-            if let browser = model.fileBrowser,
-               (model.filesAvailable && browser.browsing) || browser.transfer != nil || browser.conflict != nil {
-                FilesBar(browser: browser, usable: model.filesAvailable, bottomInset: filesBarInset)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
+
         .readFilesBarHeight(into: $filesBarHeight)
         .animation(.snappy, value: model.fileBrowser?.browsing)
         .interactiveDismissDisabled(model.fileBrowser?.running == true)
@@ -128,7 +122,7 @@ struct SessionSettingsSheet: View {
             model.documentPickerProblem = nil
         }
         .presentationBackground(Color(.systemGroupedBackground))
-        .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+
         // The picker takes a copy of the file (`CopyDocumentPicker`).
         .documentCopyPicker(isPresented: $importing, types: InstallRefusal.pickerTypes) { result in
             switch result {
@@ -395,7 +389,7 @@ struct SessionSettingsSheet: View {
                 } label: {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc")
                         .font(.system(size: 15, weight: .semibold))
-                        .contentTransition()
+
                         .frame(width: 36, height: 36)
                 }
                 .buttonStyle(.borderless)
@@ -499,7 +493,7 @@ struct SessionSettingsSheet: View {
             .font(.system(.body, design: .rounded).weight(.medium))
             .monospacedDigit()
             .foregroundStyle(.secondary)
-            .contentTransition(.numericText())
+
     }
 }
 
@@ -513,7 +507,7 @@ extension View {
     func sessionSettings(isPresented: Binding<Bool>, large: Bool, model: AppModel) -> some View {
         sheet(isPresented: isPresented) {
             SessionSettingsSheet(large: large)
-                .environment(model)
+                .environmentObject(model).environment(\.compatAppModel, model)
                 .statusBarHidden(true)
                 // On a turned inner display the sheet rises to the fold and
                 // lets touches through to the guest above it.

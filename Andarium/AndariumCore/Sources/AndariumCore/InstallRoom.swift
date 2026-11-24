@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// The room an install needs, checked once the file is in hand and before a
 /// byte of it goes to the virtual machine. The package manager stages the app

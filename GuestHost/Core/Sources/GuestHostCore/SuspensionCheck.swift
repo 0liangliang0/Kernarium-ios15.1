@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// What a guest paused for space came to: suspended, as its processor time
 /// standing still shows, or still running after every attempt.

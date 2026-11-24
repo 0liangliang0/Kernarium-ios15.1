@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// A guest process that holds graphics memory, as the runtime reports it.
 public struct GraphicsHolder: Equatable, Sendable {

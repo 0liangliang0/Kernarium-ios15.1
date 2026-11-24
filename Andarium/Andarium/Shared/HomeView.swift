@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 
 /// The only screen before a run: the guest's storage, processors and memory,
 /// its options and Start. Without a guest it offers to set one up.
 struct HomeView: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @EnvironmentObject private var model: AppModel@Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The notes zoom out of the ribbon and back into it.
     @Namespace private var whatsNewZoom
     let hints: ScreenHints
@@ -41,7 +41,7 @@ struct HomeView: View {
                                 }
                             }
                         }
-                        .safeAreaBar(edge: .bottom) { startBar(wide: wide) }
+
                     } else {
                         WelcomeView()
                     }
@@ -79,7 +79,7 @@ struct HomeView: View {
                     }
                 }
             }
-            .environment(model)
+            .environmentObject(model).environment(\.compatAppModel, model)
             .foldSheet(model)
         }
         .microphoneAccessAlert()
@@ -120,7 +120,7 @@ struct HomeView: View {
             .padding(.top, 8)
             .padding(.bottom, 20)
         }
-        .safeAreaBar(edge: .bottom) { startBar(wide: false) }
+
         let second = ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 22) {
@@ -378,9 +378,7 @@ struct HomeView: View {
 
 /// The main action starts Android normally.
 struct StartButton: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         Button {
             model.start(.normal)
         } label: {
@@ -411,9 +409,7 @@ struct StartButton: View {
 
 /// Home's Info button, the toolbar's trailing item.
 struct HomeInfoButton: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         Button {
             model.sheet = .info
         } label: {
@@ -470,9 +466,7 @@ struct IconTile: View {
 
 /// First launch: there is no guest yet.
 struct WelcomeView: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         // While the device is bent a half can be shorter than the column: it
         // scrolls only then.
         column
@@ -505,7 +499,7 @@ struct WelcomeView: View {
                     .font(.body.weight(.semibold))
                     .frame(width: 220, height: 50)
             }
-            .buttonStyle(.glassProminent)
+            .buttonStyle(.borderedProminent)
             .disabled(!model.host.runsGuestGraphics)
             .padding(.top, 28)
             Spacer(minLength: 20)
@@ -530,7 +524,7 @@ struct NoticeAction {
 struct NoticeCard: View {
     private func actionButton(_ action: NoticeAction) -> some View {
         Button(action.label, action: action.perform)
-            .buttonStyle(.glass)
+            .buttonStyle(.bordered)
             .controlSize(.small)
             .accessibilityHint(action.hint ?? "")
             .accessibilityIdentifier(action.identifier ?? "")
@@ -562,7 +556,7 @@ struct NoticeCard: View {
                     .fixedSize(horizontal: false, vertical: true)
                 if let action, let secondAction {
                     // Two buttons share a line while both fit, and stack otherwise.
-                    ViewThatFits(in: .horizontal) {
+                    CompatViewThatFits(in: .horizontal) {
                         HStack(spacing: 8) { actionButton(action); actionButton(secondAction) }
                         VStack(alignment: .leading, spacing: 8) { actionButton(action); actionButton(secondAction) }
                     }
@@ -597,8 +591,7 @@ struct NoticeCard: View {
 /// An update that did not reach its end. Start tries it again; the one
 /// button, Restore, puts the data back to what the update started from.
 struct UnfinishedUpdateCard: View {
-    @Environment(AppModel.self) private var model
-    let release: String
+    @EnvironmentObject private var model: AppModellet release: String
     let canRetry: Bool
     let canRestore: Bool
 
@@ -621,7 +614,7 @@ struct UnfinishedUpdateCard: View {
             }
             if canRestore {
                 Button("Restore") { Task { await model.restoreUpdate() } }
-                    .buttonStyle(.glass)
+                    .buttonStyle(.bordered)
                     .controlSize(.regular)
                     .accessibilityIdentifier("home-update-restore")
             }
@@ -648,9 +641,7 @@ struct UnfinishedUpdateCard: View {
 /// Erasing the guest: the one row, in a card of its own after the sections,
 /// with no heading and the spacing the other cards have.
 struct EraseCard: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
+    @EnvironmentObject private var model: AppModelvar body: some View {
         Button {
             model.confirmingErase = true
         } label: {
@@ -681,7 +672,7 @@ struct ZoomFrom: ViewModifier {
 
     func body(content: Content) -> some View {
         if enabled {
-            content.navigationTransition(.zoom(sourceID: id, in: namespace))
+            content
         } else {
             content
         }

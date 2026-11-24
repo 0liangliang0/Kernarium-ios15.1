@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import SwiftUI
+import GuestHostCore
 
 /// What a file is, from its extension: nothing is read from the file to tell.
 nonisolated enum GuestFileKind: Hashable, Sendable {

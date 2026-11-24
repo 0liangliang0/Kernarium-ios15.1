@@ -16,7 +16,7 @@ struct CameraNoticeBanner: View {
         // The capsule is as wide as its words when they fit on one line, so a
         // short text in any language is not lost in a wide one; a longer text
         // wraps inside the cap.
-        ViewThatFits(in: .horizontal) {
+        CompatViewThatFits(in: .horizontal) {
             banner(oneLine: true)
             banner(oneLine: false)
         }

@@ -43,7 +43,7 @@ private struct OnCardHalf: ViewModifier {
     let screen: FoldScreen
     /// Optional: a card shown without a model, as a harness does, is laid out
     /// as it always was.
-    @Environment(AppModel.self) private var model: AppModel?
+    @Environment(\.compatAppModel) private var model: AppModel?
     /// The space the view is given, in window coordinates, once measured.
     @State private var measured: CGRect?
 
@@ -85,7 +85,7 @@ extension View {
 }
 
 private struct ScrollsWhenTall: ViewModifier {
-    @Environment(AppModel.self) private var model: AppModel?
+    @Environment(\.compatAppModel) private var model: AppModel?
 
     func body(content: Content) -> some View {
         if model?.fold?.pose.spreads == true {
@@ -121,7 +121,7 @@ private struct FoldSheetPresentation: ViewModifier {
     func body(content: Content) -> some View {
         if turned {
             content
-                .presentationBackgroundInteraction(reachesBehind ? .enabled : .disabled)
+
                 .onChange(of: model.fold.flatMap(FoldSheet.detentHeight)) { next in
                     if let next, next != height { height = next }
                 }

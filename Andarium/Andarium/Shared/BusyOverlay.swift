@@ -2,6 +2,7 @@
 
 import AndariumCore
 import SwiftUI
+import UIKit
 
 /// Covers the screens while a long task runs, so nothing else is asked of the
 /// guest's files meanwhile: a glass card with what is happening and how far.
@@ -19,7 +20,7 @@ struct BusyOverlay: View {
             // The card is as tall as its text. Where the text does not fit the screen (a long text in another
             // language) the text scrolls between the title and the button, so that the button stays on the
             // screen and the card can be closed.
-            ViewThatFits(in: .vertical) {
+            CompatViewThatFits(in: .vertical) {
                 content(scrolls: false)
                 content(scrolls: true)
             }
@@ -34,7 +35,7 @@ struct BusyOverlay: View {
         // The card is what the person is to deal with: VoiceOver reaches nothing behind it, and says what is
         // happening when it appears, for a task (a copy of a large file) that can take minutes.
         .accessibilityAddTraits(.isModal)
-        .onAppear { AccessibilityNotification.Announcement(state.title).post() }
+        .onAppear { UIAccessibility.post(notification: .announcement, argument: state.title) }
         .onChange(of: state.result != nil) { ended in
             // How it ended, in place of what it was doing.
             if ended { VoiceOver.screenChanged("\(state.title). \(state.detail)") }
@@ -77,7 +78,7 @@ struct BusyOverlay: View {
                     .font(.system(.body, design: .rounded).weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
-                    .contentTransition(.numericText())
+
                     // The bar says it.
                     .accessibilityHidden(true)
             }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import SwiftUI
+import GuestHostCore
 import UIKit
 import UniformTypeIdentifiers
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Darwin
+import GuestHostCore
 import Foundation
 
 /// Keeps the Metal shader cache only while its index is small.

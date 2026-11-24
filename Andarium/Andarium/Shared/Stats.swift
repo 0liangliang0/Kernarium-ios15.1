@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 
 // MARK: - Stats
@@ -218,8 +219,7 @@ struct StatsPill: View {
 /// The pill over the session, and the reason the readings run while it
 /// shows: the model reads the statistics only while some view shows them.
 struct StatsOverlay: View {
-    @Environment(AppModel.self) private var model
-    let memoryMiB: Int
+    @EnvironmentObject private var model: AppModellet memoryMiB: Int
     var recovery = false
 
     var body: some View {

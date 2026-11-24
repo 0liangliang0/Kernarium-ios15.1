@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import SwiftUI
+import GuestHostCore
 
 /// A page of Info that a navigation path or a launch can open directly.
 enum InfoPage: Hashable {
@@ -190,8 +191,7 @@ extension Acknowledgements.Project {
 
 /// The list of projects, grouped, ending with the line about names and marks.
 struct AcknowledgementsView: View {
-    @Environment(AppModel.self) private var model
-    private let acknowledgements = Acknowledgements.bundled
+    @EnvironmentObject private var model: AppModelprivate let acknowledgements = Acknowledgements.bundled
 
     var body: some View {
         List {
@@ -226,8 +226,7 @@ struct AcknowledgementsView: View {
 
 /// One project: who holds the copyright, the license, and its full text.
 struct LicenseView: View {
-    @Environment(AppModel.self) private var model
-    let projectID: String
+    @EnvironmentObject private var model: AppModellet projectID: String
     private let acknowledgements = Acknowledgements.bundled
 
     var body: some View {

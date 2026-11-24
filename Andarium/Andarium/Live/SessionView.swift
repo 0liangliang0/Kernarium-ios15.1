@@ -7,8 +7,7 @@ import SwiftUI
 /// the side keys on its edge. The keys are Android's: Power and volume, Back
 /// and Home, as the keyboard events a phone's hardware keys would raise.
 struct SessionView: View {
-    @Environment(AppModel.self) private var model
-    let mode: StartMode
+    @EnvironmentObject private var model: AppModellet mode: StartMode
 
     var body: some View {
         @ObservedObject var model = model

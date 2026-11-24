@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// Seconds on a monotonic clock, for the intervals an application measures
 /// itself (Caps Lock, the plug timers, a start's elapsed time). It is not

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// Opening the Magisk app on the guest's screen after the application put it
 /// in (`RootInstallRule.opensAppAfterInstall`), so that its one-time setup

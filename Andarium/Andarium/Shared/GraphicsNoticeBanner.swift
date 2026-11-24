@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import SwiftUI
 
 /// The words that Android ran out of graphics memory, over the top of the
@@ -55,8 +56,7 @@ struct GraphicsNoticeBanner: View {
 /// taller than the room, so every Dismiss can be reached and the side keys stay
 /// tappable.
 struct SessionNoticesOverlay: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.heatQuestionPatience) private var patience
+    @EnvironmentObject private var model: AppModel@Environment(\.heatQuestionPatience) private var patience
     @Environment(\.alertIsUp) private var alertIsUp
 
     /// The side padding every banner draws itself with.
@@ -68,7 +68,7 @@ struct SessionNoticesOverlay: View {
         let failure = model.androidApps.open.banner
         let showing = denial != nil || model.graphicsNotice.isShowing || model.thermalNotice.isShowing
             || model.cameraNoticeShowing || opening != nil || failure != nil
-        ViewThatFits(in: .vertical) {
+        CompatViewThatFits(in: .vertical) {
             column(denial: denial, opening: opening, failure: failure)
             ScrollView(.vertical) {
                 // The scroll view is as wide as the glass, and not the

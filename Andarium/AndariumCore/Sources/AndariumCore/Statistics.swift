@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// One reading of the running guest's host-side figures, as the runtime
 /// reports them (`kernarium_runtime_statistics`). Two readings of one boot

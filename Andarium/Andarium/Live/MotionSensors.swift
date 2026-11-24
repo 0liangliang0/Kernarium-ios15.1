@@ -99,7 +99,7 @@ nonisolated enum CompassSource {
 /// given now. It adds no interface, permission or usage string.
 nonisolated final class CompassReadout: @unchecked Sendable {
     /// The mount the guest's sensors have now (`MotionSensors.update`).
-    private static let mount = OSAllocatedUnfairLock(initialState: MotionSample.Axes.portrait)
+    private static let mount = NSLock(initialState: MotionSample.Axes.portrait)
 
     /// Every field sample forwarded to the guest since the last printed line,
     /// that line's own sample included: how many, and the lowest and highest
@@ -117,7 +117,7 @@ nonisolated final class CompassReadout: @unchecked Sendable {
     }
 
     private let period: TimeInterval
-    private let span = OSAllocatedUnfairLock(initialState: Span())
+    private let span = NSLock(initialState: Span())
 
     static func setMount(_ axes: MotionSample.Axes) { mount.withLock { $0 = axes } }
 
@@ -248,7 +248,7 @@ private final class CoreMotionDevice: MotionDevice, @unchecked Sendable {
         queue.maxConcurrentOperationCount = 1
         return queue
     }()
-    private let started = OSAllocatedUnfairLock(initialState: Set<MotionSample.Sensor>())
+    private let started = NSLock(initialState: Set<MotionSample.Sensor>())
     private let field = MagneticFieldSource(
         backend: CoreMotionFieldBackend(manager: CoreMotionDevice.sharedManager),
         log: { note in
@@ -264,7 +264,7 @@ private final class CoreMotionDevice: MotionDevice, @unchecked Sendable {
                 print("Andarium: compass: device motion failed (\(reason)); the magnetometer stops for this run")
             }
         })
-    private static let reported = OSAllocatedUnfairLock(initialState: false)
+    private static let reported = NSLock(initialState: false)
 
     deinit {
         for sensor in started.withLock({ $0 }) { stop(sensor) }

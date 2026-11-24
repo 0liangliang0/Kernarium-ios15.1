@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
+import GuestHostCore
 
 /// An installed app that Old app compatibility can apply to: built for an
 /// Android before 4.0, 32-bit, not a system app, with no shared user. The

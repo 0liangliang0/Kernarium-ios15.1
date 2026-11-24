@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import AppIntents
 import SwiftUI
 
@@ -37,8 +38,7 @@ struct AddToHomeScreenRow: View {
 /// Shortcuts. The list is the cache's, shown at once while Android is asked for
 /// a fresher one, and the switch for Search is at the foot.
 struct AddToHomeScreenPage: View {
-    @Environment(AppModel.self) private var model
-    @State private var query: String
+    @EnvironmentObject private var model: AppModel@State private var query: String
     @State private var guided: AndroidApp?
 
     init(query: String = "") {
@@ -244,7 +244,7 @@ struct AddToHomeScreenGuide: View {
             .frame(maxWidth: .infinity)
         }
         .background(Color(.systemGroupedBackground))
-        .safeAreaBar(edge: .bottom) { ShortcutsLinkBar(caption: AndroidAppsWords.linkCaption) }
+
         .navigationTitle(AndroidAppsWords.featureName)
         .navigationBarTitleDisplayMode(.inline)
         .accessibilityIdentifier("add-to-home-screen-guide")

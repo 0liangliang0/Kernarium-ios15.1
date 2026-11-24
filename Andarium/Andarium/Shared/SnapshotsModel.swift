@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import GuestHostCore
 import Combine
 import Foundation
 
@@ -25,7 +26,7 @@ struct RestoredSnapshotNotice: Equatable {
 /// Home and the sheet both show, the prompts that are up, and the outcome of
 /// each operation. Words come from `SnapshotWords`. A driver's refusal, plan
 /// and figure reach the screens only through here.
-@MainActor @MainActor
+@MainActor
 final class SnapshotsModel: ObservableObject {
 
     weak var app: AppModel?
@@ -384,7 +385,7 @@ final class SnapshotsModel: ObservableObject {
         guard let app else { return }
         await flushName()
         guard let item = item(id) else { return }
-        @Published var notice = RestoredSnapshotNotice(name: item.name, created: item.created)
+        var notice = RestoredSnapshotNotice(name: item.name, created: item.created)
         if case .updatesAtNextStart(_, let to) = item.restore { notice.updatesTo = SnapshotWords.revision(of: to) }
         switch await app.restoreSnapshot(id) {
         case .done:

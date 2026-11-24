@@ -20,7 +20,7 @@ protocol MicrophonePermission {
 
 nonisolated struct SystemMicrophonePermission: MicrophonePermission {
     var access: MicrophoneAccess {
-        switch AVAudioApplication.shared.recordPermission {
+        switch AVAudioSession.sharedInstance().recordPermission() {
         case .granted: .granted
         case .undetermined: .notAsked
         default: .denied
@@ -28,7 +28,7 @@ nonisolated struct SystemMicrophonePermission: MicrophonePermission {
     }
 
     func request(_ answered: @escaping @Sendable (MicrophoneAccess) -> Void) {
-        AVAudioApplication.requestRecordPermission { granted in
+        AVAudioSession.sharedInstance().requestRecordPermission { granted in
             answered(granted ? .granted : .denied)
         }
     }
