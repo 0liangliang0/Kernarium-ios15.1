@@ -415,6 +415,7 @@
       "name": "kernarium-ios15-device-android",
       "configurePreset": "kernarium-ios15-device-android",
       "targets": [
+        "KernariumRuntime",
         "uml_emulator",
         "architecture-audit"
       ]
