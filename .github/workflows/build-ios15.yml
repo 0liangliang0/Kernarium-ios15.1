@@ -39,6 +39,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Cache expensive dependency builds (LLVM + Mesa takes ~45 min). Keyed
+      # on the dependency scripts, manifest, patches and LLVM archive pin.
+      - name: Cache dependency builds
+        id: dep-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/dependencies
+            .build/dependency-cache
+            .build/dependency-build
+            external/sources
+          key: deps-${{ runner.os }}-${{ hashFiles('dependencies/**', 'CMakePresets.json', 'Kernarium/scripts/package-ios15-frameworks.sh') }}
+          restore-keys: deps-${{ runner.os }}-
+
       # The image has several Xcode bundles; Xcode.app points at 27, but pin
       # by detecting the real path instead of hardcoding a wrong one.
       - name: Select Xcode 27

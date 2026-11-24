@@ -581,7 +581,8 @@ else
 	LLVM_PREFIX="$TEMP_ROOT/llvm"
 	"$ROOT_DIR/dependencies/build-apple-gpu-llvm.sh" \
 		--archive "$LLVM_ARCHIVE" --prefix "$LLVM_PREFIX" \
-		--work-root "$TEMP_ROOT/llvm-work" --jobs "$JOBS"
+		--work-root "$TEMP_ROOT/llvm-work" --jobs "$JOBS" \
+		--sdk "$SDK_NAME"
 	# The cross file names the llvm-config that describes the Simulator
 	# libraries; the helper installed the one built for this machine.
 	awk -v llvm_config="$LLVM_PREFIX/bin/llvm-config" '

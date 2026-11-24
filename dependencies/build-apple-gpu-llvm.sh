@@ -24,6 +24,9 @@ ARCHIVE=
 PREFIX=
 WORK_ROOT=
 JOBS=8
+# ios-simulator builds simulator LLVM libraries; ios-software builds device
+# LLVM libraries that can link into a real-device Mesa/IPA.
+LLVM_SDK_NAME=iphonesimulator
 # The software-renderer LLVM libraries build at the iOS 15.1 floor (used by
 # both the Simulator and the iOS 15 device port) and the build machine's own
 # pass, whose tools run on this Mac, at the macOS floor.
@@ -58,6 +61,14 @@ while [ "$#" -gt 0 ]; do
 		JOBS=$2
 		shift 2
 		;;
+	--sdk)
+		[ "$#" -ge 2 ] || fail "--sdk requires a name"
+		case "$2" in
+		iphoneos|iphonesimulator) LLVM_SDK_NAME=$2 ;;
+		*) fail "--sdk must be iphoneos or iphonesimulator" ;;
+		esac
+		shift 2
+		;;
 	*) fail "unknown option: $1" ;;
 	esac
 done
@@ -90,9 +101,16 @@ VERSION=${TOP#llvm-project-}
 VERSION=${VERSION%.src}
 
 NATIVE_SDK=$($XCRUN --sdk macosx --show-sdk-path)
-SIMULATOR_SDK=$($XCRUN --sdk iphonesimulator --show-sdk-path)
-[ -d "$NATIVE_SDK" ] && [ -d "$SIMULATOR_SDK" ] ||
+LLVM_SDK=$($XCRUN --sdk "$LLVM_SDK_NAME" --show-sdk-path)
+[ -d "$NATIVE_SDK" ] && [ -d "$LLVM_SDK" ] ||
 	fail "xcrun returned an invalid SDK"
+if [ "$LLVM_SDK_NAME" = iphoneos ]; then
+	LLVM_TRIPLE="arm64-apple-ios$DEPLOYMENT_TARGET"
+	LLVM_LABEL="iOS device"
+else
+	LLVM_TRIPLE="arm64-apple-ios$DEPLOYMENT_TARGET-simulator"
+	LLVM_LABEL="iOS Simulator"
+fi
 CC=$($XCRUN --sdk macosx --find clang)
 CXX=$($XCRUN --sdk macosx --find clang++)
 
@@ -155,10 +173,10 @@ llvm_cmake --build "$NATIVE_BUILD" -j "$JOBS" \
 # static and unaffected.
 LLVM_STEP=simulator-configure
 llvm_cmake -S "$SOURCE/llvm" -B "$SIMULATOR_BUILD" "$@" \
-	-DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT="$SIMULATOR_SDK" \
+	-DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT="$LLVM_SDK" \
 	-DCMAKE_OSX_DEPLOYMENT_TARGET="$DEPLOYMENT_TARGET" \
-	-DLLVM_HOST_TRIPLE="arm64-apple-ios$DEPLOYMENT_TARGET-simulator" \
-	-DLLVM_DEFAULT_TARGET_TRIPLE="arm64-apple-ios$DEPLOYMENT_TARGET-simulator" \
+	-DLLVM_HOST_TRIPLE="$LLVM_TRIPLE" \
+	-DLLVM_DEFAULT_TARGET_TRIPLE="$LLVM_TRIPLE" \
 	-DLLVM_TARGET_ARCH=AArch64 \
 	-DLLVM_TABLEGEN="$NATIVE_BUILD/bin/llvm-tblgen" \
 	-DLLVM_NATIVE_TOOL_DIR="$NATIVE_BUILD/bin" \
@@ -185,4 +203,4 @@ CONFIG="$PREFIX/bin/llvm-config"
 [ "$("$CONFIG" --libdir)" = "$PREFIX/lib" ] ||
 	fail "llvm-config does not describe the installed libraries"
 [ -f "$PREFIX/lib/libLLVMCore.a" ] || fail "LLVM installed no libraries"
-printf '%s\n' "built LLVM $VERSION for the iOS Simulator: $PREFIX"
+printf '%s\n' "built LLVM $VERSION for the $LLVM_LABEL: $PREFIX"
