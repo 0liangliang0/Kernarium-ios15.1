@@ -72,6 +72,7 @@ jobs:
       # -------------------------------------------------------------------
       - name: Prepare dependency sources
         run: |
+          dependencies/prepare.sh --product all
           dependencies/prepare.sh --product all --verify
 
       # -------------------------------------------------------------------
