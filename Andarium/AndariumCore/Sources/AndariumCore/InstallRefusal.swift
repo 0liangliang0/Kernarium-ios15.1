@@ -60,34 +60,28 @@ public enum InstallRefusal: Error, Equatable, Sendable {
     public var message: String {
         switch self {
         case .notApk:
-            String(localized: "This isn\u{2019}t an app. Choose a file that ends in .apk, .apks, .xapk or .apkm.", bundle: .module)
+            String(compatLocalized: "This isn\u{2019}t an app. Choose a file that ends in .apk, .apks, .xapk or .apkm.", bundle: .module)
         case .tooLarge:
-            String(
-                localized: "Android can\u{2019}t install an app from a single .apk file of \(Formats.size(bytes: Self.singleApkLimit)) or more.",
+            String(compatLocalized: "Android can\u{2019}t install an app from a single .apk file of \(Formats.size(bytes: Self.singleApkLimit)) or more.",
                 bundle: .module)
         case .encrypted:
-            String(localized: "This file is encrypted, so it can\u{2019}t be installed. Choose an app file that isn\u{2019}t encrypted.", bundle: .module)
+            String(compatLocalized: "This file is encrypted, so it can\u{2019}t be installed. Choose an app file that isn\u{2019}t encrypted.", bundle: .module)
         case .appBundle:
-            String(
-                localized: "This is an app bundle for publishing apps, which can\u{2019}t be installed. Choose an .apk, .apks, .xapk or .apkm file.",
+            String(compatLocalized: "This is an app bundle for publishing apps, which can\u{2019}t be installed. Choose an .apk, .apks, .xapk or .apkm file.",
                 bundle: .module)
         case .noApp:
-            String(localized: "There\u{2019}s no app in this file. Choose an .apk, .apks, .xapk or .apkm file that holds an app.", bundle: .module)
+            String(compatLocalized: "There\u{2019}s no app in this file. Choose an .apk, .apks, .xapk or .apkm file that holds an app.", bundle: .module)
         case .damaged:
-            String(
-                localized: "This file is damaged, or the parts of the app don\u{2019}t fit together. Download it again, or choose another file.",
+            String(compatLocalized: "This file is damaged, or the parts of the app don\u{2019}t fit together. Download it again, or choose another file.",
                 bundle: .module)
         case .noMatchingProcessor:
-            String(
-                localized: "This app has no code for this device\u{2019}s processor. Choose a version of the app made for ARM processors.",
+            String(compatLocalized: "This app has no code for this device\u{2019}s processor. Choose a version of the app made for ARM processors.",
                 bundle: .module)
         case .damagedOrEncrypted:
-            String(
-                localized: "This file is damaged or encrypted, so it can\u{2019}t be installed. Download it again, or choose another file.",
+            String(compatLocalized: "This file is damaged or encrypted, so it can\u{2019}t be installed. Download it again, or choose another file.",
                 bundle: .module)
         case .partTooLarge:
-            String(
-                localized: "Android can\u{2019}t install an app with a part of \(Formats.size(bytes: Self.singleApkLimit)) or more.",
+            String(compatLocalized: "Android can\u{2019}t install an app with a part of \(Formats.size(bytes: Self.singleApkLimit)) or more.",
                 bundle: .module)
         }
     }

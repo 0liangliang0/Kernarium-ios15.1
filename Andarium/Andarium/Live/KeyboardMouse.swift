@@ -400,7 +400,7 @@ final class KeyboardMouse: GuestHardwareSink {
         guard let time else { return }
         let delay = max(time - clock(), 0) + 0.05
         timer = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(delay))
+            try? await compatSleep(for: .seconds(delay))
             guard !Task.isCancelled else { return }
             self?.evaluate()
         }

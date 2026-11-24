@@ -39,7 +39,6 @@ struct LowSpaceOverlay: View {
             }
             .padding(20)
             .frame(maxWidth: sizeClass == .regular ? 520 : 380)
-            .glassEffect(.regular, in: .rect(cornerRadius: 26))
             .padding(24)
             .onCardHalf()
         }

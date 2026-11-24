@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import Combine
 import Foundation
-import Observation
 
 /// Keeps what the person sets across launches: Home's "120 Hz", AOT and JIT
 /// rows, the display options chosen on Home, and Settings' "Show on screen",
@@ -16,6 +16,7 @@ final class PreferenceKeeper {
     /// The write an observed change has queued, which re-arms the observation
     /// when it ends; a test awaits it.
     private(set) var pending: Task<Void, Never>?
+    private var cancellable: AnyCancellable?
 
     init(model: AppModel, defaults: UserDefaults = .standard) {
         self.model = model
@@ -38,21 +39,14 @@ final class PreferenceKeeper {
         if let on = model.jitToKeep { JitPreference(defaults: defaults).keep(on) }
     }
 
+    /// The Observation framework is absent on iOS 15. The model is an
+    /// `ObservableObject`, so its publisher carries the same change signal.
     private func observe() {
         guard let model else { return }
-        withObservationTracking {
-            _ = (model.displayOptionsToKeep, model.showStatsToKeep, model.pointerAsTouchToKeep, model.heatLimitToKeep)
-            _ = model.highRefreshToKeep
-            _ = (model.translatedLibrariesToKeep, model.jitToKeep)
-        } onChange: { [weak self] in
-            // The model belongs to the main actor, so the change begins there;
-            // the write waits until it has been made.
-            MainActor.assumeIsolated {
-                self?.pending = Task { @MainActor [weak self] in
-                    self?.keep()
-                    self?.observe()
-                }
+        cancellable = model.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                self?.pending = Task { @MainActor [weak self] in self?.keep() }
             }
-        }
     }
 }

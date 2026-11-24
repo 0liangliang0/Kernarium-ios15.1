@@ -25,7 +25,6 @@ struct BusyOverlay: View {
             }
             .padding(20)
             .frame(maxWidth: sizeClass == .regular ? 520 : 360)
-            .glassEffect(.regular, in: .rect(cornerRadius: 26))
             .padding(24)
             .onCardHalf()
         }
@@ -36,7 +35,7 @@ struct BusyOverlay: View {
         // happening when it appears, for a task (a copy of a large file) that can take minutes.
         .accessibilityAddTraits(.isModal)
         .onAppear { AccessibilityNotification.Announcement(state.title).post() }
-        .onChange(of: state.result != nil) { _, ended in
+        .onChange(of: state.result != nil) { ended in
             // How it ended, in place of what it was doing.
             if ended { VoiceOver.screenChanged("\(state.title). \(state.detail)") }
         }
@@ -61,7 +60,6 @@ struct BusyOverlay: View {
             .fixedSize(horizontal: false, vertical: true)
         if scrolls {
             ScrollView { text.frame(maxWidth: .infinity, alignment: .leading) }
-                .scrollBounceBehavior(.basedOnSize)
         } else {
             text
         }

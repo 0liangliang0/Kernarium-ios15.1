@@ -52,7 +52,7 @@ nonisolated struct VsockConnector: AdbConnector, GuestStreamOpener {
 nonisolated enum AdbOperationRunner {
     static func run<Output: Sendable>(
         identity: AdbKeyStore.Identity?, clock: GuestRunClock, cancellable: Bool = true,
-        connector: any AdbConnector = VsockConnector(), connectLimit: Duration = AdbSession.defaultConnectLimit,
+        connector: any AdbConnector = VsockConnector(), connectLimit: CompatDuration = AdbSession.defaultConnectLimit,
         onCancel: @escaping @Sendable () -> Void = {},
         _ body: @escaping @Sendable (AdbSession) throws -> Output
     ) async throws -> Output {
@@ -96,7 +96,7 @@ nonisolated enum AdbOperationRunner {
 nonisolated struct AdbGuestShell: GuestShell {
     var operations: AdbGuestOperations
 
-    func run(_ command: String, limit: Duration) async throws -> GuestShellOutput {
+    func run(_ command: String, limit: CompatDuration) async throws -> GuestShellOutput {
         let result = try await operations.shell(command, limit: limit)
         return GuestShellOutput(text: result.text, exitCode: result.exitCode)
     }
@@ -105,7 +105,7 @@ nonisolated struct AdbGuestShell: GuestShell {
 /// The image's `kernarium_apps` tool prints binary pictures: its answers are
 /// read as the bytes the shell sent.
 extension AdbGuestShell: GuestBinaryShell {
-    func runBinary(_ command: String, limit: Duration) async throws -> ShellResult {
+    func runBinary(_ command: String, limit: CompatDuration) async throws -> ShellResult {
         try await operations.shell(command, limit: limit)
     }
 }
@@ -128,10 +128,10 @@ nonisolated enum BugReportOperation {
     static let generatingShare = 0.9
     /// Silence from `bugreportz` for this long, in the guest's running time,
     /// ends the report; so does the whole taking this long.
-    static let idleLimit = Duration.seconds(5 * 60)
-    static let overallLimit = Duration.seconds(45 * 60)
-    static let pullIdleLimit = Duration.seconds(60)
-    static let cleanupLimit = Duration.seconds(15)
+    static let idleLimit = CompatDuration.seconds(5 * 60)
+    static let overallLimit = CompatDuration.seconds(45 * 60)
+    static let pullIdleLimit = CompatDuration.seconds(60)
+    static let cleanupLimit = CompatDuration.seconds(15)
 
     /// Makes the report and returns the staged file. The staged partial file
     /// goes on any failure; the guest's copy goes after a good pull.
@@ -150,7 +150,7 @@ nonisolated enum BugReportOperation {
                     alive: { watchdog.touch() }
                 )
                 trail.remotePath = path
-                update(BusyUpdate(progress: generatingShare, detail: String(localized: "Copying the report\u{2026}")))
+                update(BusyUpdate(progress: generatingShare, detail: String(compatLocalized: "Copying the report\u{2026}")))
                 watchdog.arm(idle: pullIdleLimit)
                 var hooks = BugReport.Hooks()
                 hooks.alive = { watchdog.touch() }
@@ -304,7 +304,7 @@ nonisolated struct AdbGuestOperations: Sendable {
     }
 
     /// Runs a command in the guest's shell and returns what it printed.
-    func shell(_ command: String, limit: Duration = .seconds(60)) async throws -> ShellResult {
+    func shell(_ command: String, limit: CompatDuration = .seconds(60)) async throws -> ShellResult {
         guard let identity else { throw AdbFailure(.keyRejected, activity: .bugReport) }
         return try await AdbOperationRunner.run(identity: identity, clock: clock, connector: connector) { session in
             try session.run { connection in

@@ -33,7 +33,7 @@ enum FollowXWords {
 
     /// The row's VoiceOver label: the title with the name where the logo is.
     static var accessibilityLabel: String {
-        String(localized: "Follow developer on \(name)", table: "FollowX")
+        String(compatLocalized: "Follow developer on \(name)", table: "FollowX")
     }
 }
 

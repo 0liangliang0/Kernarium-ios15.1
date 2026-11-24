@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import Combine
 import Foundation
-import Observation
+
 import UIKit
 
 /// What a person is told of Android's screen reader in Settings: the line under
@@ -54,12 +55,12 @@ enum ScreenReaderRow: Equatable {
 /// change under way, the last change that failed and the card that asks about
 /// it. A session that ends takes all of it along, and every task that
 /// works on it checks it is still the session's (`AppModel+ScreenReader`).
-@Observable
-final class ScreenReaderSession {
+final class ScreenReaderSession: ObservableObject {
+
     /// A failed change.
     struct Failure: Equatable {
-        var turningOn: Bool
-        var reason: String
+        @Published var turningOn: Bool
+        @Published var reason: String
     }
 
     /// The card over Android's screen while VoiceOver runs.
@@ -73,45 +74,45 @@ final class ScreenReaderSession {
     /// Where a read stands: it applies only if no change began or ended since
     /// it started and no newer read has applied.
     struct Ticket: Equatable {
-        fileprivate var generation: Int
-        fileprivate var order: Int
+        @Published fileprivate var generation: Int
+        @Published fileprivate var order: Int
     }
 
     /// Android's state as last read or changed; nil until it has been, and
     /// again after a read that got no answer.
-    private(set) var state: ScreenReaderState?
+    @Published private(set) var state: ScreenReaderState?
     /// The last read got no answer.
-    private(set) var readFailed = false
+    @Published private(set) var readFailed = false
     /// The change under way: the state it turns to.
-    private(set) var changing: Bool?
+    @Published private(set) var changing: Bool?
     /// The last change that failed, until another begins or Android shows the
     /// state that was asked for.
-    private(set) var failure: Failure?
+    @Published private(set) var failure: Failure?
     /// The card over Android's screen, if one shows.
-    var card: Card?
+    @Published var card: Card?
     /// Why the card's last Turn On did not turn it on.
-    var cardFailure: String?
+    @Published var cardFailure: String?
     /// The person answered the card's question with Not Now, or turned the
     /// screen reader off, in Settings or in Android: no card again in this
     /// session.
-    var declined = false
+    @Published var declined = false
     /// VoiceOver has been told that the screen reader is on, and how to come
     /// back, in this session: by the change that turned it on, or at the first
     /// read that found it on, where the display's own words did not carry it.
-    var toldOn = false
+    @Published var toldOn = false
     /// Android's first answer in this session found the screen reader on: it
     /// was on before the run began, and no change of this session turned it on.
-    @ObservationIgnored private(set) var wasOnAtStart = false
-    @ObservationIgnored private var answered = false
+    private(set) var wasOnAtStart = false
+    private var answered = false
     /// The card that says the image has none has been shown in this session.
-    var toldMissing = false
+    @Published var toldMissing = false
     /// How many Settings sheets watch the state.
-    var settingsOpen = 0
+    @Published var settingsOpen = 0
     /// The sentence that says what the run is, announced as the run began, is
     /// still being spoken to VoiceOver: neither the card that asks nor the
     /// display's direct-touch element takes VoiceOver's focus until it has
     /// been.
-    var runStartAnnouncing = false
+    @Published var runStartAnnouncing = false
     /// The sentence of the run's start is being spoken and Android's state is
     /// still unread: what VoiceOver says of the display on landing there is
     /// composed now and spoken after the sentence, so a value that says
@@ -119,23 +120,23 @@ final class ScreenReaderSession {
     var displayWaitsForRead: Bool { runStartAnnouncing && state == nil }
     /// Which announcement of the run's start `runStartAnnouncing` is for: the
     /// end of an earlier one does not release a later one.
-    @ObservationIgnored var runStartGeneration = 0
+    var runStartGeneration = 0
     /// The loop that reads while VoiceOver runs.
-    @ObservationIgnored var watcher: Task<Void, Never>?
+    var watcher: Task<Void, Never>?
     /// The session is over: nothing begins in it, and what was under way was
     /// cancelled.
-    @ObservationIgnored private(set) var ended = false
+    private(set) var ended = false
     /// The tasks that work on Android for this session: a change, a read that
     /// Turn On asked for, the opening of Android's Settings. Each stays until
     /// it finishes, or until the session ends and cancels it.
-    @ObservationIgnored private var operations: [Int: Task<Void, Never>] = [:]
-    @ObservationIgnored private var operationCount = 0
+    private var operations: [Int: Task<Void, Never>] = [:]
+    private var operationCount = 0
 
     /// Android has shown the screen reader on in this session.
-    @ObservationIgnored private var hasBeenOn = false
-    @ObservationIgnored private var generation = 0
-    @ObservationIgnored private var started = 0
-    @ObservationIgnored private var applied = 0
+    private var hasBeenOn = false
+    private var generation = 0
+    private var started = 0
+    private var applied = 0
 
     var isOn: Bool { state?.isOn == true }
 

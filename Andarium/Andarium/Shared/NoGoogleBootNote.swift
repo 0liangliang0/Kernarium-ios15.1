@@ -12,9 +12,8 @@ import SwiftUI
 /// (`scripts/localization.py` holds the exception to its rule). VoiceOver
 /// reads the title and then the text as one element.
 struct NoGoogleBootNote: View {
-    static let title = String(localized: "No Google apps")
-    static let text = String(
-        localized: "Google licenses its apps and Google Play services only to makers of certified devices. Install apps from files you have; many work without them.")
+    static let title = String(compatLocalized: "No Google apps")
+    static let text = String(compatLocalized: "Google licenses its apps and Google Play services only to makers of certified devices. Install apps from files you have; many work without them.")
 
     var body: some View {
         Label {

@@ -58,7 +58,6 @@ struct BootView: View {
                         guest: guest, system: model.system, steps: steps, current: current)
                         .frame(minHeight: proxy.size.height, alignment: .center)
                 }
-                .scrollBounceBehavior(.basedOnSize)
             }
         }
         .onCardHalf(.boot)
@@ -77,18 +76,18 @@ struct BootView: View {
             // whose line never comes is exactly the one it is for.
             while !Task.isCancelled {
                 model.updateSlowStart()
-                try? await Task.sleep(for: .seconds(1))
+                try? await compatSleep(for: .seconds(1))
             }
         }
-        .onChange(of: model.slowStart.showing) { _, showing in
+        .onChange(of: model.slowStart.showing) { showing in
             guard showing else { return }
             Self.announce(Self.slowTitle(longByNature: model.slowStart.longByNature))
         }
-        .onChange(of: model.slowStart.stopping) { _, stopping in
+        .onChange(of: model.slowStart.stopping) { stopping in
             guard stopping else { return }
-            Self.announce(String(localized: "Stopping\u{2026}"))
+            Self.announce(String(compatLocalized: "Stopping\u{2026}"))
         }
-        .onChange(of: min(current, steps.count - 1)) { _, active in
+        .onChange(of: min(current, steps.count - 1)) { active in
             // VoiceOver hears each step as it starts, after what it is saying.
             guard current < steps.count else { return }
             VoiceOver.announce(steps[active].title, queued: true)
@@ -101,11 +100,11 @@ struct BootView: View {
             }
             for (index, step) in steps.enumerated() {
                 withAnimation(.snappy) { stage = index }
-                try? await Task.sleep(for: .seconds(step.seconds))
+                try? await compatSleep(for: .seconds(step.seconds))
                 if Task.isCancelled { return }
             }
             withAnimation(.snappy) { stage = steps.count }
-            try? await Task.sleep(for: .seconds(0.4))
+            try? await compatSleep(for: .seconds(0.4))
             model.finishBoot(kind)
         }
     }
@@ -139,8 +138,8 @@ struct BootView: View {
     private func shownSteps(guest: Guest) -> [Step] {
         var steps = Self.steps(kind, guest: guest, system: model.system, grewFromGiB: model.lifecycle.grewFromGiB)
         if model.preparingDisk {
-            let detail = model.diskProgress.map { String(localized: "Preparing \u{00B7} \(Int(($0 * 100).rounded()))%") }
-                ?? String(localized: "Preparing")
+            let detail = model.diskProgress.map { String(compatLocalized: "Preparing \u{00B7} \(Int(($0 * 100).rounded()))%") }
+                ?? String(compatLocalized: "Preparing")
             steps[0] = Step(title: steps[0].title, detail: detail, seconds: 0)
         }
         if model.preparingJit {
@@ -160,7 +159,7 @@ struct BootView: View {
         while !Task.isCancelled && !model.bootTracker.isReady {
             let live = min(model.liveBootStage(), stepCount - 1)
             if live != stage { withAnimation(.snappy) { stage = live } }
-            try? await Task.sleep(for: .milliseconds(200))
+            try? await compatSleep(for: .milliseconds(200))
         }
         if Task.isCancelled { return }
         // Android is up. With root, the Magisk app is checked and put in before
@@ -170,7 +169,7 @@ struct BootView: View {
         }
         if Task.isCancelled { return }
         withAnimation(.snappy) { stage = model.rootAppInstalling ? BootSteps.countWithRootApp : stepCount }
-        try? await Task.sleep(for: .seconds(0.4))
+        try? await compatSleep(for: .seconds(0.4))
         if Task.isCancelled { return }
         model.finishBoot(kind)
     }
@@ -181,7 +180,7 @@ struct BootView: View {
         HStack(spacing: 8) {
             PulsingDot()
             // Stop was chosen: the line says what is happening now.
-            Text(model.slowStart.stopping ? String(localized: "Stopping\u{2026}") : Self.status(kind))
+            Text(model.slowStart.stopping ? String(compatLocalized: "Stopping\u{2026}") : Self.status(kind))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.accentColor)
             Spacer()
@@ -284,8 +283,8 @@ struct BootView: View {
     /// have no usual to be slower than.
     static func slowTitle(longByNature: Bool) -> String {
         longByNature
-            ? String(localized: "Starting is taking a long time")
-            : String(localized: "Starting is taking longer than usual")
+            ? String(compatLocalized: "Starting is taking a long time")
+            : String(compatLocalized: "Starting is taking longer than usual")
     }
 
     /// Spoken at once, not after VoiceOver's own speech.
@@ -297,7 +296,7 @@ struct BootView: View {
 
     /// "3 minutes, 12 seconds" in the person's language, for VoiceOver.
     static func spoken(_ seconds: Int) -> String {
-        Duration.seconds(seconds).formatted(.units(allowed: [.minutes, .seconds], width: .wide))
+        CompatDuration.seconds(seconds).formatted(.units(allowed: [.minutes, .seconds], width: .wide))
     }
 
     private func slowNotice(steps: [Step], current: Int) -> some View {
@@ -445,26 +444,26 @@ struct BootView: View {
 
     private static func spokenState(_ state: StepState) -> String {
         switch state {
-        case .done: String(localized: "Done")
-        case .active: String(localized: "In progress")
-        case .pending: String(localized: "Waiting")
+        case .done: String(compatLocalized: "Done")
+        case .active: String(compatLocalized: "In progress")
+        case .pending: String(compatLocalized: "Waiting")
         }
     }
 
     /// "1 minute 5 seconds" for the elapsed time "1:05".
     static func spokenElapsed(_ seconds: Int) -> String {
-        Duration.seconds(max(seconds, 0)).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .wide))
+        CompatDuration.seconds(max(seconds, 0)).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .wide))
     }
 
     // MARK: Content per kind
 
     static func status(_ kind: BootKind) -> String {
         switch kind {
-        case .normal: String(localized: "Starting")
-        case .firstStart: String(localized: "First start")
-        case .upgrade: String(localized: "Updating")
-        case .recovery: String(localized: "Starting recovery")
-        case .restart: String(localized: "Restarting")
+        case .normal: String(compatLocalized: "Starting")
+        case .firstStart: String(compatLocalized: "First start")
+        case .upgrade: String(compatLocalized: "Updating")
+        case .recovery: String(compatLocalized: "Starting recovery")
+        case .restart: String(compatLocalized: "Restarting")
         }
     }
 
@@ -477,12 +476,12 @@ struct BootView: View {
     static func note(_ kind: BootKind, from: String?, system: SystemInfo) -> String? {
         switch kind {
         case .firstStart:
-            String(localized: "The first-run setup may take a few minutes.")
+            String(compatLocalized: "The first-run setup may take a few minutes.")
         case .upgrade:
             if let from {
-                String(localized: "Updating from \(ReleaseLabel.revision(of: from)) to \(system.releaseRevision). Apps and files are kept.")
+                String(compatLocalized: "Updating from \(ReleaseLabel.revision(of: from)) to \(system.releaseRevision). Apps and files are kept.")
             } else {
-                String(localized: "Updating to \(system.releaseRevision). Apps and files are kept.")
+                String(compatLocalized: "Updating to \(system.releaseRevision). Apps and files are kept.")
             }
         case .normal, .restart, .recovery:
             nil
@@ -495,38 +494,38 @@ struct BootView: View {
     /// already the new one.
     static func steps(_ kind: BootKind, guest: Guest, system info: SystemInfo, grewFromGiB: Int? = nil) -> [Step] {
         let system = Step(
-            title: String(localized: "System image"), detail: String(localized: "\(info.releaseRevision) · read-only"), seconds: 0.7)
+            title: String(compatLocalized: "System image"), detail: String(compatLocalized: "\(info.releaseRevision) · read-only"), seconds: 0.7)
         let kernelVersion = info.kernel.replacingOccurrences(of: "Linux ", with: "")
         let kernel = Step(
-            title: String(localized: "Linux kernel"),
-            detail: String(localized: "\(kernelVersion) · \(CountWords.vcpus(guest.cores)) · \(Formats.size(mib: guest.memoryMiB)) RAM"),
+            title: String(compatLocalized: "Linux kernel"),
+            detail: String(compatLocalized: "\(kernelVersion) · \(CountWords.vcpus(guest.cores)) · \(Formats.size(mib: guest.memoryMiB)) RAM"),
             seconds: 0.9)
         let used = MeterWords.storage(Formats.size(bytes: guest.usedBytes), of: Formats.size(gib: guest.capacityGiB))
         let growing = grewFromGiB.map {
-            String(localized: "Grows from \(Formats.size(gib: $0)) to \(Formats.size(gib: guest.capacityGiB))")
+            String(compatLocalized: "Grows from \(Formats.size(gib: $0)) to \(Formats.size(gib: guest.capacityGiB))")
         }
-        let storage = String(localized: "Storage")
-        let startup = String(localized: "Startup")
+        let storage = String(compatLocalized: "Storage")
+        let startup = String(compatLocalized: "Startup")
         switch kind {
         case .recovery:
             return [system, kernel,
                     Step(title: storage, detail: growing ?? used, seconds: growing == nil ? 0.6 : 1.2),
-                    Step(title: String(localized: "Recovery"), detail: String(localized: "Loads the recovery system"), seconds: 1.4)]
+                    Step(title: String(compatLocalized: "Recovery"), detail: String(compatLocalized: "Loads the recovery system"), seconds: 1.4)]
         case .firstStart:
             return [system, kernel,
                     Step(
                         title: storage,
-                        detail: String(localized: "Prepares \(Formats.size(gib: guest.effectiveCapacityGiB)) for first use"),
+                        detail: String(compatLocalized: "Prepares \(Formats.size(gib: guest.effectiveCapacityGiB)) for first use"),
                         seconds: 0.9),
-                    Step(title: startup, detail: String(localized: "Sets up for the first time"), seconds: 4.0)]
+                    Step(title: startup, detail: String(compatLocalized: "Sets up for the first time"), seconds: 4.0)]
         case .upgrade:
             return [system, kernel,
                     Step(title: storage, detail: growing ?? used, seconds: growing == nil ? 0.7 : 1.2),
-                    Step(title: startup, detail: String(localized: "Updates apps for \(info.releaseRevision)"), seconds: 3.6)]
+                    Step(title: startup, detail: String(compatLocalized: "Updates apps for \(info.releaseRevision)"), seconds: 3.6)]
         case .normal, .restart:
             return [system, kernel,
                     Step(title: storage, detail: growing ?? used, seconds: growing == nil ? 0.6 : 1.2),
-                    Step(title: startup, detail: String(localized: "Starts services"), seconds: 1.8)]
+                    Step(title: startup, detail: String(compatLocalized: "Starts services"), seconds: 1.8)]
         }
     }
 }
@@ -573,10 +572,10 @@ struct BootPanel: ViewModifier {
         if dimmed {
             content.background(
                 Color(.secondarySystemGroupedBackground).opacity(0.78),
-                in: .rect(cornerRadius: radius, style: .continuous)
+                in: .compatRect(cornerRadius: radius, style: .continuous)
             )
         } else {
-            content.glassEffect(.regular, in: .rect(cornerRadius: radius))
+            content
         }
     }
 }
@@ -586,7 +585,7 @@ struct ProgressBar: View {
     let value: Double
     var height: CGFloat = 8
     /// What VoiceOver calls the bar: what is in progress.
-    var label = String(localized: "Progress")
+    var label = String(compatLocalized: "Progress")
 
     var body: some View {
         GeometryReader { geo in

@@ -23,7 +23,6 @@ struct FolderPage: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color(.systemGroupedBackground))
             .background { FileDateProbe(width: $dateWidth) }
-            .onGeometryChange(for: Bool.self) { $0.size.width >= 520 } action: { wide = $0 }
             .navigationTitle(GuestPath.name(of: path))
             .navigationSubtitle(subtitle)
             .navigationBarTitleDisplayMode(.inline)
@@ -50,16 +49,16 @@ struct FolderPage: View {
         guard model.filesAvailable else { return "" }
         if !browser.selection.isEmpty { return browser.selectionSummary }
         guard case let .loaded(files) = browser.listing(path) else { return "" }
-        let items = String(localized: "\(files.count) items")
+        let items = String(compatLocalized: "\(files.count) items")
         guard let free = browser.freeBytes else { return items }
-        return String(localized: "\(items) \u{00B7} \(Formats.size(bytes: free)) free")
+        return String(compatLocalized: "\(items) \u{00B7} \(Formats.size(bytes: free)) free")
     }
 
     @ViewBuilder private var content: some View {
         if checking {
             loading
         } else if !model.filesAvailable {
-            ContentUnavailableView {
+            CompatContentUnavailableView {
                 Label("Android is still starting", systemImage: "hourglass")
             } description: {
                 Text("Its storage isn\u{2019}t ready yet. The files appear here in a moment.")
@@ -71,13 +70,13 @@ struct FolderPage: View {
             case .loading:
                 loading
             case .refused:
-                ContentUnavailableView {
+                CompatContentUnavailableView {
                     Label("No access", systemImage: "lock.fill")
                 } description: {
                     Text("Android doesn\u{2019}t allow this folder to be opened.")
                 }
             case let .failed(reason):
-                ContentUnavailableView {
+                CompatContentUnavailableView {
                     Label("Couldn\u{2019}t open this folder", systemImage: "exclamationmark.triangle.fill")
                 } description: {
                     Text(reason)
@@ -87,7 +86,7 @@ struct FolderPage: View {
             case .loaded:
                 let files = browser.entries(in: path)
                 if files.isEmpty {
-                    ContentUnavailableView("Empty folder", systemImage: "folder")
+                    CompatContentUnavailableView("Empty folder", systemImage: "folder")
                 } else {
                     list(files)
                 }
@@ -105,8 +104,7 @@ struct FolderPage: View {
                 if wide { columnHeader }
             }
         }
-        .listSectionSpacing(.compact)
-        .contentMargins(.top, wide ? 0 : 6, for: .scrollContent)
+        .padding(.top, wide ? 0 : 6)
         .endingAboveFilesBar(barHeight)
     }
 
@@ -144,11 +142,11 @@ struct FolderPage: View {
     private var columnHeader: some View {
         HStack(spacing: 12) {
             Color.clear.frame(width: FileRow.tileSize, height: 1)
-            columnButton(.name, title: String(localized: "Name"))
+            columnButton(.name, title: String(compatLocalized: "Name"))
                 .frame(maxWidth: .infinity, alignment: .leading)
-            columnButton(.date, title: String(localized: "Modified"))
+            columnButton(.date, title: String(compatLocalized: "Modified"))
                 .frame(width: dateWidth, alignment: .leading)
-            columnButton(.size, title: String(localized: "Size"))
+            columnButton(.size, title: String(compatLocalized: "Size"))
                 .frame(width: FileRow.sizeWidth, alignment: .trailing)
             Color.clear.frame(width: FileRow.chevronWidth, height: 1)
         }
@@ -182,8 +180,7 @@ struct FolderPage: View {
                 if wide { columnHeader.unredacted() }
             }
         }
-        .listSectionSpacing(.compact)
-        .contentMargins(.top, wide ? 0 : 6, for: .scrollContent)
+        .padding(.top, wide ? 0 : 6)
         .endingAboveFilesBar(barHeight)
         .redacted(reason: .placeholder)
         .allowsHitTesting(false)
@@ -191,7 +188,7 @@ struct FolderPage: View {
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            @Bindable var browser = browser
+            @ObservedObject var browser = browser
             Menu {
                 if browser.allSelected(in: path) {
                     Button("Clear Selection", systemImage: "checkmark.circle.badge.xmark") {
@@ -316,7 +313,7 @@ struct FileRow: View {
         if file.isFolder {
             Button(action: toggle) { glyph }
                 .buttonStyle(.borderless)
-                .accessibilityLabel(selected ? String(localized: "Deselect \(file.name)") : String(localized: "Select \(file.name)"))
+                .accessibilityLabel(selected ? String(compatLocalized: "Deselect \(file.name)") : String(compatLocalized: "Select \(file.name)"))
         } else {
             glyph
         }
@@ -371,9 +368,6 @@ private struct FileDateProbe: View {
         }
         .font(.subheadline)
         .fixedSize()
-        .onGeometryChange(for: CGFloat.self) { ceil($0.size.width) } action: {
-            width = max(FileRow.minimumDateWidth, $0)
-        }
         .hidden()
     }
 }

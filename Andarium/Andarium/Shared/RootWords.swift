@@ -9,47 +9,42 @@ enum RootWords {
     // MARK: Home
 
     static let sectionTitle: LocalizedStringKey = "Root"
-    static let rowTitle = String(localized: "Root access")
-    static let note = String(localized: "Apps you allow in Magisk can run as root. Takes effect at the next start.")
+    static let rowTitle = String(compatLocalized: "Root access")
+    static let note = String(compatLocalized: "Apps you allow in Magisk can run as root. Takes effect at the next start.")
     /// The line under the switch while a failed start has paused root.
-    static let paused = String(localized: "Paused after a failed start")
+    static let paused = String(compatLocalized: "Paused after a failed start")
 
     // MARK: The warning before root is turned on
 
-    static let warningTitle = String(localized: "Turn on root access?")
-    static let warningBody = String(
-        localized:
+    static let warningTitle = String(compatLocalized: "Turn on root access?")
+    static let warningBody = String(compatLocalized:
             "Apps you allow in Magisk can read and change everything in the virtual machine, including other apps’ data. Some apps don’t run on a rooted device. The official Magisk app is installed at the next start. You can turn root off whenever the virtual machine is stopped."
     )
 
     // MARK: The boot screen's Magisk app step
 
-    static let stepTitle = String(localized: "Magisk app")
-    static let stepDetail = String(localized: "Installs the official Magisk app")
-    static let appFailedTitle = String(localized: "Magisk app not installed")
-    static let appFailedMessage = String(
-        localized:
+    static let stepTitle = String(compatLocalized: "Magisk app")
+    static let stepDetail = String(compatLocalized: "Installs the official Magisk app")
+    static let appFailedTitle = String(compatLocalized: "Magisk app not installed")
+    static let appFailedMessage = String(compatLocalized:
             "The Magisk app couldn’t be installed. Root is on, but no app can be given root until it is. Andarium tries again at the next start."
     )
 
     // MARK: Home's cards after a start with root that did not finish
 
-    static let pausedTitle = String(localized: "Root is paused")
-    static let pausedText = String(
-        localized:
+    static let pausedTitle = String(compatLocalized: "Root is paused")
+    static let pausedText = String(compatLocalized:
             "Android did not finish starting with root, so it starts without root until you choose. Try root again, or turn it off."
     )
-    static let tryAgain = String(localized: "Try with root again")
-    static let turnOff = String(localized: "Turn off root")
-    static let turnedOffTitle = String(localized: "Root turned off")
-    static let turnedOffText = String(
-        localized:
+    static let tryAgain = String(compatLocalized: "Try with root again")
+    static let turnOff = String(compatLocalized: "Turn off root")
+    static let turnedOffTitle = String(compatLocalized: "Root turned off")
+    static let turnedOffText = String(compatLocalized:
             "Android did not finish starting with root, so root was turned off. You can turn it on again under Root."
     )
-    static let stoppedTitle = String(localized: "Start was stopped")
-    static let stoppedText = String(
-        localized:
+    static let stoppedTitle = String(compatLocalized: "Start was stopped")
+    static let stoppedText = String(compatLocalized:
             "You stopped a start with root before Android finished starting. If root is the problem, start once without it."
     )
-    static let startWithoutRoot = String(localized: "Start without root")
+    static let startWithoutRoot = String(compatLocalized: "Start without root")
 }

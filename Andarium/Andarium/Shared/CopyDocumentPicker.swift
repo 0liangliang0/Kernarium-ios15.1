@@ -92,7 +92,7 @@ struct CopyDocumentPicker: UIViewControllerRepresentable {
                         presenter.present(picker, animated: true)
                         return
                     }
-                    if attempt < 19 { try? await Task.sleep(for: .milliseconds(100)) }
+                    if attempt < 19 { try? await compatSleep(for: .milliseconds(100)) }
                 }
                 self?.finish(.failure(PickedFileFailure.notTaken))
             }

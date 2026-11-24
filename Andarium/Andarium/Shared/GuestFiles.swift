@@ -14,7 +14,7 @@ nonisolated enum GuestPath {
 
     /// What a folder is called on screen.
     static func name(of path: String) -> String {
-        path == root ? String(localized: "Internal storage") : GuestFilePath.name(of: path)
+        path == root ? String(compatLocalized: "Internal storage") : GuestFilePath.name(of: path)
     }
 
     static func parent(of path: String) -> String {
@@ -47,7 +47,7 @@ nonisolated enum GuestFolderProblem: Error, Equatable {
 extension GuestFolderProblem: LocalizedError {
     var errorDescription: String? {
         switch self {
-        case .refused: String(localized: "Android doesn\u{2019}t allow this folder to be opened.")
+        case .refused: String(compatLocalized: "Android doesn\u{2019}t allow this folder to be opened.")
         case let .unavailable(reason): reason
         }
     }

@@ -159,7 +159,7 @@ public enum WhatsNewPlace: String, Hashable, Decodable, Sendable {
 
     public var words: String {
         switch self {
-        case .sessionSettings: String(localized: "Found in Settings while the virtual machine runs", bundle: .module)
+        case .sessionSettings: String(compatLocalized: "Found in Settings while the virtual machine runs", bundle: .module)
         }
     }
 

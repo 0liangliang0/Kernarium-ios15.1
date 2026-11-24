@@ -22,7 +22,7 @@ public enum SuspensionCheck {
         case unknown
     }
 
-    public static let interval = Duration.seconds(1)
+    public static let interval = CompatDuration.seconds(1)
     /// The processor time a guest may use over one interval and still count as
     /// held: a suspended guest's threads are held and use none, and the bound
     /// only leaves room for the clock's own rounding.
@@ -36,7 +36,7 @@ public enum SuspensionCheck {
 
     @MainActor
     public static func confirm(
-        reading: () async -> UInt64?, wait: (Duration) async -> Void
+        reading: () async -> UInt64?, wait: (CompatDuration) async -> Void
     ) async -> Verdict {
         guard var last = await reading() else { return .unknown }
         var still = 0

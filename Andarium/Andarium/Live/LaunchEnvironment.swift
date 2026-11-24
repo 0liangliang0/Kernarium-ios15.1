@@ -235,7 +235,7 @@ extension AppEntry {
         let file = directory.appendingPathComponent(harnessSpaceAnswerFile)
         Task { @MainActor [weak model] in
             while !Task.isCancelled, let model {
-                try? await Task.sleep(for: .seconds(1))
+                try? await compatSleep(for: .seconds(1))
                 guard let text = try? String(contentsOf: file, encoding: .utf8),
                     let stage = model.spacePause?.stage, model.spacePause?.working == nil
                 else { continue }

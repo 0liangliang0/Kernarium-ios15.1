@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import Foundation
-import Observation
+import Combine
 
 /// The update notice of a sideloaded application: whether a newer version of
 /// it exists, what the card, the detail and Info show of it, and the one read
@@ -16,8 +16,8 @@ import Observation
 /// withdrawn or installed version goes away and a build the file lists below
 /// the installed one is never offered.
 @MainActor
-@Observable
-public final class UpdateNotice {
+public final class UpdateNotice: ObservableObject {
+
     /// The application, as the card and the detail speak of it.
     public struct App: Equatable, Sendable {
         public let name: String
@@ -35,26 +35,26 @@ public final class UpdateNotice {
     }
 
     /// How long Home has been showing before a read starts.
-    public static let settle: Duration = .seconds(3)
+    public static let settle: CompatDuration = .seconds(3)
 
     public let configuration: UpdateConfiguration
     public let app: App
 
     /// The last answer and what the person put away.
-    public private(set) var record: UpdateRecord
+    @Published public private(set) var record: UpdateRecord
     /// The Check for Updates switch.
-    public private(set) var checks: Bool
+    @Published public private(set) var checks: Bool
     /// A read is under way.
-    public private(set) var reading = false
+    @Published public private(set) var reading = false
 
-    @ObservationIgnored private let store: any UpdateStore
-    @ObservationIgnored private let fetcher: any UpdateFetching
-    @ObservationIgnored private let host: UpdateHost
-    @ObservationIgnored private let os: UpdateOSVersion
-    @ObservationIgnored private let now: () -> Date
-    @ObservationIgnored private let wait: (Duration) async throws -> Void
-    @ObservationIgnored private let canOpen: (URL) -> Bool
-    @ObservationIgnored private let open: (URL) -> Void
+    private let store: any UpdateStore
+    private let fetcher: any UpdateFetching
+    private let host: UpdateHost
+    private let os: UpdateOSVersion
+    private let now: () -> Date
+    private let wait: (CompatDuration) async throws -> Void
+    private let canOpen: (URL) -> Bool
+    private let open: (URL) -> Void
 
     /// `canOpen` answers whether the system has an application for a URL (the
     /// sideloading apps, which the application's `Info.plist` lists), and
@@ -63,7 +63,7 @@ public final class UpdateNotice {
     public init(
         configuration: UpdateConfiguration, app: App, store: any UpdateStore, fetcher: any UpdateFetching,
         host: UpdateHost, os: UpdateOSVersion = .current, now: @escaping () -> Date = { Date() },
-        wait: @escaping (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
+        wait: @escaping (CompatDuration) async throws -> Void = { try await compatSleep(for: $0) },
         canOpen: @escaping (URL) -> Bool, open: @escaping (URL) -> Void
     ) {
         self.configuration = configuration

@@ -134,10 +134,10 @@ public struct StatsMeter: Equatable, Sendable {
 public enum StatsSampling {
     /// A run of readings starts with two this far apart, so the figures show
     /// within about a third of a second.
-    public static let firstGap = Duration.milliseconds(250)
+    public static let firstGap = CompatDuration.milliseconds(250)
     /// Then the readings go on at this interval, and the guest's memory is
     /// asked for with every `memoryEvery`th.
-    public static let interval = Duration.seconds(1)
+    public static let interval = CompatDuration.seconds(1)
     public static let memoryEvery = 2
 
     /// Whether the readings run: some view shows them, the application is

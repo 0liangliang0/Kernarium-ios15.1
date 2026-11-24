@@ -142,18 +142,18 @@ public enum CameraNotice: Hashable, Sendable {
 public struct CameraNoticeState: Equatable, Sendable {
     /// How long the Camera-is-off notice stays after the guest closed every
     /// camera.
-    public static let lingerFor = Duration.seconds(2)
+    public static let lingerFor = CompatDuration.seconds(2)
 
     public private(set) var capture = CameraCapture.idle
     private var dismissed: Set<CameraNotice> = []
     /// When the guest closed the last camera it had open while Camera was off,
     /// until `lingerFor` has passed or a camera opens again.
-    private var closedAt: ContinuousClock.Instant?
+    private var closedAt: CompatClockInstant?
 
     public init() {}
 
     /// The runtime reports what the host is doing for the guest's cameras.
-    public mutating func captureChanged(_ capture: CameraCapture, at now: ContinuousClock.Instant) {
+    public mutating func captureChanged(_ capture: CameraCapture, at now: CompatClockInstant) {
         expire(at: now)
         guard capture != self.capture else { return }
         let before = CameraNotice.raised(by: self.capture)
@@ -168,7 +168,7 @@ public struct CameraNoticeState: Equatable, Sendable {
     }
 
     /// Ends the linger of a notice whose camera closed `lingerFor` ago.
-    public mutating func expire(at now: ContinuousClock.Instant) {
+    public mutating func expire(at now: CompatClockInstant) {
         guard let closedAt, closedAt.duration(to: now) >= Self.lingerFor else { return }
         self.closedAt = nil
     }

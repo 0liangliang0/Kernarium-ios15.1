@@ -17,14 +17,14 @@ nonisolated enum GuestFilesFailure {
 
     static func message(_ error: GuestFilesError, device: String) -> String {
         switch error {
-        case .refused: String(localized: "Android doesn\u{2019}t allow this folder to be opened.")
-        case .missing: String(localized: "It is no longer in the virtual machine.")
-        case .exists: String(localized: "A file with that name is already there.")
-        case .folderInTheWay: String(localized: "A folder with that name is already there.")
-        case .changed: String(localized: "The file changed while it was being copied.")
-        case .guestFull: String(localized: "Not enough space in the virtual machine.")
-        case .deviceFull: String(localized: "Not enough space on this \(device).")
-        case .badPath: String(localized: "The virtual machine can\u{2019}t take a file with this name.")
+        case .refused: String(compatLocalized: "Android doesn\u{2019}t allow this folder to be opened.")
+        case .missing: String(compatLocalized: "It is no longer in the virtual machine.")
+        case .exists: String(compatLocalized: "A file with that name is already there.")
+        case .folderInTheWay: String(compatLocalized: "A folder with that name is already there.")
+        case .changed: String(compatLocalized: "The file changed while it was being copied.")
+        case .guestFull: String(compatLocalized: "Not enough space in the virtual machine.")
+        case .deviceFull: String(compatLocalized: "Not enough space on this \(device).")
+        case .badPath: String(compatLocalized: "The virtual machine can\u{2019}t take a file with this name.")
         }
     }
 }
@@ -50,21 +50,21 @@ nonisolated final class LocalFileSource: AdbSource, @unchecked Sendable {
 /// Passes on a transfer's progress no more often than the screen needs it.
 nonisolated final class ProgressThrottle: @unchecked Sendable {
     private let lock = NSLock()
-    private let interval: Duration
-    private var last: ContinuousClock.Instant
+    private let interval: CompatDuration
+    private var last: CompatClockInstant
     private let deliver: @Sendable (UInt64, UInt64) -> Void
 
-    init(interval: Duration = .milliseconds(100), deliver: @escaping @Sendable (UInt64, UInt64) -> Void) {
+    init(interval: CompatDuration = .milliseconds(100), deliver: @escaping @Sendable (UInt64, UInt64) -> Void) {
         self.interval = interval
         self.deliver = deliver
-        last = ContinuousClock.now - interval
+        last = CompatContinuousClock.now - interval
     }
 
     /// The first report, the last one (`moved` at `total`) and one in each
     /// interval between are delivered.
     func report(_ moved: UInt64, _ total: UInt64) {
         let due = lock.withLock { () -> Bool in
-            let now = ContinuousClock.now
+            let now = CompatContinuousClock.now
             guard moved >= total || now - last >= interval else { return false }
             last = now
             return true
@@ -77,7 +77,7 @@ nonisolated final class ProgressThrottle: @unchecked Sendable {
 /// move gives it its own and has the media index complete its row
 /// (`GuestFiles.upload`).
 nonisolated enum FileUploadOperation {
-    static let idleLimit = Duration.seconds(60)
+    static let idleLimit = CompatDuration.seconds(60)
 
     /// `hostFree` is the device's free space now, read once the file is in
     /// hand.
@@ -107,7 +107,7 @@ nonisolated enum FileUploadOperation {
     ) throws {
         let values = try file.resourceValues(forKeys: [.contentModificationDateKey, .isDirectoryKey])
         if values.isDirectory == true {
-            throw AdbFailure(message: String(localized: "Folders and packages can\u{2019}t be imported."))
+            throw AdbFailure(message: String(compatLocalized: "Folders and packages can\u{2019}t be imported."))
         }
         let source = try LocalFileSource(file)
         // The size of the file as open, not the one the picker read: an iCloud
@@ -147,7 +147,7 @@ nonisolated enum FileUploadOperation {
 /// One export: a file, or a folder with its whole tree, copied into a folder
 /// of the app's own.
 nonisolated enum FileDownloadOperation {
-    static let idleLimit = Duration.seconds(60)
+    static let idleLimit = CompatDuration.seconds(60)
 
     static func measure(session: AdbSession, file: GuestFile) throws -> UInt64 {
         guard file.isFolder else { return file.size }
@@ -302,7 +302,7 @@ extension AdbGuestOperations {
     }
 
     /// How long the sweep may run, in the guest's running time.
-    static let sweepLimit = Duration.seconds(10 * 60)
+    static let sweepLimit = CompatDuration.seconds(10 * 60)
 
     /// Removes every partial file below internal storage that an earlier run
     /// left, and returns how many it removed. The files of this run's own
@@ -411,7 +411,7 @@ final class LiveGuestFiles: GuestFilesBackend {
         } catch GuestFilesError.refused {
             throw GuestFolderProblem.refused
         } catch GuestFilesError.missing {
-            throw GuestFolderProblem.unavailable(String(localized: "The folder is no longer in the virtual machine."))
+            throw GuestFolderProblem.unavailable(String(compatLocalized: "The folder is no longer in the virtual machine."))
         }
     }
 

@@ -39,7 +39,6 @@ struct WhatsNewRibbon: View {
                         HStack(spacing: 5) {
                             Image(systemName: "sparkles")
                                 .foregroundStyle(Color.accentColor)
-                                .symbolEffect(.bounce, value: sparkle)
                             Text("What\u{2019}s New")
                                 .foregroundStyle(.primary)
                         }
@@ -77,8 +76,6 @@ struct WhatsNewRibbon: View {
         .padding(.vertical, 9)
         .frame(minHeight: 52)
         // On a dark ground the tint needs more of the accent to read as jade.
-        .glassEffect(
-            .regular.tint(Color.accentColor.opacity(colorScheme == .dark ? 0.42 : 0.24)).interactive(), in: .capsule)
         .offset(y: pull)
         // A swipe that moves the ribbon is not also a tap on it.
         .highPriorityGesture(swipe)
@@ -92,7 +89,7 @@ struct WhatsNewRibbon: View {
         Self.arrived = true
         guard !reduceMotion else { return }
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(600))
+            try? await compatSleep(for: .milliseconds(600))
             sparkle += 1
         }
     }
@@ -113,10 +110,10 @@ struct WhatsNewRibbon: View {
     /// or "7 new features" when none is named.
     static func summary(_ titles: [String], naming named: Int, language: String = appLanguage) -> String {
         guard named > 0 else {
-            return String(localized: "\(titles.count) new features")
+            return String(compatLocalized: "\(titles.count) new features")
         }
         let rest = titles.count - named
-        return (titles.prefix(named) + (rest > 0 ? [String(localized: "\(rest) more")] : []))
+        return (titles.prefix(named) + (rest > 0 ? [String(compatLocalized: "\(rest) more")] : []))
             .joined(separator: separator(inLanguage: language))
     }
 

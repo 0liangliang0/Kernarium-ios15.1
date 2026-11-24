@@ -13,8 +13,8 @@ struct HomeView: View {
     let hints: ScreenHints
 
     var body: some View {
-        @Bindable var model = model
-        NavigationStack {
+        @ObservedObject var model = model
+        NavigationView {
             GeometryReader { geo in
                 let wide = geo.size.width >= 700
                 Group {
@@ -230,7 +230,7 @@ struct HomeView: View {
 
     @ViewBuilder
     private var notices: some View {
-        @Bindable var model = model
+        @ObservedObject var model = model
         // A newer version of Andarium comes first among the notices.
         AppUpdateCard()
         // An app an icon, Shortcuts, Search or Siri asked to open waits for the
@@ -261,7 +261,7 @@ struct HomeView: View {
         if model.lowSpace {
             NoticeCard(
                 symbol: "externaldrive.badge.exclamationmark", color: .orange,
-                title: String(localized: "\(Formats.size(bytes: model.host.freeStorageBytes)) free on this \(model.host.name)"),
+                title: String(compatLocalized: "\(Formats.size(bytes: model.host.freeStorageBytes)) free on this \(model.host.name)"),
                 text: SnapshotWords.lowSpaceText(
                     hasSnapshots: model.snapshots.count > 0, startReserve: Formats.size(bytes: Limits.startReserveBytes),
                     device: model.host.name)
@@ -296,8 +296,8 @@ struct HomeView: View {
             // A restored older snapshot says itself that the next start updates it.
             NoticeCard(
                 symbol: "arrow.down.circle.fill", color: .accentColor,
-                title: String(localized: "System image updated"),
-                text: String(localized: "Andarium system image is updated to \(ReleaseLabel.revision(of: release)). The next start finishes the update and takes a little longer.")
+                title: String(compatLocalized: "System image updated"),
+                text: String(compatLocalized: "Andarium system image is updated to \(ReleaseLabel.revision(of: release)). The next start finishes the update and takes a little longer.")
             )
         case .unfinishedUpdate(let release, let canRetry, let canRestore):
             UnfinishedUpdateCard(release: release, canRetry: canRetry, canRestore: canRestore)
@@ -315,8 +315,8 @@ struct HomeView: View {
             case .closedInBackground:
                 NoticeCard(
                     symbol: "moon.zzz.fill", color: .secondary,
-                    title: String(localized: "iOS closed Andarium"),
-                    text: String(localized: "The virtual machine was shut down in the background."),
+                    title: String(compatLocalized: "iOS closed Andarium"),
+                    text: String(compatLocalized: "The virtual machine was shut down in the background."),
                     onClose: { withAnimation { model.notice = nil } }
                 )
             case .sessionEnded(let ended):
@@ -393,7 +393,6 @@ struct StartButton: View {
         .font(.body.weight(.semibold))
         .foregroundStyle(.white)
         .background(Capsule().fill(Color.accentColor))
-        .glassEffect(.regular.tint(Color.accentColor).interactive(), in: .capsule)
         .opacity(blocked ? 0.4 : 1)
         .disabled(blocked)
     }
@@ -401,11 +400,11 @@ struct StartButton: View {
     private var blocked: Bool { !model.plan.allowsStart || !model.host.runsGuestGraphics }
 
     private var title: String {
-        guard model.guest != nil, model.plan.allowsStart else { return String(localized: "Start") }
+        guard model.guest != nil, model.plan.allowsStart else { return String(compatLocalized: "Start") }
         switch model.bootKind(.normal) {
-        case .firstStart: return String(localized: "Start and set up")
-        case .upgrade: return String(localized: "Update and start")
-        default: return String(localized: "Start")
+        case .firstStart: return String(compatLocalized: "Start and set up")
+        case .upgrade: return String(compatLocalized: "Update and start")
+        default: return String(compatLocalized: "Start")
         }
     }
 }
@@ -448,7 +447,7 @@ struct IconTile: View {
     var body: some View {
         glyphView
             .frame(width: 30, height: 30)
-            .background(color.gradient, in: .rect(cornerRadius: 8, style: .continuous))
+            .background(color.gradient, in: .compatRect(cornerRadius: 8, style: .continuous))
             // It marks a row whose words say it all.
             .accessibilityHidden(true)
     }
@@ -545,7 +544,7 @@ struct NoticeCard: View {
     /// A second button beside the first (`RootNoticeCard`).
     var secondAction: NoticeAction?
     /// What VoiceOver says for the close button.
-    var closeLabel = String(localized: "Dismiss")
+    var closeLabel = String(compatLocalized: "Dismiss")
     var onClose: (() -> Void)?
 
     var body: some View {
@@ -591,7 +590,6 @@ struct NoticeCard: View {
             }
         }
         .padding(14)
-        .glassEffect(.regular, in: .rect(cornerRadius: 22))
         .accessibilityElement(children: .contain)
     }
 }
@@ -630,20 +628,19 @@ struct UnfinishedUpdateCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .glassEffect(.regular, in: .rect(cornerRadius: 22))
     }
 
     private var text: String {
         let revision = ReleaseLabel.revision(of: release)
         return switch (canRetry, canRestore) {
         case (true, true):
-            String(localized: "The update to \(revision) did not finish. Update and start tries it again, or Restore puts back your data from before the update.")
+            String(compatLocalized: "The update to \(revision) did not finish. Update and start tries it again, or Restore puts back your data from before the update.")
         case (true, false):
-            String(localized: "The update to \(revision) did not finish. Update and start tries it again, or erase the virtual machine to start over.")
+            String(compatLocalized: "The update to \(revision) did not finish. Update and start tries it again, or erase the virtual machine to start over.")
         case (false, true):
-            String(localized: "This app version carries a different release than the update that did not finish. Restore puts back your data from before it, or erase the virtual machine to start over.")
+            String(compatLocalized: "This app version carries a different release than the update that did not finish. Restore puts back your data from before it, or erase the virtual machine to start over.")
         case (false, false):
-            String(localized: "The update to \(revision) did not finish, and nothing from before it is left to put back. Erase the virtual machine to start over.")
+            String(compatLocalized: "The update to \(revision) did not finish, and nothing from before it is left to put back. Erase the virtual machine to start over.")
         }
     }
 }
@@ -672,7 +669,6 @@ struct EraseCard: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 26))
     }
 }
 

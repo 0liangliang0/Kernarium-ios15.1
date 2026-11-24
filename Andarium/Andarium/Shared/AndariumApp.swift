@@ -133,16 +133,16 @@ struct RootView: View {
     static func spoken(_ phase: Phase) -> String? {
         switch phase {
         case .running(.normal):
-            String(localized: "Android is running. The side keys on the screen edge have Back, Home and Settings.")
+            String(compatLocalized: "Android is running. The side keys on the screen edge have Back, Home and Settings.")
         case .running(.recovery):
-            String(localized: "Recovery is running. The side keys have Up and Down to move, and Power to choose.")
+            String(compatLocalized: "Recovery is running. The side keys have Up and Down to move, and Power to choose.")
         case .home, .booting, .failed:
             nil
         }
     }
 
     var body: some View {
-        @Bindable var model = model
+        @ObservedObject var model = model
         ZStack {
             // The guest's display lives under the screens of the boot and the
             // run, so it is one view from the first frame to the last.
@@ -186,7 +186,7 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.4), value: model.phase)
         // A new screen replaces the old one under VoiceOver's cursor: it
         // starts again at the top, and hears what the run now is.
-        .onChange(of: model.phase) { _, phase in
+        .onChange(of: model.phase) { phase in
             model.announceRunStart(phase)
         }
         .animation(.easeInOut(duration: 0.2), value: model.busy != nil)
@@ -253,11 +253,11 @@ extension LegacyInstallAlert {
         // answer, the overlay's Cancel or the guest ending cancels the task.
         defer { withdrawn = false }
         while model.legacyInstallQuestion != nil {
-            do { try await Task.sleep(for: .milliseconds(500)) } catch { return }
+            do { try await compatSleep(for: .milliseconds(500)) } catch { return }
             guard model.legacyInstallQuestion != nil else { return }
             guard !Self.alertIsUp else { continue }
             withdrawn = true
-            do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
+            do { try await compatSleep(for: .milliseconds(100)) } catch { return }
             withdrawn = false
         }
         await takeDownAlertOfGoneQuestion()
@@ -268,11 +268,11 @@ extension LegacyInstallAlert {
     /// answer, over the screens. After a moment, in which SwiftUI's own take-down ends, the alert
     /// still up under the question's title is taken down here, until a question stands again.
     private func takeDownAlertOfGoneQuestion() async {
-        do { try await Task.sleep(for: .seconds(1)) } catch { return }
+        do { try await compatSleep(for: .seconds(1)) } catch { return }
         for _ in 0..<50 {
             guard model.legacyInstallQuestion == nil, let alert = Self.topAlert, alert.title == LegacyInstallWords.title else { return }
             if !alert.isBeingDismissed { alert.dismiss(animated: true) }
-            do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
+            do { try await compatSleep(for: .milliseconds(100)) } catch { return }
         }
     }
 

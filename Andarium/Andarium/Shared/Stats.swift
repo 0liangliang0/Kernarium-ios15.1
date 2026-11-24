@@ -71,7 +71,7 @@ struct Readout {
     /// What a figure shows before the first reading.
     static let unknown = "\u{2013}"
     /// What VoiceOver says for it.
-    static let unknownSpoken = String(localized: "no reading yet")
+    static let unknownSpoken = String(compatLocalized: "no reading yet")
 
     var cpuText: String { cpu.map { "\($0)%" } ?? Self.unknown }
     var fpsText: String { fps.map { "\($0) fps" } ?? Self.unknown }
@@ -111,11 +111,11 @@ struct Readout {
     func spoken(memoryMiB: Int, recovery: Bool) -> String {
         let none = Self.unknownSpoken
         var parts = [
-            String(localized: "CPU \(cpu.map { "\($0)%" } ?? none)"),
-            String(localized: "memory \(memoryUsedBytes.map { MeterWords.spoken(Formats.size(bytes: $0), of: Formats.size(mib: memoryMiB)) } ?? none)"),
-            String(localized: "graphics memory \(vram.map { MeterWords.spoken(Formats.size(bytes: $0.used), of: Formats.size(bytes: $0.budget)) } ?? none)"),
+            String(compatLocalized: "CPU \(cpu.map { "\($0)%" } ?? none)"),
+            String(compatLocalized: "memory \(memoryUsedBytes.map { MeterWords.spoken(Formats.size(bytes: $0), of: Formats.size(mib: memoryMiB)) } ?? none)"),
+            String(compatLocalized: "graphics memory \(vram.map { MeterWords.spoken(Formats.size(bytes: $0.used), of: Formats.size(bytes: $0.budget)) } ?? none)"),
         ]
-        if !recovery { parts.append(String(localized: "frame rate \(fps.map { "\($0) fps" } ?? none)")) }
+        if !recovery { parts.append(String(compatLocalized: "frame rate \(fps.map { "\($0) fps" } ?? none)")) }
         return ListWords.join(parts)
     }
 
@@ -184,7 +184,6 @@ struct StatsPill: View {
         .fixedSize()
         .padding(.horizontal, 14)
         .frame(height: StatsPlacement.height)
-        .glassEffect(.regular, in: .capsule)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(readout.spoken(memoryMiB: memoryMiB, recovery: recovery))
     }

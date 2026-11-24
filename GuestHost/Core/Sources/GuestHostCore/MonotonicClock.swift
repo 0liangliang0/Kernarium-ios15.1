@@ -9,8 +9,8 @@ import Foundation
 /// declare, and nothing here compares a reading with another clock's
 /// timestamp. A reading counts from the first one the process takes.
 public nonisolated enum MonotonicClock {
-    private static let continuousOrigin = ContinuousClock.now
-    private static let suspendingOrigin = SuspendingClock.now
+    private static let continuousOrigin = CompatContinuousClock.now
+    private static let suspendingOrigin = CompatSuspendingClock.now
 
     /// Runs while the device sleeps.
     public static func continuousSeconds() -> Double {
@@ -23,7 +23,7 @@ public nonisolated enum MonotonicClock {
         seconds(suspendingOrigin.duration(to: .now))
     }
 
-    private static func seconds(_ elapsed: Duration) -> Double {
+    private static func seconds(_ elapsed: CompatDuration) -> Double {
         Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
     }
 }

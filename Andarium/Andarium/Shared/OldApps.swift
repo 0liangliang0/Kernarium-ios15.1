@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import Combine
 import Foundation
-import Observation
 
 /// Where the old apps come from: the runtime's driver asks the image's
 /// `kernarium_oldapp` command through `OldAppCompatibility`, and the Simulator
@@ -12,7 +12,7 @@ import Observation
 protocol OldAppsSource: AnyObject {
     /// The installed apps Old app compatibility can apply to, within `limit`
     /// (the command's own when nil).
-    func listOldApps(limit: Duration?) async -> OldAppListing
+    func listOldApps(limit: CompatDuration?) async -> OldAppListing
     /// Switches it on or off for one app, which the image force-stops.
     func setOldApp(_ package: String, on: Bool) async -> OldAppWrite
     /// Whether the app has a process now; nil when that cannot be told.
@@ -41,35 +41,35 @@ enum OldAppsPrompt: Identifiable, Equatable {
 /// What the session knows of Old app compatibility: the last listing and the
 /// change under way. It lasts for one run: the image's apps and the switch
 /// belong to the virtual machine that is running.
-@Observable
-final class OldAppsState {
+final class OldAppsState: ObservableObject {
+
     /// The apps of the last listing that answered, by name.
-    private(set) var apps: [OldApp] = []
+    @Published private(set) var apps: [OldApp] = []
     /// A listing has answered this run (an empty one included).
-    private(set) var listed = false
+    @Published private(set) var listed = false
     /// The image has no listing command, or one this Andarium cannot read.
-    private(set) var unavailable = false
+    @Published private(set) var unavailable = false
     /// The last listing did not get an answer.
-    private(set) var failed = false
+    @Published private(set) var failed = false
     /// A listing is under way.
-    private(set) var listing = false
+    @Published private(set) var listing = false
     /// The package whose switch is being asked about or written.
-    var busy: String?
-    var prompt: OldAppsPrompt?
+    @Published var busy: String?
+    @Published var prompt: OldAppsPrompt?
     /// The listing under way, which a second asker joins.
-    @ObservationIgnored var inFlight: Task<OldAppListing, Never>?
+    var inFlight: Task<OldAppListing, Never>?
     /// Counts what changes the apps from outside a listing: each listing that
     /// was applied and each change that finished. A listing asked before
     /// either is older than the state and is not applied over it.
-    @ObservationIgnored private(set) var generation = 0
+    private(set) var generation = 0
     /// Which showing of the page asks. An answer that comes after the page was
     /// closed raises no alert for a page that is gone.
-    @ObservationIgnored private(set) var showing = 0
+    private(set) var showing = 0
     /// The run's first listing, which waits for Android's storage and is asked
     /// again a few times if it got no answer, then ends.
-    @ObservationIgnored var first: Task<Void, Never>?
+    var first: Task<Void, Never>?
     /// The spacing of the first listing's attempts: each waits twice as long as the one before.
-    @ObservationIgnored var retryInterval = Duration.seconds(5)
+    var retryInterval = CompatDuration.seconds(5)
     /// How many times the run's first listing is asked: at the start, then
     /// after 5, 10, 20 and 40 s, and last after 80 s.
     static let startAttempts = 6
@@ -239,7 +239,7 @@ extension AppModel {
         state.first = Task { [weak self, weak state] in
             for attempt in 0..<OldAppsState.startAttempts {
                 if attempt > 0, let wait = state?.retryInterval {
-                    try? await Task.sleep(for: wait * (1 << (attempt - 1)))
+                    try? await compatSleep(for: wait * (1 << (attempt - 1)))
                 }
                 guard let self, let state, !Task.isCancelled, self.session.oldApps === state else { return }
                 if let driver = self.driver, await driver.storageReady() == true {
@@ -337,59 +337,56 @@ extension AppModel {
 /// "guest"; no promise that an app works; the app's own name and package
 /// name are shown as they are.
 nonisolated enum OldAppsWords {
-    static let title = String(localized: "Old app compatibility")
-    static let on = String(localized: "On")
-    static let loading = String(localized: "Looking for old apps\u{2026}")
-    static let sectionHeader = String(localized: "Built for Android before 4.0")
-    static let empty = String(localized: "No app built for Android before 4.0 is installed.")
-    static let failed = String(localized: "The virtual machine didn\u{2019}t answer. Try again.")
-    static let tryAgain = String(localized: "Try again")
-    static let turnOn = String(localized: "Turn on")
-    static let turnOff = String(localized: "Turn off")
-    static let cancel = String(localized: "Cancel")
-    static let ok = String(localized: "OK")
+    static let title = String(compatLocalized: "Old app compatibility")
+    static let on = String(compatLocalized: "On")
+    static let loading = String(compatLocalized: "Looking for old apps\u{2026}")
+    static let sectionHeader = String(compatLocalized: "Built for Android before 4.0")
+    static let empty = String(compatLocalized: "No app built for Android before 4.0 is installed.")
+    static let failed = String(compatLocalized: "The virtual machine didn\u{2019}t answer. Try again.")
+    static let tryAgain = String(compatLocalized: "Try again")
+    static let turnOn = String(compatLocalized: "Turn on")
+    static let turnOff = String(compatLocalized: "Turn off")
+    static let cancel = String(compatLocalized: "Cancel")
+    static let ok = String(compatLocalized: "OK")
 
     /// The page's footer: what the switch is for, then when to use it.
     static var footer: String {
-        String(localized: "Some apps this old crash because they rely on how Android used to work. Old app compatibility makes Android run an app more like older versions did.")
+        String(compatLocalized: "Some apps this old crash because they rely on how Android used to work. Old app compatibility makes Android run an app more like older versions did.")
             + "\n\n"
-            + String(localized: "Turn it on only for an app that crashes: it can make an app that works today behave differently. Turning it on or off closes the app if it\u{2019}s open. Only apps it can apply to are listed.")
+            + String(compatLocalized: "Turn it on only for an app that crashes: it can make an app that works today behave differently. Turning it on or off closes the app if it\u{2019}s open. Only apps it can apply to are listed.")
     }
 
     /// What VoiceOver reads for an app's switch.
     static func switchLabel(_ label: String) -> String {
-        String(
-            localized: "\(label), Old app compatibility",
+        String(compatLocalized: "\(label), Old app compatibility",
             comment: "What VoiceOver reads for an app's switch on the Old app compatibility page: the app's name, then the feature's name.")
     }
 
     static func title(for prompt: OldAppsPrompt) -> String {
         switch prompt {
-        case let .turnOn(app, _): String(localized: "Turn on for \u{201C}\(app.label)\u{201D}?")
-        case let .turnOff(app): String(localized: "Turn off for \u{201C}\(app.label)\u{201D}?")
-        case .notChanged: String(localized: "Old app compatibility wasn\u{2019}t changed")
+        case let .turnOn(app, _): String(compatLocalized: "Turn on for \u{201C}\(app.label)\u{201D}?")
+        case let .turnOff(app): String(compatLocalized: "Turn off for \u{201C}\(app.label)\u{201D}?")
+        case .notChanged: String(compatLocalized: "Old app compatibility wasn\u{2019}t changed")
         }
     }
 
     static func message(for prompt: OldAppsPrompt) -> String {
         switch prompt {
         case let .turnOn(app, open):
-            let message = String(
-                localized: "Android will run this app more like older versions did. This may help an app that crashes, but it can also make the app behave differently. You can turn it off again here.")
+            let message = String(compatLocalized: "Android will run this app more like older versions did. This may help an app that crashes, but it can also make the app behave differently. You can turn it off again here.")
             return open ? Sentences.join(message, closesNow(app.label)) : message
         case let .turnOff(app):
-            return Sentences.join(closesNow(app.label), String(localized: "It will open without Old app compatibility next time."))
+            return Sentences.join(closesNow(app.label), String(compatLocalized: "It will open without Old app compatibility next time."))
         case .notChanged:
-            return String(localized: "The virtual machine didn\u{2019}t accept the change. Try again.")
+            return String(compatLocalized: "The virtual machine didn\u{2019}t accept the change. Try again.")
         }
     }
 
     private static func closesNow(_ label: String) -> String {
-        String(localized: "\u{201C}\(label)\u{201D} is open and will close now.")
+        String(compatLocalized: "\u{201C}\(label)\u{201D} is open and will close now.")
     }
 
     /// The two sentences after Install anyway installed an old app: what it
     /// was built for, and where the switch is.
-    static let installHint = String(
-        localized: "It was built for an Android version before 4.0. If it crashes, open Settings from the side keys and choose Old app compatibility.")
+    static let installHint = String(compatLocalized: "It was built for an Android version before 4.0. If it crashes, open Settings from the side keys and choose Old app compatibility.")
 }

@@ -169,7 +169,7 @@ nonisolated enum ContainerInstallOperation {
             trail.openSession = id
             for (index, part) in plan.candidates.enumerated() {
                 if plan.candidates.count > 1 {
-                    update(BusyUpdate(detail: String(localized: "Sending part \(index + 1) of \(plan.candidates.count)\u{2026}")))
+                    update(BusyUpdate(detail: String(compatLocalized: "Sending part \(index + 1) of \(plan.candidates.count)\u{2026}")))
                 }
                 try write(
                     part, to: id, archive: archive, on: connection, watchdog: watchdog,
@@ -179,7 +179,7 @@ nonisolated enum ContainerInstallOperation {
             // The commit. It cannot be stopped, and it ends the session.
             update(BusyUpdate(
                 progress: hasData ? commitMark : partsEnd,
-                detail: String(localized: "The virtual machine is installing the app\u{2026}"), cancellable: false))
+                detail: String(compatLocalized: "The virtual machine is installing the app\u{2026}"), cancellable: false))
             watchdog.arm(idle: nil, overall: ApkInstallOperation.commitLimit)
             // A cancel that came in on the way here ends the install with the
             // session still the trail's to abandon.
@@ -236,7 +236,7 @@ nonisolated enum ContainerInstallOperation {
             guard let place = plan.guestLocation(of: file) else { return .installedDataNotPlaced }
             places.append((file, place.folder, place.path))
         }
-        update(BusyUpdate(detail: String(localized: "Copying app data\u{2026}"), cancellable: true))
+        update(BusyUpdate(detail: String(compatLocalized: "Copying app data\u{2026}"), cancellable: true))
         watchdog.arm(idle: ApkInstallOperation.sendIdleLimit)
         do {
             if let partials = step.partials {
@@ -245,7 +245,7 @@ nonisolated enum ContainerInstallOperation {
             }
             for (index, place) in places.enumerated() {
                 if places.count > 1 {
-                    update(BusyUpdate(detail: String(localized: "Copying data file \(index + 1) of \(places.count)\u{2026}")))
+                    update(BusyUpdate(detail: String(compatLocalized: "Copying data file \(index + 1) of \(places.count)\u{2026}")))
                 }
                 guard let entry = archive.entry(named: place.file.entry) else { throw InstallRefusal.damaged }
                 let made = try connection.runShell(GuestFiles.makeFolderCommand(for: place.folder))

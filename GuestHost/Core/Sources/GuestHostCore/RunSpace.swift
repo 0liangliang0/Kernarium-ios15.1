@@ -37,8 +37,8 @@ public enum RunSpace {
     /// next check is placed. A guest writes this fast only briefly, and a
     /// guess too high costs a few more checks, not a missed pause.
     public static let assumedWriteRate: UInt64 = 128 * Bytes.mib
-    public static let shortestInterval = Duration.seconds(2)
-    public static let longestInterval = Duration.seconds(30)
+    public static let shortestInterval = CompatDuration.seconds(2)
+    public static let longestInterval = CompatDuration.seconds(30)
 
     /// What one reading of the free space says of a running guest.
     public static func verdict(freeBytes: UInt64) -> Verdict {
@@ -56,7 +56,7 @@ public enum RunSpace {
     /// `assumedWriteRate`, so a nearly full device is read often and a roomy
     /// one rarely. Never less than `shortestInterval` or more than
     /// `longestInterval`.
-    public static func nextCheck(freeBytes: UInt64) -> Duration {
+    public static func nextCheck(freeBytes: UInt64) -> CompatDuration {
         let margin = freeBytes > pauseBelowBytes ? freeBytes - pauseBelowBytes : 0
         let seconds = Double(margin) / Double(assumedWriteRate)
         return min(max(.seconds(seconds), shortestInterval), longestInterval)

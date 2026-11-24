@@ -25,7 +25,7 @@ public enum RootOffRule {
     /// A start without root, when the rule removes the app: removes it if it
     /// is there, and says whether the guest was asked successfully. Bounded by
     /// `limit` for each command.
-    public static func removeAppIfAny(shell: any GuestShell, limit: Duration) async -> Bool {
+    public static func removeAppIfAny(shell: any GuestShell, limit: CompatDuration) async -> Bool {
         switch await MagiskApp.presence(shell: shell, limit: limit) {
         case .absent: return true
         case .unknown: return false

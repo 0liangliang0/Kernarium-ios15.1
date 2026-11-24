@@ -31,8 +31,7 @@ struct ScreenReaderCard: View {
             // Glass alone shows whatever Android draws behind it: over a light
             // screen the body measured 4.05:1 in dark mode. The opaque backing
             // the app's other cards use keeps the words readable over any screen.
-            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 26))
-            .glassEffect(.regular, in: .rect(cornerRadius: 26))
+            .background(Color(.secondarySystemGroupedBackground), in: .compatRect(cornerRadius: 26))
             .padding(24)
             .onCardHalf()
         }
@@ -44,7 +43,7 @@ struct ScreenReaderCard: View {
         .accessibilityIdentifier("screen-reader-card")
         .task {
             // The focus can move only to an element VoiceOver has been told of.
-            try? await Task.sleep(for: .milliseconds(300))
+            try? await compatSleep(for: .milliseconds(300))
             titleFocused = true
         }
     }

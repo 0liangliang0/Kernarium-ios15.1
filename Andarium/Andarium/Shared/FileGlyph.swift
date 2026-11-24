@@ -102,7 +102,7 @@ struct FileGlyph: View {
             .font(.system(size: size * 0.44, weight: .bold))
             .foregroundStyle(.white)
             .frame(width: size, height: size)
-            .background(Color.accentColor.gradient, in: .rect(cornerRadius: size * 0.26, style: .continuous))
+            .background(Color.accentColor.gradient, in: .compatRect(cornerRadius: size * 0.26, style: .continuous))
     }
 
     private var folder: some View {
@@ -127,6 +127,6 @@ struct FileGlyph: View {
             .font(.system(size: size * 0.5, weight: .semibold))
             .foregroundStyle(kind.color)
             .frame(width: size, height: size)
-            .background(kind.color.opacity(0.14), in: .rect(cornerRadius: size * 0.24, style: .continuous))
+            .background(kind.color.opacity(0.14), in: .compatRect(cornerRadius: size * 0.24, style: .continuous))
     }
 }

@@ -156,11 +156,11 @@ extension Acknowledgements.Group {
     var heading: String {
         switch id {
         case "system":
-            String(localized: "Operating system", comment: "Heading of the group of Acknowledgements with Android, LineageOS and Linux.")
+            String(compatLocalized: "Operating system", comment: "Heading of the group of Acknowledgements with Android, LineageOS and Linux.")
         case "graphics":
-            String(localized: "Graphics", comment: "Heading of the group of Acknowledgements with the graphics software.")
+            String(compatLocalized: "Graphics", comment: "Heading of the group of Acknowledgements with the graphics software.")
         case "libraries":
-            String(localized: "Libraries", comment: "Heading of the group of Acknowledgements with the software libraries Andarium uses.")
+            String(compatLocalized: "Libraries", comment: "Heading of the group of Acknowledgements with the software libraries Andarium uses.")
         default: title
         }
     }
@@ -172,7 +172,7 @@ extension Acknowledgements.Project {
     var displayName: String {
         switch id {
         case "aot-libraries":
-            String(localized: "Translated system libraries", comment: "Title of the page of notices, and of the row that opens it, for the Android system libraries that Andarium translates to machine code ahead of time.")
+            String(compatLocalized: "Translated system libraries", comment: "Title of the page of notices, and of the row that opens it, for the Android system libraries that Andarium translates to machine code ahead of time.")
         default: name
         }
     }
@@ -182,7 +182,7 @@ extension Acknowledgements.Project {
     var introduction: String? {
         switch id {
         case "aot-libraries":
-            String(localized: "Andarium contains machine code translated from the libraries of the Android system it runs, so that those libraries start and run faster. The translated code is derived from the original libraries and stays under their licences: Apache License 2.0 for the Android Open Source Project and LineageOS, and the BSD, MIT, zlib and other licences of the libraries they include. Every notice that applies to a translated library is listed under Translated system libraries.", comment: "Paragraph on the Android Open Source Project page of Acknowledgements about the translated system libraries. The last words are the title of the row below it, Translated system libraries.")
+            String(compatLocalized: "Andarium contains machine code translated from the libraries of the Android system it runs, so that those libraries start and run faster. The translated code is derived from the original libraries and stays under their licences: Apache License 2.0 for the Android Open Source Project and LineageOS, and the BSD, MIT, zlib and other licences of the libraries they include. Every notice that applies to a translated library is listed under Translated system libraries.", comment: "Paragraph on the Android Open Source Project page of Acknowledgements about the translated system libraries. The last words are the title of the row below it, Translated system libraries.")
         default: nil
         }
     }
@@ -199,7 +199,7 @@ struct AcknowledgementsView: View {
                 let projects = acknowledgements.projects(in: group, rootCarried: model.rootAvailable)
                 Section {
                     ForEach(projects) { project in
-                        NavigationLink(value: InfoPage.license(project.id)) {
+                        CompatNavigationLink(value: InfoPage.license(project.id)) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(project.name)
                                 Text(project.license)
@@ -259,22 +259,22 @@ struct LicenseView: View {
                 .padding(.horizontal, 20)
                 .padding(.vertical, 16)
             } else {
-                ContentUnavailableView("No license", systemImage: "doc.text")
+                CompatContentUnavailableView("No license", systemImage: "doc.text")
             }
         }
         .background(Color(.systemGroupedBackground))
-        .navigationTitle(acknowledgements.project(projectID)?.displayName ?? String(localized: "License"))
+        .navigationTitle(acknowledgements.project(projectID)?.displayName ?? String(compatLocalized: "License"))
         .navigationBarTitleDisplayMode(.inline)
     }
 
     private func summary(_ project: Acknowledgements.Project) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            field(String(localized: "Copyright"), "© \(project.copyright)")
-            field(String(localized: "License"), project.license)
+            field(String(compatLocalized: "Copyright"), "© \(project.copyright)")
+            field(String(compatLocalized: "License"), project.license)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 20))
+        .background(Color(.secondarySystemGroupedBackground), in: .compatRect(cornerRadius: 20))
     }
 
     /// What a project covers that has notices of its own: a paragraph and the
@@ -286,7 +286,7 @@ struct LicenseView: View {
                     .font(.footnote)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            NavigationLink(value: InfoPage.license(child.id)) {
+            CompatNavigationLink(value: InfoPage.license(child.id)) {
                 HStack {
                     Text(child.displayName)
                     Spacer()
@@ -297,7 +297,7 @@ struct LicenseView: View {
                 }
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 20))
+                .background(Color(.secondarySystemGroupedBackground), in: .compatRect(cornerRadius: 20))
             }
             .buttonStyle(.plain)
         }

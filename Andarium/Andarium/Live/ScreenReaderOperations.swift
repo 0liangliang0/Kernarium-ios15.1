@@ -7,7 +7,7 @@ import Foundation
 /// connection that carries it (`shell`), so that what each exit status and
 /// each reply means is the same code the application runs and a test's.
 nonisolated enum ScreenReaderAdapter {
-    typealias Shell = (_ command: String, _ limit: Duration) async throws -> ShellResult
+    typealias Shell = (_ command: String, _ limit: CompatDuration) async throws -> ShellResult
 
     /// Android's screen reader in the guest; nil when the guest did not
     /// answer, a command in the read failed, or the reply is not the report.

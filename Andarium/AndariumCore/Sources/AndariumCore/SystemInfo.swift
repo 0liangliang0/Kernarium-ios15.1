@@ -42,8 +42,7 @@ public struct SystemInfo: Equatable, Sendable {
 
     /// "arm64, 4 KiB pages": the CPU architecture and the page size the guest kernel runs with.
     public static func architecture(pageKiB: Int) -> String {
-        String(
-            localized: "arm64, \(pageKiB) KiB pages", bundle: .module,
+        String(compatLocalized: "arm64, \(pageKiB) KiB pages", bundle: .module,
             comment: "The architecture row of the Info sheet: the CPU architecture, then the size of a memory page, as in arm64, 4 KiB pages.")
     }
 

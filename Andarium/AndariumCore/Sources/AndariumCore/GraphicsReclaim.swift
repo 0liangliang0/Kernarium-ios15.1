@@ -10,11 +10,11 @@ public struct GraphicsHolder: Equatable, Sendable {
     /// What the process's graphics contexts hold of the host GPU's memory.
     public var bytes: UInt64
     /// How long its most recently active context has run no command.
-    public var idle: Duration
+    public var idle: CompatDuration
     /// The process's command name, or an unnamed context's debug name.
     public var name: String
 
-    public init(pid: UInt32, contexts: UInt32 = 1, bytes: UInt64, idle: Duration, name: String) {
+    public init(pid: UInt32, contexts: UInt32 = 1, bytes: UInt64, idle: CompatDuration, name: String) {
         self.pid = pid
         self.contexts = contexts
         self.bytes = bytes
@@ -183,7 +183,7 @@ public struct GuestShellOutput: Equatable, Sendable {
 /// Runs short commands in the guest's shell. A failure to reach the guest
 /// throws.
 public protocol GuestShell: Sendable {
-    func run(_ command: String, limit: Duration) async throws -> GuestShellOutput
+    func run(_ command: String, limit: CompatDuration) async throws -> GuestShellOutput
 }
 
 /// How a try to free graphics memory by ending an app came out.
@@ -228,13 +228,13 @@ public struct GraphicsReclaim: Equatable, Sendable {
     public static let nearFullMargin: UInt64 = 96 << 20
     public static let confirmingReads = 2
     public static let minimumHolderBytes: UInt64 = 32 << 20
-    public static let minimumIdle = Duration.seconds(10)
-    public static let killInterval = Duration.seconds(3)
+    public static let minimumIdle = CompatDuration.seconds(10)
+    public static let killInterval = CompatDuration.seconds(3)
     public static let killsPerEpisode = 3
     public static let calmReads = 5
     /// After a try that ended nothing, how long to wait before asking the
     /// guest for its processes again.
-    public static let retryInterval = Duration.seconds(10)
+    public static let retryInterval = CompatDuration.seconds(10)
 
     /// Apps the policy asked to end that still held graphics memory when the
     /// guest had had time to free it.
@@ -250,8 +250,8 @@ public struct GraphicsReclaim: Equatable, Sendable {
     private var nearReads = 0
     private var calm = 0
     private var killsInEpisode = 0
-    private var lastKill: ContinuousClock.Instant?
-    private var notBefore: ContinuousClock.Instant?
+    private var lastKill: CompatClockInstant?
+    private var notBefore: CompatClockInstant?
     /// The apps asked to end and how many readings have passed since.
     private var asked: [UInt32: Int] = [:]
 
@@ -272,7 +272,7 @@ public struct GraphicsReclaim: Equatable, Sendable {
     }
 
     /// Takes one reading and says whether to try to end an app now.
-    public mutating func observe(_ reading: GraphicsMemoryReading, at now: ContinuousClock.Instant) -> Bool {
+    public mutating func observe(_ reading: GraphicsMemoryReading, at now: CompatClockInstant) -> Bool {
         guard reading.budgetBytes > 0, !reading.guestReclaims else {
             reset()
             return false
@@ -317,7 +317,7 @@ public struct GraphicsReclaim: Equatable, Sendable {
     }
 
     /// Takes what the try came to.
-    public mutating func record(_ result: GraphicsReclaimResult, at now: ContinuousClock.Instant) {
+    public mutating func record(_ result: GraphicsReclaimResult, at now: CompatClockInstant) {
         switch result {
         case .ended(_, let pid, _):
             lastKill = now

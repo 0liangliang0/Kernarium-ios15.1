@@ -17,7 +17,7 @@ struct WhatsNewSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             WhatsNewNotesList(releases: releases)
                 .navigationTitle("What\u{2019}s New")
                 .navigationBarTitleDisplayMode(.inline)
@@ -28,13 +28,12 @@ struct WhatsNewSheet: View {
                     }
                 }
         }
-        .presentationSizing(.form)
         .onAppear { model.whatsNew.read() }
         .onDisappear {
             // The ribbon leaves once the notes are gone, so the zoom back
             // lands on it first.
             Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(350))
+                try? await compatSleep(for: .milliseconds(350))
                 withAnimation(.snappy) { model.whatsNew.putAway() }
             }
         }
@@ -69,7 +68,6 @@ struct WhatsNewNotesList: View {
                                 WhatsNewEntryRow(entry: entry)
                             }
                         }
-                        .glassEffect(.regular, in: .rect(cornerRadius: 26))
                     }
                 }
             }
@@ -188,6 +186,6 @@ struct WhatsNewPoints: View {
 /// with no entry is shown as written. A new build's notes are added to both.
 enum WhatsNewWords {
     static func localized(_ note: String) -> String {
-        String(localized: String.LocalizationValue(note), table: "WhatsNew")
+        String(compatLocalized: note, table: "WhatsNew")
     }
 }

@@ -29,8 +29,8 @@ public enum AndroidAppReadiness {
 
     /// How often Android is looked at, and how long Android has to become
     /// ready (counted in the guest's own running time).
-    public static let pollInterval = Duration.milliseconds(400)
-    public static let limit = Duration.seconds(30)
+    public static let pollInterval = CompatDuration.milliseconds(400)
+    public static let limit = CompatDuration.seconds(30)
 
     static let bootCompletedCommand = "getprop sys.boot_completed"
     static let homeCommand = "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME"
@@ -98,8 +98,8 @@ public enum AndroidAppReadiness {
     /// that clock, so the time Andarium spends in the background does not
     /// count). Ready is what a look observed: nothing is waited for blind.
     public static func wait(
-        check: () async -> State, now: () -> Duration, sleep: (Duration) async -> Void,
-        limit: Duration = AndroidAppReadiness.limit, interval: Duration = pollInterval
+        check: () async -> State, now: () -> CompatDuration, sleep: (CompatDuration) async -> Void,
+        limit: CompatDuration = AndroidAppReadiness.limit, interval: CompatDuration = pollInterval
     ) async -> Outcome {
         let started = now()
         while true {

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
-import Observation
+import Combine
+
 import SwiftUI
 
 /// A view that shows the guest's statistics.
@@ -54,33 +55,33 @@ enum GuestScreen: Equatable {
 
 /// What the running guest offers through Settings (ADB and the stats
 /// overlay) and whether its side keys are open. It lasts for one run.
-@Observable
-final class SessionState {
+final class SessionState: ObservableObject {
+
     /// ADB over network is on: the listener runs.
-    var adb = false
+    @Published var adb = false
     /// The device's address on the local network while `adb` is on; nil
     /// without one.
-    var adbAddress: String?
+    @Published var adbAddress: String?
     /// Why ADB over network did not start, in words.
-    var adbProblem: String?
+    @Published var adbProblem: String?
     /// The guest's USB debugging setting as last read; nil until it has
     /// been. ADB over network needs it on.
-    var usbDebugging: Bool?
+    @Published var usbDebugging: Bool?
     /// Whether the guest's internal storage is up, as last read; nil until it
     /// has been. Android ends its boot some seconds before it, and the file
     /// browser waits for it.
-    var storageReady: Bool?
+    @Published var storageReady: Bool?
     /// What the session knows of Old app compatibility (`OldApps.swift`).
     let oldApps = OldAppsState()
-    var showStats = false
-    var readout = Readout()
+    @Published var showStats = false
+    @Published var readout = Readout()
     /// The side keys are open. The session owns it because a touch on the
     /// guest's display, which is another view, closes them.
-    var sideKeysOpen = false
+    @Published var sideKeysOpen = false
     /// The edge the side keys are on, which they report as they appear and
     /// move; nil where they are not on an edge (the key rail). The words that
     /// send a person back to the keys name it.
-    var keysEdge: KeysEdge?
+    @Published var keysEdge: KeysEdge?
     /// Android's screen reader in this session: what Android last said of it,
     /// a change under way and the card that asks about it.
     let reader = ScreenReaderSession()
@@ -102,8 +103,8 @@ final class SessionState {
 /// What the screens read and change. The guest's life (create, start, boot,
 /// erase, how a run ends) is `Lifecycle` in AndariumCore; this adds what only
 /// a screen holds: the open sheet, display options and the session's state.
-@Observable
-final class AppModel {
+final class AppModel: ObservableObject {
+
     var lifecycle: Lifecycle {
         // The readings run while the guest does.
         didSet {
@@ -121,7 +122,7 @@ final class AppModel {
             if (lifecycle.guest == nil) != (oldValue.guest == nil) { refreshNetworkWatch() }
         }
     }
-    var host: HostDevice
+    @Published var host: HostDevice
     /// Whether the iPad app runs on a Mac or on an Apple Vision Pro, and what
     /// its system offers: this process's.
     private let processPadAppHost = IPadAppHost.system
@@ -134,33 +135,33 @@ final class AppModel {
         didSet { fileBrowser?.isAvailable = { [weak self] in self?.filesAvailable ?? false } }
     }
     /// The system this build of Andarium carries.
-    var system: SystemInfo
+    @Published var system: SystemInfo
     /// What the runtime behind the screens can do; a screen shows only the
     /// controls whose capability exists.
-    var capabilities: Capabilities
+    @Published var capabilities: Capabilities
     /// Free space a new guest needs, which the storage behind the screens
     /// decides.
-    var createRequirementBytes: UInt64
+    @Published var createRequirementBytes: UInt64
     /// The largest data disk the carried system accepts, in GiB; the storage
     /// rulers stop there when it is below `Limits.capacityRangeGiB`.
-    var releaseMaximumGiB = Limits.capacityRangeGiB.upperBound
+    @Published var releaseMaximumGiB = Limits.capacityRangeGiB.upperBound
     /// The sizes the storage rulers offer, in steps of 4 GiB.
     var capacityStopsGiB: [Int] { Limits.capacityStopsGiB(releaseMaximumGiB: releaseMaximumGiB) }
-    var sheet: SheetKind?
-    var startBlocked = false
+    @Published var sheet: SheetKind?
+    @Published var startBlocked = false
     /// Erase guest is asking to be confirmed.
-    var confirmingErase = false
+    @Published var confirmingErase = false
     /// What a start would be, from the guest's files: Home words Start and
     /// shows the update notices by it.
-    var plan: StartPlan = .normal
+    @Published var plan: StartPlan = .normal
     /// The release the running boot updates from, where it is known.
-    var bootFrom: String?
+    @Published var bootFrom: String?
     /// Whether the guest's first Android boot had not been seen to complete
     /// when the start under way began (`InstanceFiles.firstBootPending`): an
     /// ordinary start of such a guest is its first Android boot still.
-    private(set) var bootStartedUnfinished = false
+    @Published private(set) var bootStartedUnfinished = false
     /// The preview's plan after Restore; a device reads it from the files.
-    var planAfterRestore: StartPlan?
+    @Published var planAfterRestore: StartPlan?
 
     // App-wide display option, set on the home screen: how densely the guest
     // draws, from one guest pixel to a point to one to each pixel of the
@@ -169,20 +170,20 @@ final class AppModel {
     /// then it follows the device (`DisplayOptions.defaultScale`: 240 dpi on a
     /// low-memory one, else 320), and once they have the default never
     /// replaces it. A Retina mode an earlier version stored is no choice.
-    var chosenScale: GuestDisplayScale?
+    @Published var chosenScale: GuestDisplayScale?
     /// The resolution the launch states (automation): that run's alone, so it
     /// is not kept and what the person chose stays stored.
-    var launchScale: GuestDisplayScale?
+    @Published var launchScale: GuestDisplayScale?
     /// What the system holds this application's memory to (`MemoryLimit`),
     /// which the default resolution follows (`DisplayOptions.isLowMemory`);
     /// zero where it sets none.
-    var memoryLimitBytes: UInt64 = 0
+    @Published var memoryLimitBytes: UInt64 = 0
     /// The native scale of the screen the window is on, as last read.
-    var screenNativeScale = 1.0
+    @Published var screenNativeScale = 1.0
     /// The size of the display the next start gives the guest, in points: the
     /// window less the session's safe area (`SessionDisplayArea`). Nil until
     /// Home has laid out and read it.
-    var displayPoints: CGSize?
+    @Published var displayPoints: CGSize?
     /// What this screen offers.
     var resolutionChoices: ResolutionChoices { ResolutionChoices(nativeScale: screenNativeScale) }
     /// The resolution the guest draws at: the launch's, else the person's
@@ -207,9 +208,9 @@ final class AppModel {
     var resolutionLayout: GuestDisplayLayout? { resolutionLayout(at: resolutionIndex) }
     /// A screen and a display the Simulator preview states to show other
     /// devices; nothing in the application does.
-    var statedNativeScale: Double?
-    var statedDisplayPoints: CGSize?
-    var statedMaximumFramesPerSecond: Int?
+    @Published var statedNativeScale: Double?
+    @Published var statedDisplayPoints: CGSize?
+    @Published var statedMaximumFramesPerSecond: Int?
     /// What the scene reads of the screen the window is on. A caller that
     /// does not read the frame rate leaves it as it was.
     func screenDidChange(nativeScale: Double, maximumFramesPerSecond: Int? = nil) {
@@ -238,24 +239,24 @@ final class AppModel {
     /// The host owns the guest's display rotation: in an iPad session the guest
     /// is held at rotation zero and its display follows the scene. The scene's
     /// root sets it (`SessionOrientationPolicy`). Never a saved guest setting.
-    var hostDrivesGuestRotation = false
+    @Published var hostDrivesGuestRotation = false
     /// The guest follows the device's orientation, as iOS reports it: the device
     /// is an iPhone, whose interface stays portrait while the guest turns with
     /// the device, or the launch states it (a Mac test). Where the interface
     /// turns (a folding iPhone's inner display) the host drives the guest
     /// instead. Set once, when the model is made (`AppEntry`).
-    var followsDeviceOrientation = false
+    @Published var followsDeviceOrientation = false
     /// What the system says of the folding display the scene is on (the iPhone
     /// Duo); nil on every device that reports no hinge, which keeps every
     /// layout it has. The scene's root reads it (`FoldSceneReader`) and the
     /// layout decisions are `AndariumCore`'s (`FoldLayout.swift`).
-    var fold: FoldReading?
+    @Published var fold: FoldReading?
     /// Where the scene is: `.plain` unless the display folds.
     var foldPose: FoldPose { fold?.pose ?? .plain }
     /// The session's layout on a folding display; nil elsewhere.
     var sessionPlan: SessionPlan? { fold.flatMap(SessionPlan.init) }
 
-    var sessionPreset = SessionPreset()
+    @Published var sessionPreset = SessionPreset()
     var session = SessionState() {
         // The new session shows no figures: the next reading is published
         // whatever it draws. The old one's reader ends, and with it the work it began.
@@ -266,14 +267,14 @@ final class AppModel {
     }
     /// The release notes: Info's history and the ribbon above Start after an
     /// update.
-    var whatsNew = WhatsNewModel()
+    @Published var whatsNew = WhatsNewModel()
     /// The notice that a newer version of Andarium exists, in a build that
     /// has an address for its updates and a launch that is the person's own;
     /// nil elsewhere, where Home and Info show nothing of it.
-    var appUpdate: UpdateNotice?
+    @Published var appUpdate: UpdateNotice?
     /// The launch decided whether the statistics show (automation, see
     /// `StatsPreference.launch`): the value belongs to that run and is not kept.
-    var statsDecidedByLaunch = false
+    @Published var statsDecidedByLaunch = false
     /// What is kept of Settings' "Show on screen" across launches
     /// (`StatsPreference`); nil where the launch decided it.
     var showStatsToKeep: Bool? { statsDecidedByLaunch ? nil : session.showStats }
@@ -282,13 +283,13 @@ final class AppModel {
     // and only a build that carries the translated-code framework has it.
     /// This build carries the translated-code framework (what Acknowledgements
     /// reads, `Acknowledgements.carries`), so Home shows the row.
-    var translatedLibrariesAvailable = false
+    @Published var translatedLibrariesAvailable = false
     /// Whether the person wants them. On is the default. Kept for the install
     /// (`TranslatedLibrariesPreference`).
-    var translatedLibrariesOn = true
+    @Published var translatedLibrariesOn = true
     /// The launch decided it (automation): the value belongs to that run and
     /// is not kept.
-    var translatedLibrariesDecidedByLaunch = false
+    @Published var translatedLibrariesDecidedByLaunch = false
     /// What is kept of the row across launches; nil where the launch decided
     /// it.
     var translatedLibrariesToKeep: Bool? { translatedLibrariesDecidedByLaunch ? nil : translatedLibrariesOn }
@@ -326,32 +327,32 @@ final class AppModel {
     /// This build on this device can run the guest on the JIT engine: a build
     /// on a device, Debug or Release. The Simulator and the preview offer it
     /// only as a mock.
-    var jitAvailable = false
+    @Published var jitAvailable = false
     /// Whether the person wants the JIT. It applies to the next start.
-    var jitOn = false
+    @Published var jitOn = false
     /// The launch decided it (automation): the value belongs to that run and
     /// is not kept.
-    var jitDecidedByLaunch = false
+    @Published var jitDecidedByLaunch = false
     /// What is kept of the JIT row across launches (`JitPreference`); nil
     /// where the launch decided it.
     var jitToKeep: Bool? { jitDecidedByLaunch ? nil : jitOn }
     /// A debugger is attached to Andarium, as last read.
-    var jitDebuggerAttached = false
+    @Published var jitDebuggerAttached = false
     /// What the executable memory was prepared for, once a start has done it.
-    var jitPrepared: JitShape?
+    @Published var jitPrepared: JitShape?
     /// How the last start answered, when it ran without the JIT it was asked
     /// for.
-    var jitLastStart: JitAnswer?
+    @Published var jitLastStart: JitAnswer?
     /// The debugger is preparing the executable memory, which the boot screen
     /// says while it takes the seconds it takes.
-    var preparingJit = false
+    @Published var preparingJit = false
     /// How the attempt made when Andarium opened ended, when it left the
     /// memory unprepared (`prepareJitAtLaunch`).
-    var jitLaunch: JitAnswer?
+    @Published var jitLaunch: JitAnswer?
     /// The attempt made when Andarium opened, which a start that comes while
     /// it runs waits for.
-    @ObservationIgnored private var jitLaunchWork: Task<Void, Never>?
-    @ObservationIgnored private var jitLaunchAsked = false
+    private var jitLaunchWork: Task<Void, Never>?
+    private var jitLaunchAsked = false
     /// What Home says under the JIT row.
     var jitStatus: JitStatus {
         JitStatus(
@@ -451,20 +452,20 @@ final class AppModel {
         jitDebuggerAttached = driver?.jitDebuggerAttached() ?? previewJitDebugger
     }
     /// Whether the preview, which has no runtime, plays a debugger.
-    var previewJitDebugger = true
+    @Published var previewJitDebugger = true
     /// How the last run ended, for the screen that says so.
-    var runEnd = RunEnd(result: 0)
-    var runUptimeSeconds: Int?
+    @Published var runEnd = RunEnd(result: 0)
+    @Published var runUptimeSeconds: Int?
     /// Where Resize opens; nil opens at the current capacity.
-    var resizePreset: Int?
+    @Published var resizePreset: Int?
     /// Holds the boot screen at one stage instead of animating (screenshots).
-    var frozenBootStage: Int?
+    @Published var frozenBootStage: Int?
     /// Seconds the boot screen shows when it is held.
-    var frozenElapsed = 9
+    @Published var frozenElapsed = 9
 
     /// The launch's automation work (create, erase, start) has run; a scene
     /// that connects to this model again does not repeat it.
-    var launchApplied = false
+    @Published var launchApplied = false
 
     /// The runtime and storage behind the screens; nil plays mock data.
     var driver: (any RuntimeDriver)? {
@@ -505,34 +506,34 @@ final class AppModel {
     /// A sheet that stands over the screens draws the overlay of the task under
     /// way itself, and the screens do not: set for the task a sheet starts,
     /// and cleared with it.
-    var busyOverSheet = false
+    @Published var busyOverSheet = false
     #if FOLLOW_X
     /// The handle Follow developer on X opens, from Info.plist, which only a
     /// build that names one has; a test replaces it.
-    @ObservationIgnored var followXHandle: () -> String? = { FollowXProfile.handle }
+    var followXHandle: () -> String? = { FollowXProfile.handle }
     #endif
     /// The update's Restore is under way (waiting for a snapshot operation, or running).
-    private var restoringUpdate = false
+    @Published private var restoringUpdate = false
     /// The sender of the last text message, kept until the virtual machine
     /// is erased.
-    @ObservationIgnored var smsSender = GuestSms.SenderMemory()
+    var smsSender = GuestSms.SenderMemory()
     /// Says what a text message came to aloud, for VoiceOver, and tells whether
     /// the announcement was spoken to its end; a test collects the words and
     /// reports the end itself.
-    @ObservationIgnored var textMessageAnnouncer: @MainActor (String, @escaping @MainActor @Sendable (Bool) -> Void) -> Void = {
+    var textMessageAnnouncer: @MainActor (String, @escaping @MainActor @Sendable (Bool) -> Void) -> Void = {
         VoiceOver.announce($0, finished: $1)
     }
     /// VoiceOver runs. A line counts as told only when VoiceOver has said it.
-    @ObservationIgnored var textMessageVoiceOver: @MainActor () -> Bool = { UIAccessibility.isVoiceOverRunning }
+    var textMessageVoiceOver: @MainActor () -> Bool = { UIAccessibility.isVoiceOverRunning }
     /// The scene is active: a line counts as told only while it is (the bar reports it).
-    @ObservationIgnored var textMessageSceneActive = true
+    var textMessageSceneActive = true
     /// The notice of a model with no guest (the preview): it lives in memory.
-    @ObservationIgnored let previewTextMessageNotice = TextMessageNotice(
+    let previewTextMessageNotice = TextMessageNotice(
         directory: URL(fileURLWithPath: "/"), files: MemoryNoticeFiles())
     /// Waits for Settings to go before the bar comes up over Android; a test
     /// paces it by hand.
-    @ObservationIgnored var textMessageSleep: @MainActor (Duration) async -> Void = { duration in
-        try? await Task.sleep(for: duration)
+    var textMessageSleep: @MainActor (CompatDuration) async -> Void = { duration in
+        try? await compatSleep(for: duration)
     }
     /// The guest is paused because the device is nearly out of space; the
     /// screen over the session asks what to do.
@@ -543,94 +544,94 @@ final class AppModel {
             if oldValue == nil, spacePause != nil { androidAppsSpacePaused() }
         }
     }
-    var alert: AppAlert?
+    @Published var alert: AppAlert?
     /// What a Files picker's failure says, over Settings (`documentPickerFailed`).
-    var documentPickerProblem: AppAlert?
+    @Published var documentPickerProblem: AppAlert?
     /// Settings' Install APK asks whether to install an app Android refused for
     /// the version it was built for; the screens' alert shows it while the
     /// install waits behind the overlay (`LegacyInstallFlow`).
-    var legacyInstallQuestion: LegacyInstallQuestion?
-    @ObservationIgnored private var legacyInstallAnswer: CheckedContinuation<Bool?, Never>?
+    @Published var legacyInstallQuestion: LegacyInstallQuestion?
+    private var legacyInstallAnswer: CheckedContinuation<Bool?, Never>?
     /// Which attempt of an install the overlay listens to: what an attempt that is over reports
     /// late (the guest's last words arrive on the main actor after the attempt has thrown) is
     /// dropped, so it cannot write over the question's or the retry's overlay.
-    @ObservationIgnored private var installAttemptTag = 0
+    private var installAttemptTag = 0
     /// How far the current boot has got, from the guest's console.
-    var bootTracker = BootTracker()
+    @Published var bootTracker = BootTracker()
     /// When the start under way began and whether the boot screen says it is
     /// slow (`SlowStart`).
-    var slowStart = SlowStart()
+    @Published var slowStart = SlowStart()
     /// The notice's Stop asked first (`askToStop`): the dialog is up.
-    var confirmingStop = false
+    @Published var confirmingStop = false
     /// The preview's frozen boot screen shows the start's own clock, which runs.
-    @ObservationIgnored var previewClockRuns = false
+    var previewClockRuns = false
     /// The time the boot screen counts a start by, in seconds: a monotonic
     /// reading that does not run while the guest is held (a background span, a
     /// pause for space). A runtime supplies its pause-aware clock; a test
     /// replaces it. The default stands still while the device sleeps, as the
     /// system uptime it replaces did (`MonotonicClock`).
-    @ObservationIgnored var clock: () -> TimeInterval = { MonotonicClock.suspendingSeconds() }
+    var clock: () -> TimeInterval = { MonotonicClock.suspendingSeconds() }
     /// The guest's disk is being written before the run can begin.
-    var preparingDisk = false
-    var diskProgress: Double?
+    @Published var preparingDisk = false
+    @Published var diskProgress: Double?
     /// The device has haptics (a Taptic Engine) for the guest's vibrator to
     /// play on. The runtime states it; an iPad, a Mac and the Simulator have
     /// none, and Capabilities then has no Haptics row.
-    var hapticsAvailable = false
+    @Published var hapticsAvailable = false
     /// The Android release this copy carries holds root (`RootRelease`): Home
     /// shows the Root section only then, and a start boots Magisk only then.
     /// The device application reads it from the staged release; nothing else
     /// sets it.
-    var rootAvailable = false
+    @Published var rootAvailable = false
     /// The alert that asks before root is turned on is up (`Model+Root.swift`).
-    var rootWarningShowing = false
+    @Published var rootWarningShowing = false
     /// The boot screen's Magisk app step is under way: Android has booted with
     /// root and the app is being put in the guest (`runRootAppStep`). The
     /// screen adds its fifth step only while this is set.
-    var rootAppInstalling = false
+    @Published var rootAppInstalling = false
     /// Counts the starts, restarts and run ends of the guest: a Magisk app
     /// step belongs to the boot it began in and changes nothing of Home or
     /// the boot screen once this number has moved (`runRootAppStep`).
-    private(set) var bootRun = 0
+    @Published private(set) var bootRun = 0
     /// Counts the changes of the Root switch and of what pauses it: a result
     /// of a Magisk app step belongs to the period of the switch it began in,
     /// as well as to its boot (`runRootAppStep`).
-    @ObservationIgnored
+    
     var rootPeriod = 0
     /// A fallback decided at launch, before a driver could save the guest.
-    @ObservationIgnored
+    
     var rootStateUnsaved = false
     /// The previous session's record is left where the runtime wrote it while
     /// a decision made from it (a pause of root) is not saved, so that a
     /// launch that ends first reads it again (`PreviousSession`).
-    @ObservationIgnored
+    
     var previousSessionHeld = false
     /// The record of a run that ended is left at its place while the pause
     /// decided from it is not saved, and moved aside once it is
     /// (`keepRunRecordIfDecided`): a launch that comes after "Try with root
     /// again" does not read it again.
-    @ObservationIgnored
+    
     var runRecordHeld = false
     /// The ramdisk the last boot before the run under way used, as its record
     /// said: the previous session's, or a run of this process whose record
     /// was moved aside.
-    @ObservationIgnored
+    
     var previousBootRamdisk: SessionRecord.BootRamdisk?
     /// Settings' "Use the pointer as touch": the system pointer's clicks are the
     /// guest's touches and the guest has no mouse. Kept for the install
     /// (`PointerPreference`); off, Android sees a mouse with its own cursor.
-    var pointerAsTouch = false
+    @Published var pointerAsTouch = false
     /// The launch decided it (automation): the value belongs to that run and
     /// is not kept.
-    var pointerAsTouchDecidedByLaunch = false
+    @Published var pointerAsTouchDecidedByLaunch = false
     /// What is kept of the setting across launches; nil where the launch
     /// decided it.
     var pointerAsTouchToKeep: Bool? { pointerAsTouchDecidedByLaunch ? nil : pointerAsTouch }
     /// Settings is open over the session. A sheet has the keys, so the guest
     /// does not hold the keyboard focus meanwhile.
-    var sessionSettingsOpen = false
+    @Published var sessionSettingsOpen = false
     /// The share sheet of a bug report is up over the session.
-    var shareSheetUp = false
+    @Published var shareSheetUp = false
     /// The guest has the hardware keys unless something is over it that needs
     /// them (Settings, the text message bar, a sheet, an alert, the share
     /// sheet): the sheet takes the keys, and the guest takes them back when
@@ -642,119 +643,119 @@ final class AppModel {
     }
     /// An Android application captured the pointer and the guest should have
     /// the pointer lock; the scene's root asks iOS for it.
-    var pointerLockWanted = false
+    @Published var pointerLockWanted = false
     /// A UI test's launch: the guest's keyboard and mouse send to a log the
     /// test reads, and Settings carries a text field to take the keys.
-    var inputProbe: InputProbe?
-    var microphoneState = MicrophoneState.notAsked
+    @Published var inputProbe: InputProbe?
+    @Published var microphoneState = MicrophoneState.notAsked
     /// How far iOS lets Andarium use the device's cameras, and `unavailable`
     /// for a device that has none.
-    var cameraAccess = CameraAccess.unavailable
+    @Published var cameraAccess = CameraAccess.unavailable
     /// The person went to Settings to allow the camera: when Andarium is
     /// active again with access, the switch they tapped turns on.
-    var cameraAwaitsSettings = false
+    @Published var cameraAwaitsSettings = false
     /// The Camera switch is on and iOS's question about it is on screen, or
     /// about to be. A switch that is on while iOS has not been asked and no
     /// question is under way is a choice made under access that has ended, and
     /// it goes off.
-    private var cameraAsking = false
+    @Published private var cameraAsking = false
     /// Asks iOS about the camera. The device application and the Simulator
     /// preview's system mode have one; a preview without it takes the access
     /// as given.
-    @ObservationIgnored var camera: CameraController?
+    var camera: CameraController?
     /// Asks the runtime what a live camera session of this host holds out of
     /// the GPU's budget, for every budget the memory policy has
     /// (`MemoryPolicy.withCameraReserve`). The device application has one, and
     /// so do the preview states that show a camera reserve; without one the
     /// model keeps the policy's own figure, the ceiling that bounds the system
     /// cameras.
-    @ObservationIgnored var cameraReservePlanner: (@Sendable (MemoryPolicy) -> CameraReservePlan)?
+    var cameraReservePlanner: (@Sendable (MemoryPolicy) -> CameraReservePlan)?
     /// The last question to the runtime for the camera reserve, which a test
     /// waits for.
-    @ObservationIgnored private(set) var cameraReserveTask: Task<Void, Never>?
+    private(set) var cameraReserveTask: Task<Void, Never>?
     /// What the host is doing for the guest's cameras, from the runtime, and
     /// whether the person put the notice it raised away.
-    private(set) var cameraNotice = CameraNoticeState()
+    @Published private(set) var cameraNotice = CameraNoticeState()
     var cameraCapture: CameraCapture { cameraNotice.capture }
     /// Waits out the time the Camera-is-off notice stays after the guest closed
     /// its camera; a test paces it by hand.
-    @ObservationIgnored var cameraNoticeSleep: @MainActor (Duration) async -> Void = { duration in
-        try? await Task.sleep(for: duration)
+    var cameraNoticeSleep: @MainActor (CompatDuration) async -> Void = { duration in
+        try? await compatSleep(for: duration)
     }
     /// The moment a report is taken at; a test sets its own.
-    @ObservationIgnored var cameraNoticeClock: @MainActor () -> ContinuousClock.Instant = { .now }
-    @ObservationIgnored private var cameraNoticeExpiry: Task<Void, Never>?
+    var cameraNoticeClock: @MainActor () -> CompatClockInstant = { .now }
+    private var cameraNoticeExpiry: Task<Void, Never>?
     /// The question about a permission the person is being asked, if any.
-    var permissionPrompt: PermissionPrompt?
+    @Published var permissionPrompt: PermissionPrompt?
     /// The person went to Settings to allow the microphone: when Andarium is
     /// active again with access, the switch they tapped turns on.
-    var microphoneAwaitsSettings = false
+    @Published var microphoneAwaitsSettings = false
     /// Asks iOS about the microphone and tells the guest. The device
     /// application and the Simulator preview's system mode have one; a preview
     /// without it takes the access as given.
-    @ObservationIgnored var microphone: MicrophoneController?
-    var locationAuthorization = LocationAuthorization.notDetermined
+    var microphone: MicrophoneController?
+    @Published var locationAuthorization = LocationAuthorization.notDetermined
     /// The person went to Settings to allow the location: when Andarium is
     /// active again with access, the switch they tapped turns on.
-    var locationAwaitsSettings = false
+    @Published var locationAwaitsSettings = false
     /// The Location switch is on and iOS's question about it is on screen, or
     /// about to be. A switch that is on while iOS has not been asked and no
     /// question is under way is a choice made under access that has ended
     /// (iOS's "Allow Once"), and it goes off.
-    private var locationAsking = false
+    @Published private var locationAsking = false
     /// Asks iOS about the location and sets the guest's session to match. The
     /// device application and the Simulator preview's system mode have one; a
     /// preview without it takes the access as given.
-    @ObservationIgnored var location: LocationController?
+    var location: LocationController?
     /// Opens Andarium's page in the system's Settings. A test puts its own here.
-    @ObservationIgnored var openSettings: @MainActor () -> Void = {
+    var openSettings: @MainActor () -> Void = {
         if let url = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(url)
         }
     }
-    private var persistTask: Task<Void, Never>?
+    @Published private var persistTask: Task<Void, Never>?
     /// The Android operation under way (a bug report, an install), which the
     /// overlay's Cancel stops, and the run it belongs to.
-    private var operation: Task<Void, Never>?
-    private var operationEpoch = 0
-    private var operationCancelled = false
+    @Published private var operation: Task<Void, Never>?
+    @Published private var operationEpoch = 0
+    @Published private var operationCancelled = false
     /// Looks after ADB over network while it is on.
-    private var adbWatcher: Task<Void, Never>?
-    private var readingUsbDebugging = false
-    private var readingStorage = false
+    @Published private var adbWatcher: Task<Void, Never>?
+    @Published private var readingUsbDebugging = false
+    @Published private var readingStorage = false
     /// How often the watcher looks while ADB over network is on: the address
     /// every time, the USB debugging setting every fifth. A test shortens it.
-    var adbWatchInterval = Duration.seconds(2)
+    @Published var adbWatchInterval = CompatDuration.seconds(2)
     /// Whether VoiceOver is running; a test answers for it.
-    @ObservationIgnored var voiceOverRunning: @MainActor () -> Bool = { UIAccessibility.isVoiceOverRunning }
+    var voiceOverRunning: @MainActor () -> Bool = { UIAccessibility.isVoiceOverRunning }
     /// What VoiceOver is told of its own accord; a test collects it.
-    @ObservationIgnored var announcer: @MainActor (_ text: String, _ queued: Bool, _ highPriority: Bool) -> Void = {
+    var announcer: @MainActor (_ text: String, _ queued: Bool, _ highPriority: Bool) -> Void = {
         VoiceOver.announce($0, queued: $1, priority: $2 ? .high : nil)
     }
     /// Says what a run is as it begins, at high priority (VoiceOver's own
     /// speech of the element it lands on after the screen change would cut a
     /// queued or default announcement off), and tells whether the sentence was
     /// spoken to its end; a test collects the words and reports the end itself.
-    @ObservationIgnored var runStartAnnouncer: @MainActor (String, @escaping @MainActor @Sendable (Bool) -> Void) -> Void = {
+    var runStartAnnouncer: @MainActor (String, @escaping @MainActor @Sendable (Bool) -> Void) -> Void = {
         VoiceOver.announce($0, priority: .high, finished: $1)
     }
     /// How long the card and the display wait for that sentence's end before
     /// they go on without it, where VoiceOver never reports one. The sentence
     /// takes about seven seconds at VoiceOver's default rate; the bound leaves
     /// room for slower speech and longer languages.
-    @ObservationIgnored var runStartBound: Duration = .seconds(15)
+    var runStartBound: CompatDuration = .seconds(15)
     /// The preview's mock guest screen reader, where no runtime is behind the
     /// screens; nil in the application.
-    @ObservationIgnored var screenReaderStandIn: (any ScreenReaderStandIn)?
+    var screenReaderStandIn: (any ScreenReaderStandIn)?
     /// How often the loop reads while VoiceOver runs; a test shortens it.
-    @ObservationIgnored var screenReaderWatchInterval = Duration.seconds(3)
-    @ObservationIgnored var voiceOverObserver: NSObjectProtocol?
+    var screenReaderWatchInterval = CompatDuration.seconds(3)
+    var voiceOverObserver: NSObjectProtocol?
 
     // MARK: Statistics state
 
     /// The views that show the statistics. Nothing is read while there are
     /// none.
-    private(set) var statisticsViewers: Set<StatisticsViewer> = []
+    @Published private(set) var statisticsViewers: Set<StatisticsViewer> = []
     /// Whether the application is the active one. The readings stop when it
     /// is not, and start again with a new baseline.
     var applicationActive = true {
@@ -768,62 +769,62 @@ final class AppModel {
         }
     }
     /// The figures behind the screens, from the driver's readings.
-    private(set) var statisticsMeter = StatsMeter()
+    @Published private(set) var statisticsMeter = StatsMeter()
     /// Holds back the readings that draw what the views show already.
-    @ObservationIgnored private var statisticsGate = StatsPublishGate<Readout.Drawn>()
+    private var statisticsGate = StatsPublishGate<Readout.Drawn>()
     /// A launch for automation prints each reading.
-    var printsStatistics = false
+    @Published var printsStatistics = false
     /// Waits between readings; a test paces them by hand.
-    @ObservationIgnored var statisticsSleep: @MainActor (Duration) async -> Void = { duration in
-        try? await Task.sleep(for: duration)
+    var statisticsSleep: @MainActor (CompatDuration) async -> Void = { duration in
+        try? await compatSleep(for: duration)
     }
-    @ObservationIgnored private var statisticsTask: Task<Void, Never>?
+    private var statisticsTask: Task<Void, Never>?
     /// Tells a loop that ended from the one that replaced it.
-    @ObservationIgnored private var statisticsGeneration = 0
+    private var statisticsGeneration = 0
 
     // MARK: Graphics notice state
 
     /// Whether the session says Android ran out of graphics memory, from the
     /// runtime's count of the refusals the guest was answered with.
-    private(set) var graphicsNotice = GraphicsNotice()
+    @Published private(set) var graphicsNotice = GraphicsNotice()
     /// Waits between readings of that count; a test paces them by hand.
-    @ObservationIgnored var graphicsNoticeSleep: @MainActor (Duration) async -> Void = { duration in
-        try? await Task.sleep(for: duration)
+    var graphicsNoticeSleep: @MainActor (CompatDuration) async -> Void = { duration in
+        try? await compatSleep(for: duration)
     }
     /// The moment a reading is taken at; a test sets its own.
-    @ObservationIgnored var graphicsNoticeClock: @MainActor () -> ContinuousClock.Instant = { .now }
-    @ObservationIgnored private var graphicsNoticeTask: Task<Void, Never>?
-    @ObservationIgnored private var graphicsNoticeGeneration = 0
+    var graphicsNoticeClock: @MainActor () -> CompatClockInstant = { .now }
+    private var graphicsNoticeTask: Task<Void, Never>?
+    private var graphicsNoticeGeneration = 0
     /// When to end the cached app that holds the most graphics memory, from
     /// the same readings; nothing of it shows.
-    @ObservationIgnored private(set) var graphicsReclaim = GraphicsReclaim()
+    private(set) var graphicsReclaim = GraphicsReclaim()
 
     // MARK: Thermal notice state
 
     /// Whether the session says the frame rate is lowered while the device is
     /// hot, once in a run, from the runtime's thermal policy.
-    private(set) var thermalNotice = ThermalNotice()
+    @Published private(set) var thermalNotice = ThermalNotice()
     /// The policy has announced the cap and the session screen is not up yet.
-    @ObservationIgnored private var thermalCapWaiting = false
+    private var thermalCapWaiting = false
     /// Waits out the notice's time; a test paces it by hand.
-    @ObservationIgnored var thermalNoticeSleep: @MainActor (Duration) async -> Void = { duration in
-        try? await Task.sleep(for: duration)
+    var thermalNoticeSleep: @MainActor (CompatDuration) async -> Void = { duration in
+        try? await compatSleep(for: duration)
     }
-    @ObservationIgnored private var thermalNoticeTask: Task<Void, Never>?
+    private var thermalNoticeTask: Task<Void, Never>?
     /// Settings' "When hot" under Performance: whether Android is told how hot
     /// the device is, so that it limits the frame rate while the device is
     /// hot. On is the default. Kept for the install (`HeatLimitPreference`).
-    var heatLimitOn = true
+    @Published var heatLimitOn = true
     /// The launch decided it (automation): the value belongs to that run and
     /// is not kept.
-    var heatLimitDecidedByLaunch = false
+    @Published var heatLimitDecidedByLaunch = false
     /// What is kept of the option across launches; nil where the launch
     /// decided it.
     var heatLimitToKeep: Bool? { heatLimitDecidedByLaunch ? nil : heatLimitOn }
     /// The most frames a second the screen the window is on can show: 60 until
     /// the scene says (`screenDidChange`, on connection and on every move
     /// between screens), and then 120 on a ProMotion iPhone or iPad.
-    private(set) var screenMaximumFramesPerSecond = 60
+    @Published private(set) var screenMaximumFramesPerSecond = 60
     /// The host can show the 120 Hz display: an iPhone or an iPad. An iPad app
     /// on a Mac or on a Vision Pro has none that the display link can pace, so
     /// nothing of the setting is offered or asked there (the gate the list of
@@ -849,10 +850,10 @@ final class AppModel {
     /// Home's "120 Hz" in Performance: whether the next Android start asks
     /// for a 120 Hz display. Off is the default. Kept for the install
     /// (`HighRefreshPreference`).
-    var highRefreshOn = false
+    @Published var highRefreshOn = false
     /// The launch decided it (automation): the value belongs to that run and
     /// is not kept.
-    var highRefreshDecidedByLaunch = false
+    @Published var highRefreshDecidedByLaunch = false
     /// What is kept of the setting across launches; nil where the launch
     /// decided it.
     var highRefreshToKeep: Bool? { highRefreshDecidedByLaunch ? nil : highRefreshOn }
@@ -870,7 +871,7 @@ final class AppModel {
     /// Whether the run in progress has the 120 Hz display, as the runtime
     /// granted it, which no change of the setting alters until Android next
     /// starts. False until the runtime has said.
-    private(set) var runHasHighRefresh = false
+    @Published private(set) var runHasHighRefresh = false
     /// Home's "120 Hz". It applies at the next start (Home shows only while no
     /// guest runs).
     func setHighRefresh(_ on: Bool) {
@@ -887,20 +888,20 @@ final class AppModel {
     /// The thermal policy holds the device hot (iOS's critical state, the
     /// policy's hold after it included), whether or not Android is told.
     /// Settings' footnote reads it.
-    private(set) var deviceIsHot = false
+    @Published private(set) var deviceIsHot = false
     /// The alert that asks to turn the limit off is up, over the notice.
-    private(set) var askingToTurnOffHeatLimit = false
+    @Published private(set) var askingToTurnOffHeatLimit = false
 
     // MARK: Network notice state
 
     /// Whether iOS denies Andarium the network, from the path watcher. The
     /// words and the Settings button are `NetworkWords`; nothing here is a
     /// request of Andarium's own.
-    private(set) var networkNotice = NetworkNotice()
+    @Published private(set) var networkNotice = NetworkNotice()
     /// Watches the system's network path while a watch is wanted. The device
     /// application has one over the system's path monitor; a test gives its
     /// own, and the Simulator preview has none.
-    @ObservationIgnored var networkWatcher: NetworkAccessWatcher? {
+    var networkWatcher: NetworkAccessWatcher? {
         didSet {
             oldValue?.setWanted(false)
             networkWatcher?.changed = { [weak self] in self?.networkWatcherChanged() }
@@ -947,9 +948,9 @@ final class AppModel {
 
     /// Where the session records and MetricKit's reports are kept: a bug
     /// report carries them (`BugReportAttachments`).
-    var diagnosticsDirectory: URL?
+    @Published var diagnosticsDirectory: URL?
     /// The application's container paths, which never leave in a bug report.
-    var diagnosticsContainers: [String] = []
+    @Published var diagnosticsContainers: [String] = []
 
     /// At launch: keeps `diagnostics` for bug reports and reads how the
     /// previous session ended (`PreviousSession`), before the next boot writes
@@ -1034,7 +1035,7 @@ final class AppModel {
         guard driver != nil else { return }
         persistTask?.cancel()
         persistTask = Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(300))
+            try? await compatSleep(for: .milliseconds(300))
             guard !Task.isCancelled else { return }
             self?.persistNow()
         }
@@ -1051,7 +1052,7 @@ final class AppModel {
             try driver.save(guest)
             return true
         } catch {
-            alert = AppAlert(title: String(localized: "Settings not saved"), message: error.localizedDescription)
+            alert = AppAlert(title: String(compatLocalized: "Settings not saved"), message: error.localizedDescription)
             return false
         }
     }
@@ -1065,10 +1066,10 @@ final class AppModel {
         }
         runBusy(
             BusyState(
-                title: String(localized: "Creating virtual machine"),
-                detail: String(localized: "Setting up Andarium with \(Formats.size(gib: guest.effectiveCapacityGiB))."), progress: 0
+                title: String(compatLocalized: "Creating virtual machine"),
+                detail: String(compatLocalized: "Setting up Andarium with \(Formats.size(gib: guest.effectiveCapacityGiB))."), progress: 0
             ),
-            failure: String(localized: "The virtual machine could not be created")
+            failure: String(compatLocalized: "The virtual machine could not be created")
         ) { progress in
             let made = try await driver.create(guest, progress: progress)
             self.lifecycle.create(made)
@@ -1093,7 +1094,7 @@ final class AppModel {
             // The data is what the update started from: its apps may differ.
             androidApps.invalidated()
         } catch {
-            alert = AppAlert(title: String(localized: "The virtual machine could not be restored"), message: error.localizedDescription)
+            alert = AppAlert(title: String(compatLocalized: "The virtual machine could not be restored"), message: error.localizedDescription)
         }
         refreshPlan()
     }
@@ -1111,8 +1112,8 @@ final class AppModel {
             return
         }
         runBusy(
-            BusyState(title: String(localized: "Erasing virtual machine"), detail: String(localized: "Deleting everything the virtual machine stored."), progress: 0),
-            failure: String(localized: "The virtual machine could not be erased")
+            BusyState(title: String(compatLocalized: "Erasing virtual machine"), detail: String(compatLocalized: "Deleting everything the virtual machine stored."), progress: 0),
+            failure: String(compatLocalized: "The virtual machine could not be erased")
         ) { progress in
             // A choice saved a moment after the last change must not come
             // back after the files are gone.
@@ -1243,8 +1244,8 @@ final class AppModel {
                 // screen comes back with the new figure if it is still short.
                 self.spacePause = nil
                 self.alert = AppAlert(
-                    title: String(localized: "Android could not be shut down"),
-                    message: String(localized: "It could not be asked to power off. Try again, or close Andarium and open it again."))
+                    title: String(compatLocalized: "Android could not be shut down"),
+                    message: String(compatLocalized: "It could not be asked to power off. Try again, or close Andarium and open it again."))
             }
         }
     }
@@ -1366,7 +1367,7 @@ final class AppModel {
             // The screen reader's switch follows a change made in Android meanwhile.
             async let screenReader: Void = refreshScreenReader()
             _ = await (debugging, storage, oldApps, screenReader)
-            try? await Task.sleep(for: .seconds(3))
+            try? await compatSleep(for: .seconds(3))
         }
     }
 
@@ -1377,9 +1378,9 @@ final class AppModel {
         adbWatcher?.cancel()
         guard driver != nil else { return }
         adbWatcher = Task { [weak self] in
-            var tick = 0
+            @Published var tick = 0
             while !Task.isCancelled {
-                try? await Task.sleep(for: self?.adbWatchInterval ?? .seconds(2))
+                try? await compatSleep(for: self?.adbWatchInterval ?? .seconds(2))
                 guard let self, !Task.isCancelled else { return }
                 tick += 1
                 refreshAdbAddress()
@@ -1415,13 +1416,13 @@ final class AppModel {
         operationEpoch += 1
         let epoch = operationEpoch
         operationCancelled = false
-        var state = state
+        @Published var state = state
         state.cancel = BusyCancel { [weak self] in self?.cancelOperation() }
         busy = state
         operation = Task { [weak self] in
             guard let self else { return }
-            var result: Output?
-            var failureWords: String?
+            @Published var result: Output?
+            @Published var failureWords: String?
             do {
                 result = try await work { update in
                     Task { @MainActor in self.apply(update, epoch: epoch) }
@@ -1490,7 +1491,7 @@ final class AppModel {
         guard operation != nil, !operationCancelled else { return }
         operationCancelled = true
         busy?.cancel = nil
-        busy?.detail = String(localized: "Cancelling\u{2026}")
+        busy?.detail = String(compatLocalized: "Cancelling\u{2026}")
         operation?.cancel()
     }
 
@@ -1521,10 +1522,10 @@ final class AppModel {
 
     /// The overlay of a bug report under way, the same wherever it is asked for.
     static let bugReportState = BusyState(
-        title: String(localized: "Creating bug report"),
-        detail: String(localized: "The virtual machine is collecting its logs and state. This can take several minutes."), progress: 0
+        title: String(compatLocalized: "Creating bug report"),
+        detail: String(compatLocalized: "The virtual machine is collecting its logs and state. This can take several minutes."), progress: 0
     )
-    static let bugReportFailure = String(localized: "Bug report not created")
+    static let bugReportFailure = String(compatLocalized: "Bug report not created")
 
     /// A normal session of a runtime that can make a bug report, with the
     /// guest's one adb channel free.
@@ -1568,7 +1569,7 @@ final class AppModel {
 
     /// Opens the share sheet on a finished report; false when there is no
     /// window to show it. A test puts its own here.
-    var presentShare: (URL, @escaping @MainActor () -> Void) -> Bool = { file, finished in
+    @Published var presentShare: (URL, @escaping @MainActor () -> Void) -> Bool = { file, finished in
         BugReportSharing.present(file, finished: finished)
     }
 
@@ -1589,12 +1590,12 @@ final class AppModel {
     /// the share sheet with a small file.
     static func playBugReport(_ update: @Sendable (BusyUpdate) -> Void) async throws -> URL {
         for step in 1...36 {
-            try await Task.sleep(for: .milliseconds(100))
+            try await compatSleep(for: .milliseconds(100))
             update(BusyUpdate(progress: Double(step) / 36 * 0.9))
         }
-        update(BusyUpdate(progress: 0.9, detail: String(localized: "Copying the report\u{2026}")))
+        update(BusyUpdate(progress: 0.9, detail: String(compatLocalized: "Copying the report\u{2026}")))
         for step in 1...8 {
-            try await Task.sleep(for: .milliseconds(100))
+            try await compatSleep(for: .milliseconds(100))
             update(BusyUpdate(progress: 0.9 + 0.1 * Double(step) / 8))
         }
         try FileManager.default.createDirectory(at: BugReportStaging.directory, withIntermediateDirectories: true)
@@ -1606,7 +1607,7 @@ final class AppModel {
 
     /// What the hosted tests put in place of the picked file's access, to see
     /// when it is held.
-    @ObservationIgnored
+    
     var accessPickedFileStub: (@MainActor (URL) -> (@MainActor () -> Void))?
 
     /// Starts the access that a picked file's URL carries and returns what
@@ -1630,7 +1631,7 @@ final class AppModel {
         guard busy == nil else { return }
         guard fileBrowser?.busy != true else {
             alert = AppAlert(
-                title: Self.installFailure, message: String(localized: "Wait for the file transfer to finish, then install the app."))
+                title: Self.installFailure, message: String(compatLocalized: "Wait for the file transfer to finish, then install the app."))
             return
         }
         let name = url.lastPathComponent
@@ -1652,7 +1653,7 @@ final class AppModel {
         }
         let detail = size > 0 ? "\(name) \u{00B7} \(Formats.size(bytes: size))" : name
         runOperation(
-            BusyState(title: String(localized: "Installing app"), detail: detail, progress: 0),
+            BusyState(title: String(compatLocalized: "Installing app"), detail: detail, progress: 0),
             failure: Self.installFailure,
             ending: { (result: ApkInstallResult) in result.outcome.words(fileName: name, oldAppHint: result.oldAppHint) },
             { [driver] update in
@@ -1671,7 +1672,7 @@ final class AppModel {
                 // The app is in. Old app compatibility lists it if it applies; after an
                 // Install anyway of an app built for an Android before 4.0 the result
                 // says where the switch is, when the listing names the app the install added.
-                var hint = false
+                @Published var hint = false
                 if let before = end.oldAppsBefore {
                     hint = await self.installAddedOldApp(listedBefore: before)
                 } else {
@@ -1682,7 +1683,7 @@ final class AppModel {
                 // 100% for a moment, then the result. Nothing is left to stop, so
                 // the Cancel that came back for an app's data goes.
                 update(BusyUpdate(progress: 1, cancellable: false))
-                try? await Task.sleep(for: .milliseconds(500))
+                try? await compatSleep(for: .milliseconds(500))
                 return ApkInstallResult(outcome: end.outcome, oldAppHint: hint)
             }
         )
@@ -1700,9 +1701,9 @@ final class AppModel {
         attempt: (_ bypassLowTargetSdkBlock: Bool, _ update: @escaping @Sendable (BusyUpdate) -> Void) async throws -> ApkInstallOutcome
     ) async throws -> LegacyInstallEnd {
         let epoch = operationEpoch
-        var flow = LegacyInstallFlow()
-        var outcome = ApkInstallOutcome.installed
-        var oldAppsBefore: [OldApp]?
+        @Published var flow = LegacyInstallFlow()
+        @Published var outcome = ApkInstallOutcome.installed
+        @Published var oldAppsBefore: [OldApp]?
         while true {
             switch flow.step {
             case let .attempt(bypass):
@@ -1790,7 +1791,7 @@ final class AppModel {
     }
 
     /// The title of an install that did not happen.
-    static let installFailure = String(localized: "App not installed")
+    static let installFailure = String(compatLocalized: "App not installed")
 
     /// The Files picker of Install APK or of the file browser's Import failed:
     /// the person is told, where nothing would otherwise happen. Settings,
@@ -1802,26 +1803,26 @@ final class AppModel {
 
     /// What one attempt of the preview's install does instead of
     /// `playInstall`, for a preview that plays how the install can end.
-    @ObservationIgnored
+    
     var previewInstallAttempt: (@Sendable (_ bypassLowTargetSdkBlock: Bool, _ update: @Sendable (BusyUpdate) -> Void) async throws -> Void)?
     /// How the preview's install ends; an install ends as installed by default.
-    @ObservationIgnored
+    
     var previewInstallOutcome = ApkInstallOutcome.installed
     /// The list of old apps the preview and a UI test's probe session play,
     /// in place of the runtime's (`ScriptedOldApps`).
-    @ObservationIgnored
+    
     var scriptedOldApps: (any OldAppsSource)?
     /// Android's apps and the way to open one that a preview or a UI test's
     /// probe session plays in place of the runtime's (`ScriptedAndroidApps`).
-    @ObservationIgnored
+    
     var scriptedAndroidApps: (any AndroidAppsSource)?
     /// The iPad-app host a test plays in place of this process's
     /// (`padAppHost`).
-    @ObservationIgnored
+    
     var playedPadAppHost: IPadAppHost?
     /// A UI test's probe session makes the preview's bug report (`playBugReport`) though a runtime is
     /// there: its guest is none.
-    @ObservationIgnored
+    
     var playsBugReport = false
 
     private func playInstall(bypassLowTargetSdkBlock: Bool, _ update: @Sendable (BusyUpdate) -> Void) async throws {
@@ -1835,11 +1836,11 @@ final class AppModel {
     /// The preview's install: the file goes over, the guest takes its time.
     private static func playInstall(_ update: @Sendable (BusyUpdate) -> Void) async throws {
         for step in 1...20 {
-            try await Task.sleep(for: .milliseconds(100))
+            try await compatSleep(for: .milliseconds(100))
             update(BusyUpdate(progress: Double(step) / 20 * 0.8))
         }
-        update(BusyUpdate(detail: String(localized: "The virtual machine is installing the app\u{2026}"), cancellable: false))
-        try await Task.sleep(for: .milliseconds(1200))
+        update(BusyUpdate(detail: String(compatLocalized: "The virtual machine is installing the app\u{2026}"), cancellable: false))
+        try await compatSleep(for: .milliseconds(1200))
     }
 
     /// Starts the guest in `mode`. Start on an update that did not finish
@@ -2010,7 +2011,7 @@ final class AppModel {
         bootRun &+= 1
         // A restart before the start finished is the same start; a running
         // session's restart begins a boot of its own.
-        var unfinished = false
+        @Published var unfinished = false
         if case .booting = phase { unfinished = true }
         lifecycle.restart()
         slowStart.guestRestarted(at: clock(), startUnfinished: unfinished)
@@ -2075,7 +2076,7 @@ final class AppModel {
     /// The launch plays none of the guest's haptics on the device, whatever
     /// the switch says (`HapticsLaunch`): the switch and the stored choice stay
     /// the person's, and the guest keeps its vibrator.
-    var hapticsSilencedByLaunch = false
+    @Published var hapticsSilencedByLaunch = false
 
     /// Whether the device plays what the guest's vibrator asks for: the
     /// switch, unless the launch silences it.
@@ -2339,7 +2340,7 @@ final class AppModel {
 
     /// The runtime reports what the host is doing for the guest's cameras.
     func cameraCaptureChanged(_ capture: CameraCapture) {
-        var next = cameraNotice
+        @Published var next = cameraNotice
         next.captureChanged(capture, at: cameraNoticeClock())
         guard next != cameraNotice else { return }
         cameraNotice = next
@@ -2357,7 +2358,7 @@ final class AppModel {
     /// since: the notice goes.
     private func expireCameraNotice() {
         cameraNoticeExpiry = nil
-        var next = cameraNotice
+        @Published var next = cameraNotice
         next.expire(at: cameraNoticeClock())
         if next != cameraNotice { cameraNotice = next }
     }
@@ -2401,7 +2402,7 @@ final class AppModel {
     }
 
     private var statisticsWanted: Bool {
-        var running = false
+        @Published var running = false
         if case .running = phase { running = true }
         return StatsSampling.isWanted(
             viewers: statisticsViewers.count, applicationActive: applicationActive,
@@ -2434,7 +2435,7 @@ final class AppModel {
     private func runStatisticsLoop() async {
         guard let driver else { return }
         statisticsMeter.pause()
-        var readings = 0
+        @Published var readings = 0
         while !Task.isCancelled, statisticsWanted {
             if let sample = await driver.readStatistics(), !Task.isCancelled {
                 statisticsMeter.record(sample)
@@ -2507,7 +2508,7 @@ final class AppModel {
                 // nothing, and the views' redraw lays the scene's root out;
                 // a reading that finds the same count and the same notice
                 // up is not published.
-                var next = graphicsNotice
+                @Published var next = graphicsNotice
                 next.record(refusals: refusals, at: graphicsNoticeClock())
                 if next != graphicsNotice { graphicsNotice = next }
             }

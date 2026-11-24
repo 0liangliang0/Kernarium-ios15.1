@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
-import Observation
+
+import Combine
 import SwiftUI
 import UIKit
 
@@ -246,6 +247,7 @@ final class AndariumHostingController<Content: View>: UIHostingController<Conten
 private final class PhaseWatcher {
     private let model: AppModel
     private let changed: @MainActor () -> Void
+    private var cancellable: AnyCancellable?
 
     init(model: AppModel, changed: @escaping @MainActor () -> Void) {
         self.model = model
@@ -253,15 +255,12 @@ private final class PhaseWatcher {
         observe()
     }
 
+    /// The Observation framework does not exist on iOS 15. `AppModel` is an
+    /// `ObservableObject`, so its `objectWillChange` carries the same signal.
     private func observe() {
-        withObservationTracking {
-            _ = model.phase
-        } onChange: { [weak self] in
-            Task { @MainActor [weak self] in
-                self?.observe()
-                self?.changed()
-            }
-        }
+        cancellable = model.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in self?.changed() }
     }
 }
 
@@ -275,6 +274,7 @@ private final class PointerLockWatcher {
     private weak var controller: UIViewController?
     /// Read only by `deinit`, which cannot be isolated, after the last use.
     nonisolated(unsafe) private var lockObserver: NSObjectProtocol?
+    private var cancellable: AnyCancellable?
 
     init(model: AppModel, controller: UIViewController) {
         self.model = model
@@ -293,14 +293,11 @@ private final class PointerLockWatcher {
     }
 
     private func observe() {
-        withObservationTracking {
-            _ = model.pointerLockWanted
-        } onChange: { [weak self] in
-            Task { @MainActor [weak self] in
-                self?.observe()
+        cancellable = model.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
                 self?.controller?.setNeedsUpdateOfPrefersPointerLocked()
             }
-        }
     }
 
     private func lockStateChanged(_ scene: UIScene?) {

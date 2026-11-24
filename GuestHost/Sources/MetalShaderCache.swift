@@ -130,7 +130,7 @@ nonisolated enum MetalShaderCache {
             userCacheDirectory: root,
             bundleIdentifier: bundleIdentifier
         )
-        let clock = ContinuousClock()
+        let clock = CompatContinuousClock()
         let start = clock.now
         let limit = megabytes(indexLimit)
         do {

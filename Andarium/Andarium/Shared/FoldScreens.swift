@@ -68,9 +68,6 @@ private struct OnCardHalf: ViewModifier {
                 .padding(Self.padding(halves?.insets(for: screen, in: (measured ?? fold?.safeArea) ?? .zero)))
                 .frame(width: geo.size.width, height: geo.size.height, alignment: bent ? .topLeading : .center)
         }
-        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
-            if bent, measured != frame { measured = frame }
-        }
     }
 
     private static func padding(_ insets: FoldInsets?) -> EdgeInsets {
@@ -96,7 +93,6 @@ private struct ScrollsWhenTall: ViewModifier {
                 ScrollView {
                     content.frame(maxWidth: .infinity, minHeight: geo.size.height)
                 }
-                .scrollBounceBehavior(.basedOnSize)
             }
         } else {
             content
@@ -125,10 +121,8 @@ private struct FoldSheetPresentation: ViewModifier {
     func body(content: Content) -> some View {
         if turned {
             content
-                .presentationSizing(.page)
-                .presentationDetents([.height(height)])
                 .presentationBackgroundInteraction(reachesBehind ? .enabled : .disabled)
-                .onChange(of: model.fold.flatMap(FoldSheet.detentHeight)) { _, next in
+                .onChange(of: model.fold.flatMap(FoldSheet.detentHeight)) { next in
                     if let next, next != height { height = next }
                 }
         } else {

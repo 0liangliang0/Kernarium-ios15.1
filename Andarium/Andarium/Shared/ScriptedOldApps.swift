@@ -17,13 +17,13 @@ final class ScriptedOldApps: OldAppsSource {
     /// The packages that have a process.
     var open: Set<String>
     /// How long each answer takes.
-    var delay = Duration.milliseconds(120)
+    var delay = CompatDuration.milliseconds(120)
     /// How long a listing takes, when it differs from the other answers.
-    var listDelay: Duration?
+    var listDelay: CompatDuration?
     private(set) var apps: [OldApp]
     private(set) var listings = 0
     /// The limit each listing was asked with.
-    private(set) var limits: [Duration?] = []
+    private(set) var limits: [CompatDuration?] = []
     private(set) var writes: [(package: String, on: Bool)] = []
 
     init(apps: [OldApp] = ScriptedOldApps.sampleApps, open: Set<String> = []) {
@@ -48,18 +48,18 @@ final class ScriptedOldApps: OldAppsSource {
         apps.removeAll { $0.package == package }
     }
 
-    func listOldApps(limit: Duration?) async -> OldAppListing {
+    func listOldApps(limit: CompatDuration?) async -> OldAppListing {
         listings += 1
         limits.append(limit)
         // The image answers with the apps as they are when it is asked.
         let answer = listingAnswer ?? .apps(apps.sorted { $0.label.localizedStandardCompare($1.label) == .orderedAscending })
-        try? await Task.sleep(for: listDelay ?? delay)
+        try? await compatSleep(for: listDelay ?? delay)
         return answer
     }
 
     func setOldApp(_ package: String, on: Bool) async -> OldAppWrite {
         writes.append((package, on))
-        try? await Task.sleep(for: delay)
+        try? await compatSleep(for: delay)
         if writeAnswer == .applied, let index = apps.firstIndex(where: { $0.package == package }) {
             apps[index].isOn = on
             apps[index].turnedOn = on ? Int(Date().timeIntervalSince1970) : 0
@@ -69,7 +69,7 @@ final class ScriptedOldApps: OldAppsSource {
     }
 
     func isOldAppOpen(_ package: String) async -> Bool? {
-        try? await Task.sleep(for: delay)
+        try? await compatSleep(for: delay)
         return open.contains(package)
     }
 }

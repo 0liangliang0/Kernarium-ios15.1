@@ -351,19 +351,18 @@ public enum MemoryRisk: Equatable, Sendable {
 /// the guest runs. Home and the memory picker use these words, so they say the
 /// same thing.
 public enum MemoryWarning {
-    public static let title = String(localized: "Virtual machine memory is high", bundle: .module)
+    public static let title = String(compatLocalized: "Virtual machine memory is high", bundle: .module)
 
     /// Home's notice: the guest's size, the size that is safer, and where to
     /// lower it.
     public static func explanation(memoryMiB: Int, safeMiB: Int, deviceName: String) -> String {
-        String(
-            localized: "iOS is likely to close Andarium with \(Formats.size(mib: memoryMiB)) of virtual machine memory on this \(deviceName). \(Formats.size(mib: safeMiB)) or less is safer. Lower it with Edit under Virtual machine.",
+        String(compatLocalized: "iOS is likely to close Andarium with \(Formats.size(mib: memoryMiB)) of virtual machine memory on this \(deviceName). \(Formats.size(mib: safeMiB)) or less is safer. Lower it with Edit under Virtual machine.",
             bundle: .module)
     }
 
     /// The line beneath the memory picker.
     public static func note(safeMiB: Int) -> String {
-        String(localized: "iOS is likely to close Andarium above \(Formats.size(mib: safeMiB)).", bundle: .module)
+        String(compatLocalized: "iOS is likely to close Andarium above \(Formats.size(mib: safeMiB)).", bundle: .module)
     }
 }
 
@@ -372,15 +371,14 @@ public enum MemoryWarning {
 /// graphics memory a new one keeps (`MemoryPolicy.isShortOfGraphicsMemory`),
 /// that a game may run short of it.
 public enum GraphicsMemoryWarning {
-    public static let title = String(localized: "VRAM", bundle: .module)
+    public static let title = String(compatLocalized: "VRAM", bundle: .module)
 
     /// Beneath the estimate: what VRAM is relative to the memory above it.
-    public static let separateNote = String(
-        localized: "VRAM is graphics memory, separate from the virtual machine\u{2019}s RAM.", bundle: .module)
+    public static let separateNote = String(compatLocalized: "VRAM is graphics memory, separate from the virtual machine\u{2019}s RAM.", bundle: .module)
 
     /// The line beneath the memory picker above the graphics line
     /// (`MemoryPolicy.graphicsLineMiB`) and not above the safe size.
     public static func note(aboveMiB: Int) -> String {
-        String(localized: "Above \(Formats.size(mib: aboveMiB)), games may run out of graphics memory.", bundle: .module)
+        String(compatLocalized: "Above \(Formats.size(mib: aboveMiB)), games may run out of graphics memory.", bundle: .module)
     }
 }

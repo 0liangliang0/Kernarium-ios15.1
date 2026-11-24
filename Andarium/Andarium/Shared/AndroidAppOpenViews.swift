@@ -79,7 +79,6 @@ struct AppOpenWaitingCard: View {
             .accessibilityIdentifier("app-open-dont-open")
         }
         .padding(14)
-        .glassEffect(.regular, in: .rect(cornerRadius: 22))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("app-open-waiting-card")
     }
@@ -111,7 +110,6 @@ struct AppOpenPill: View {
         .padding(.vertical, 8)
         .padding(.leading, 8)
         .padding(.trailing, 14)
-        .glassEffect(.regular, in: .capsule)
         .allowsHitTesting(false)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("app-open-pill")
@@ -170,7 +168,6 @@ struct AppOpenFailureBanner: View {
             .accessibilityIdentifier("app-open-banner-dismiss")
         }
         .padding(14)
-        .glassEffect(.regular, in: .rect(cornerRadius: 22))
         .frame(maxWidth: 640)
         .padding(.horizontal, 24)
         .accessibilityElement(children: .contain)

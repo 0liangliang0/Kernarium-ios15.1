@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import Combine
 import Foundation
-import Observation
 
 /// A page of the Snapshots sheet: one snapshot, or how snapshots use space.
 enum SnapshotPage: Hashable {
@@ -25,58 +25,59 @@ struct RestoredSnapshotNotice: Equatable {
 /// Home and the sheet both show, the prompts that are up, and the outcome of
 /// each operation. Words come from `SnapshotWords`. A driver's refusal, plan
 /// and figure reach the screens only through here.
-@MainActor @Observable
-final class SnapshotsModel {
-    @ObservationIgnored weak var app: AppModel?
+@MainActor @MainActor
+final class SnapshotsModel: ObservableObject {
+
+    weak var app: AppModel?
     /// How long a name waits for the next key before it is saved.
-    @ObservationIgnored var renameDelay: Duration = .milliseconds(700)
+    var renameDelay: CompatDuration = .milliseconds(700)
     /// How long a snapshot just taken stays marked.
-    @ObservationIgnored var freshDuration: Duration = .seconds(2)
+    var freshDuration: CompatDuration = .seconds(2)
 
     /// What the driver last returned; nil until the first reading.
-    private(set) var listing: SnapshotListing?
+    @Published private(set) var listing: SnapshotListing?
     /// An operation finished or a run began or ended since the listing was
     /// read: its figures describe a disk that is not there any more.
-    private(set) var stale = false
+    @Published private(set) var stale = false
     /// The figures last measured, kept while a newer reading of a disk that
     /// has not changed has none yet, so a row shows its last figure and not a
     /// gap. An operation or a run clears them (`invalidate`).
-    private var knownFigures: [SnapshotID: SnapshotFigure] = [:]
-    private var knownKept: [SnapshotID: SnapshotFigure] = [:]
-    private var knownTotal: SnapshotFigure?
-    private var knownUpdateCopy: SnapshotFigure?
+    @Published private var knownFigures: [SnapshotID: SnapshotFigure] = [:]
+    @Published private var knownKept: [SnapshotID: SnapshotFigure] = [:]
+    @Published private var knownTotal: SnapshotFigure?
+    @Published private var knownUpdateCopy: SnapshotFigure?
 
     // What the prompts hold.
-    var taking = false
-    var takeName = ""
-    var renaming: SnapshotID?
-    var renameText = ""
-    var restoreTarget: SnapshotID?
-    var deleteTarget: SnapshotID?
+    @Published var taking = false
+    @Published var takeName = ""
+    @Published var renaming: SnapshotID?
+    @Published var renameText = ""
+    @Published var restoreTarget: SnapshotID?
+    @Published var deleteTarget: SnapshotID?
     /// An operation that did not go ahead.
-    var problem: AppAlert?
+    @Published var problem: AppAlert?
 
     // Where the sheet is.
     /// The pushed pages (iPhone).
-    var route: [SnapshotPage] = []
+    @Published var route: [SnapshotPage] = []
     /// The page beside the list (iPad).
-    var selection: SnapshotPage?
+    @Published var selection: SnapshotPage?
     /// The name field of the open snapshot takes the keyboard (the preview).
-    var focusName = false
+    @Published var focusName = false
     /// The snapshot just taken, marked for a moment.
-    private(set) var fresh: SnapshotID?
+    @Published private(set) var fresh: SnapshotID?
 
     /// The operation that was under way last, for the revision change that ends
     /// it: the driver clears the operation before it counts it as finished.
-    @ObservationIgnored private var lastOperation: SnapshotWork?
-    @ObservationIgnored private var generation = 0
-    @ObservationIgnored private var inFlight: (revision: Int, task: Task<Void, Never>)?
-    @ObservationIgnored private var pendingName: (id: SnapshotID, name: String)?
+    private var lastOperation: SnapshotWork?
+    private var generation = 0
+    private var inFlight: (revision: Int, task: Task<Void, Never>)?
+    private var pendingName: (id: SnapshotID, name: String)?
     /// The debounce of the name being typed.
-    @ObservationIgnored private var renameTask: Task<Void, Never>?
+    private var renameTask: Task<Void, Never>?
     /// The last rename handed to the driver; each waits for the one before it.
-    @ObservationIgnored private var renameTail: Task<Void, Never>?
-    @ObservationIgnored private var freshTask: Task<Void, Never>?
+    private var renameTail: Task<Void, Never>?
+    private var freshTask: Task<Void, Never>?
 
     // MARK: What the listing says
 
@@ -383,7 +384,7 @@ final class SnapshotsModel {
         guard let app else { return }
         await flushName()
         guard let item = item(id) else { return }
-        var notice = RestoredSnapshotNotice(name: item.name, created: item.created)
+        @Published var notice = RestoredSnapshotNotice(name: item.name, created: item.created)
         if case .updatesAtNextStart(_, let to) = item.restore { notice.updatesTo = SnapshotWords.revision(of: to) }
         switch await app.restoreSnapshot(id) {
         case .done:
@@ -476,7 +477,7 @@ final class SnapshotsModel {
         renameTask?.cancel()
         let delay = renameDelay
         renameTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: delay)
+            try? await compatSleep(for: delay)
             guard !Task.isCancelled else { return }
             await self?.saveName()
         }
@@ -528,7 +529,7 @@ final class SnapshotsModel {
         freshTask?.cancel()
         let duration = freshDuration
         freshTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: duration)
+            try? await compatSleep(for: duration)
             guard !Task.isCancelled, self?.fresh == id else { return }
             self?.fresh = nil
         }

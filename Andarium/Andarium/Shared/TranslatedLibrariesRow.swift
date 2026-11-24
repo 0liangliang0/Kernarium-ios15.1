@@ -11,8 +11,7 @@ enum TranslatedLibrariesWords {
 
     /// The line beneath the group while the switch works: that the libraries
     /// run faster, and when to turn it off.
-    static let note = String(
-        localized: "Translated system libraries run faster. Turn off only to troubleshoot.",
+    static let note = String(compatLocalized: "Translated system libraries run faster. Turn off only to troubleshoot.",
         comment: "The note beneath the AOT group on Home, in the footer style. AOT is a name and stays as it is. Says that the translated system libraries (Android's own libraries, run from machine code translated ahead of time) make Android faster, and that the switch is only for trouble-shooting.")
 
     /// The line beneath the AOT group: the note, or while the next start runs
@@ -21,8 +20,7 @@ enum TranslatedLibrariesWords {
 
     /// Beneath the group while the next start runs on the JIT engine, which
     /// does not use them: the switch is dimmed and changes nothing.
-    static let notUsedWithJit = String(
-        localized: "Not used while JIT is on.", table: "JIT",
+    static let notUsedWithJit = String(compatLocalized: "Not used while JIT is on.", table: "JIT",
         comment: "Under the AOT switch on Home while JIT is on and ready for the next start. AOT and JIT are names and stay as they are.")
 }
 

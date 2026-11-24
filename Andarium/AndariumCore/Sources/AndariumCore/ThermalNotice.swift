@@ -10,11 +10,11 @@ import Foundation
 /// notice that Android ran out of graphics memory does.
 public struct ThermalNotice: Equatable, Sendable {
     /// How long a notice stays up when nobody dismisses it.
-    public static let visibleFor = Duration.seconds(30)
+    public static let visibleFor = CompatDuration.seconds(30)
 
     /// The words of the notice.
-    public static let text = String(localized: "Frame rate lowered while this device is hot", bundle: .module)
-    public static let dismissLabel = String(localized: "Dismiss", bundle: .module)
+    public static let text = String(compatLocalized: "Frame rate lowered while this device is hot", bundle: .module)
+    public static let dismissLabel = String(compatLocalized: "Dismiss", bundle: .module)
 
     /// A notice is up.
     public private(set) var isShowing = false

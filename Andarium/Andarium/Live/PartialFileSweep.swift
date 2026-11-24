@@ -25,7 +25,7 @@ nonisolated final class PartialFileSweep: @unchecked Sendable {
     /// longer than Android takes after its boot is done, and each reading is
     /// bounded by the guest's own running time.
     static let storagePolls = 36
-    static let storageInterval = Duration.seconds(5)
+    static let storageInterval = CompatDuration.seconds(5)
 
     enum Phase: Equatable, Sendable {
         /// The boot under way has not been looked at yet, or the sweep was
@@ -49,7 +49,7 @@ nonisolated final class PartialFileSweep: @unchecked Sendable {
     private let owed: @Sendable () -> Bool
     private let storageReady: @Sendable () async -> Bool?
     private let sweep: @Sendable () async throws -> Int
-    private let pause: @Sendable (Duration) async throws -> Void
+    private let pause: @Sendable (CompatDuration) async throws -> Void
     private let report: @Sendable (String) -> Void
 
     private let lock = NSLock()
@@ -68,7 +68,7 @@ nonisolated final class PartialFileSweep: @unchecked Sendable {
         owed: @escaping @Sendable () -> Bool,
         storageReady: @escaping @Sendable () async -> Bool?,
         sweep: @escaping @Sendable () async throws -> Int,
-        pause: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
+        pause: @escaping @Sendable (CompatDuration) async throws -> Void = { try await compatSleep(for: $0) },
         report: @escaping @Sendable (String) -> Void = { print($0) }
     ) {
         self.owed = owed

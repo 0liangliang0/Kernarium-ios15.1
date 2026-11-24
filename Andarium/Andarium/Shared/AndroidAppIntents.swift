@@ -102,7 +102,7 @@ extension AndroidAppQuery: IndexedEntityQuery {
 
 /// The error a request that names nothing Android could open ends with.
 nonisolated struct AndroidAppRequestError: Error, CustomLocalizedStringResourceConvertible {
-    var localizedStringResource: LocalizedStringResource { "This isn\u{2019}t an Android app that Andarium can open." }
+    var localizedStringResource: CompatLocalizedStringResource { "This isn\u{2019}t an Android app that Andarium can open." }
 }
 
 /// Opens an app in Android. Andarium comes to the front and starts Android first
@@ -115,7 +115,7 @@ nonisolated struct AndroidAppRequestError: Error, CustomLocalizedStringResourceC
 /// which runs by name.
 @available(iOS 27.0, *)
 struct OpenAndroidAppIntent: OpenIntent {
-    static let title: LocalizedStringResource = "Open Android App"
+    static let title: CompatLocalizedStringResource = "Open Android App"
     static let description = IntentDescription("Opens an app in Android.")
     static var supportedModes: IntentModes { .foreground(.immediate) }
 

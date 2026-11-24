@@ -8,11 +8,11 @@ import UIKit
 /// no-break spaces and is the same in every language; VoiceOver reads "×" as
 /// "multiplied by", so its words are "by".
 enum ResolutionWords {
-    static let title = String(localized: "Resolution")
-    static let change = String(localized: "Change")
-    static let changeAccessibility = String(localized: "Change resolution")
-    static let native = String(localized: "Native")
-    static let fastest = String(localized: "Fastest")
+    static let title = String(compatLocalized: "Resolution")
+    static let change = String(compatLocalized: "Change")
+    static let changeAccessibility = String(compatLocalized: "Change resolution")
+    static let native = String(compatLocalized: "Native")
+    static let fastest = String(compatLocalized: "Fastest")
 
     /// "1206 × 2334", never broken across lines.
     static func pixels(_ layout: GuestDisplayLayout) -> String {
@@ -22,12 +22,12 @@ enum ResolutionWords {
     /// "1206 by 2334". The numbers go in as text, so the language's digit
     /// grouping does not turn 1206 into 1,206.
     static func spokenPixels(_ layout: GuestDisplayLayout) -> String {
-        String(localized: "\(String(layout.width)) by \(String(layout.height))")
+        String(compatLocalized: "\(String(layout.width)) by \(String(layout.height))")
     }
 
     /// "480 dpi".
     static func dpi(_ layout: GuestDisplayLayout) -> String { dpi(layout.dotsPerInch) }
-    static func dpi(_ dotsPerInch: Int) -> String { String(localized: "\(dotsPerInch) dpi") }
+    static func dpi(_ dotsPerInch: Int) -> String { String(compatLocalized: "\(dotsPerInch) dpi") }
 
     /// The name of an end of the list: "Native" or "Fastest".
     static func name(of end: ResolutionChoices.End) -> String {
@@ -107,7 +107,7 @@ struct ResolutionSheet: View {
         let current = model.resolutionIndex
         let chosen = draft ?? current
         let order = Array((0..<choices.count).reversed())
-        NavigationStack {
+        NavigationView {
             ScrollView {
                 VStack(spacing: 0) {
                     ForEach(order, id: \.self) { index in
@@ -122,7 +122,6 @@ struct ResolutionSheet: View {
                             .accessibilityIdentifier("resolution-choice-\(index)")
                     }
                 }
-                .glassEffect(.regular, in: .rect(cornerRadius: 26))
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
                 .padding(.bottom, 24)
@@ -145,8 +144,6 @@ struct ResolutionSheet: View {
                 }
             }
         }
-        .presentationDetents([.height(height(of: choices))])
-        .presentationSizing(FixedSheetSizing(width: 540, height: height(of: choices) + 10))
     }
 
     /// A row is 61 points, and the bar and the margins 72.
@@ -198,8 +195,7 @@ struct DisplayAreaProbe: View {
 
     var body: some View {
         Color.clear
-            .containerCornerOffset(cornerEdges, sizeToFit: true)
-            .onGeometryChange(for: CGSize.self, of: \.size) {
+            .containerCornerOffset(cornerEdges, sizeToFit: true) {
                 size = $0
                 publish()
             }

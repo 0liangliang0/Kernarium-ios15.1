@@ -7,7 +7,7 @@ import Foundation
 /// returns what it left: the icons come back as bytes on stdout, which a text
 /// answer would break. A failure to reach the guest throws.
 public protocol GuestBinaryShell: Sendable {
-    func runBinary(_ command: String, limit: Duration) async throws -> ShellResult
+    func runBinary(_ command: String, limit: CompatDuration) async throws -> ShellResult
 }
 
 /// The image's `kernarium_apps` tool, which lists the launchable apps with
@@ -51,17 +51,17 @@ public struct AndroidAppsCommands: AndroidAppsTool {
 
     // MARK: Questions
 
-    public func digest(limit: Duration = AndroidAppLimits.digestLimit) async -> AndroidAppDigestAnswer {
+    public func digest(limit: CompatDuration = AndroidAppLimits.digestLimit) async -> AndroidAppDigestAnswer {
         guard let result = try? await shell.runBinary(Self.digestCommand, limit: limit) else { return .failed }
         return Self.parseDigest(result)
     }
 
-    public func list(limit: Duration = AndroidAppLimits.listLimit) async -> AndroidAppListing {
+    public func list(limit: CompatDuration = AndroidAppLimits.listLimit) async -> AndroidAppListing {
         guard let result = try? await shell.runBinary(Self.listCommand, limit: limit) else { return .failed }
         return Self.parseListing(result)
     }
 
-    public func icons(of apps: [AndroidApp], limit: Duration = AndroidAppLimits.iconLimit) async -> [String: AndroidAppIconAnswer] {
+    public func icons(of apps: [AndroidApp], limit: CompatDuration = AndroidAppLimits.iconLimit) async -> [String: AndroidAppIconAnswer] {
         // The tool refuses a component named twice.
         var seen = Set<String>()
         let asked = Array(apps.filter { seen.insert($0.id).inserted }.prefix(AndroidAppLimits.iconsPerAsk))
@@ -72,7 +72,7 @@ public struct AndroidAppsCommands: AndroidAppsTool {
         return Dictionary(uniqueKeysWithValues: zip(asked.map(\.id), answers))
     }
 
-    public func open(_ component: AndroidComponent, limit: Duration = AndroidAppLimits.openLimit) async -> AndroidAppOpenAnswer {
+    public func open(_ component: AndroidComponent, limit: CompatDuration = AndroidAppLimits.openLimit) async -> AndroidAppOpenAnswer {
         guard let result = try? await shell.runBinary(Self.launchCommand(for: component), limit: limit) else { return .failed }
         return Self.parseLaunch(result, component: component)
     }

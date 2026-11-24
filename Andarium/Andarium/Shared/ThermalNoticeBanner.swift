@@ -56,6 +56,5 @@ struct ThermalNoticeBanner: View {
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 14)
-        .glassEffect(.regular, in: .rect(cornerRadius: 22))
     }
 }

@@ -16,41 +16,41 @@ nonisolated enum AdbActivity {
     /// order the words of the activity as it needs.
     fileprivate var notReady: String {
         switch self {
-        case .installApp: String(localized: "The virtual machine isn\u{2019}t ready to install apps. Try again in a moment.")
-        case .bugReport: String(localized: "The virtual machine isn\u{2019}t ready to make a bug report. Try again in a moment.")
-        case .files: String(localized: "The virtual machine isn\u{2019}t ready to open its files. Try again in a moment.")
-        case .screenReader: String(localized: "The virtual machine isn\u{2019}t ready to change Android\u{2019}s screen reader. Try again in a moment.")
+        case .installApp: String(compatLocalized: "The virtual machine isn\u{2019}t ready to install apps. Try again in a moment.")
+        case .bugReport: String(compatLocalized: "The virtual machine isn\u{2019}t ready to make a bug report. Try again in a moment.")
+        case .files: String(compatLocalized: "The virtual machine isn\u{2019}t ready to open its files. Try again in a moment.")
+        case .screenReader: String(compatLocalized: "The virtual machine isn\u{2019}t ready to change Android\u{2019}s screen reader. Try again in a moment.")
         }
     }
 
     fileprivate var restarted: String {
         switch self {
         case .installApp:
-            String(localized: "The virtual machine\u{2019}s debugging service restarted before the app was installed. Try again.")
+            String(compatLocalized: "The virtual machine\u{2019}s debugging service restarted before the app was installed. Try again.")
         case .bugReport:
-            String(localized: "The virtual machine\u{2019}s debugging service restarted before the bug report was finished. Try again.")
+            String(compatLocalized: "The virtual machine\u{2019}s debugging service restarted before the bug report was finished. Try again.")
         case .files:
-            String(localized: "The virtual machine\u{2019}s debugging service restarted before the transfer finished. Try again.")
+            String(compatLocalized: "The virtual machine\u{2019}s debugging service restarted before the transfer finished. Try again.")
         case .screenReader:
-            String(localized: "The virtual machine\u{2019}s debugging service restarted before Android\u{2019}s screen reader changed. Try again.")
+            String(compatLocalized: "The virtual machine\u{2019}s debugging service restarted before Android\u{2019}s screen reader changed. Try again.")
         }
     }
 
     fileprivate var stoppedResponding: String {
         switch self {
-        case .installApp: String(localized: "The virtual machine stopped responding while installing the app.")
-        case .bugReport: String(localized: "The virtual machine stopped responding while making the bug report.")
-        case .files: String(localized: "The virtual machine stopped responding while copying the files.")
-        case .screenReader: String(localized: "The virtual machine stopped responding while changing Android\u{2019}s screen reader.")
+        case .installApp: String(compatLocalized: "The virtual machine stopped responding while installing the app.")
+        case .bugReport: String(compatLocalized: "The virtual machine stopped responding while making the bug report.")
+        case .files: String(compatLocalized: "The virtual machine stopped responding while copying the files.")
+        case .screenReader: String(compatLocalized: "The virtual machine stopped responding while changing Android\u{2019}s screen reader.")
         }
     }
 
     fileprivate var couldNot: String {
         switch self {
-        case .installApp: String(localized: "The virtual machine couldn\u{2019}t install the app.")
-        case .bugReport: String(localized: "The virtual machine couldn\u{2019}t make the bug report.")
-        case .files: String(localized: "The virtual machine couldn\u{2019}t copy the file.")
-        case .screenReader: String(localized: "The virtual machine couldn\u{2019}t change Android\u{2019}s screen reader.")
+        case .installApp: String(compatLocalized: "The virtual machine couldn\u{2019}t install the app.")
+        case .bugReport: String(compatLocalized: "The virtual machine couldn\u{2019}t make the bug report.")
+        case .files: String(compatLocalized: "The virtual machine couldn\u{2019}t copy the file.")
+        case .screenReader: String(compatLocalized: "The virtual machine couldn\u{2019}t change Android\u{2019}s screen reader.")
         }
     }
 }
@@ -70,9 +70,9 @@ nonisolated struct AdbFailure: LocalizedError, Equatable {
         case .refused:
             message = activity.notReady
         case .notAnswering:
-            message = String(localized: "The virtual machine isn\u{2019}t answering yet. Try again once it has started.")
+            message = String(compatLocalized: "The virtual machine isn\u{2019}t answering yet. Try again once it has started.")
         case .keyRejected:
-            message = String(localized: "The virtual machine didn\u{2019}t accept Andarium\u{2019}s key. Restart the virtual machine and try again.")
+            message = String(compatLocalized: "The virtual machine didn\u{2019}t accept Andarium\u{2019}s key. Restart the virtual machine and try again.")
         case .guestGone, .streamClosed:
             // adbd restarts when the guest's USB debugging turns off, which
             // ends a connection in use; the next try reaches the new one.
@@ -92,12 +92,12 @@ nonisolated struct AdbFailure: LocalizedError, Equatable {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         let lower = trimmed.lowercased()
         if activity == .bugReport, lower.contains("in progress") {
-            return String(localized: "The virtual machine is already making a bug report.")
+            return String(compatLocalized: "The virtual machine is already making a bug report.")
         }
         if activity == .files {
-            if lower.contains("no space left") { return String(localized: "Not enough space in the virtual machine.") }
+            if lower.contains("no space left") { return String(compatLocalized: "Not enough space in the virtual machine.") }
             if lower.contains("permission denied") || lower.contains("read-only") {
-                return String(localized: "Android doesn\u{2019}t allow changes to this folder.")
+                return String(compatLocalized: "Android doesn\u{2019}t allow changes to this folder.")
             }
         }
         return trimmed.isEmpty ? activity.couldNot : trimmed
@@ -109,12 +109,11 @@ nonisolated struct AdbFailure: LocalizedError, Equatable {
 nonisolated enum AdbNetworkMessages {
     static func cannotStart(_ error: Error) -> String {
         if let adb = error as? AdbError, adb == .io(EADDRINUSE) {
-            return String(
-                localized: "Port \(String(AdbNetworkBridge.defaultPort)) is already in use on this device.",
+            return String(compatLocalized: "Port \(String(AdbNetworkBridge.defaultPort)) is already in use on this device.",
                 comment: "The ADB over network port, written as plain digits (5555), never grouped.")
         }
-        return String(localized: "ADB over network could not start.")
+        return String(compatLocalized: "ADB over network could not start.")
     }
 
-    static let noAddress = String(localized: "This device has no Wi-Fi address. Connect to Wi-Fi to use ADB over network.")
+    static let noAddress = String(compatLocalized: "This device has no Wi-Fi address. Connect to Wi-Fi to use ADB over network.")
 }

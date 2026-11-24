@@ -51,12 +51,12 @@ struct AddToHomeScreenPage: View {
             .navigationTitle(AndroidAppsWords.featureName)
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .automatic), prompt: Text(AndroidAppsWords.searchPrompt))
-            .navigationDestination(item: $guided) { app in AddToHomeScreenGuide(app: app) }
+            .sheet(item: $guided) { app in AddToHomeScreenGuide(app: app) }
             .task { await model.refreshAndroidApps() }
             .task {
                 // A launch argument of the preview opens the guide of one app.
                 guard let id = model.sessionPreset.addToHomeGuide else { return }
-                try? await Task.sleep(for: .milliseconds(600))
+                try? await compatSleep(for: .milliseconds(600))
                 guided = state.apps.first { $0.id == id }
             }
     }
@@ -74,7 +74,7 @@ struct AddToHomeScreenPage: View {
         if state.apps.isEmpty {
             empty(state)
         } else if installed.isEmpty, builtIn.isEmpty {
-            ContentUnavailableView {
+            CompatContentUnavailableView {
                 Label(AndroidAppsWords.noResults(query), systemImage: "magnifyingglass")
             } description: {
                 Text(AndroidAppsWords.noResultsText)
@@ -95,7 +95,6 @@ struct AddToHomeScreenPage: View {
                 }
                 if query.isEmpty { searchSection(state) }
             }
-            .listSectionSpacing(.compact)
         }
     }
 
@@ -189,7 +188,7 @@ struct AddToHomeScreenPage: View {
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("android-apps-refreshing")
         } else if state.failed {
-            ContentUnavailableView {
+            CompatContentUnavailableView {
                 Label(AndroidAppsWords.failedTitle, systemImage: "apps.iphone")
             } description: {
                 Text(OldAppsWords.failed)
@@ -198,7 +197,7 @@ struct AddToHomeScreenPage: View {
                     .buttonStyle(.bordered)
             }
         } else {
-            ContentUnavailableView {
+            CompatContentUnavailableView {
                 Label(AndroidAppsWords.emptyTitle, systemImage: "apps.iphone")
             } description: {
                 Text(AndroidAppsWords.emptyText)
@@ -233,7 +232,6 @@ struct AddToHomeScreenGuide: View {
                     Divider().padding(.leading, 52)
                     step(4, AndroidAppsWords.step4, AndroidAppsWords.step4Detail) { MiniHomeSheet(app: app, scale: 0.8) }
                 }
-                .glassEffect(.regular, in: .rect(cornerRadius: 26))
                 Text(AndroidAppsWords.tapNote(app.label).keepingTogether)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -390,7 +388,7 @@ private struct MiniTiles: View {
         }
         .padding(.horizontal, 14 * scale)
         .padding(.vertical, 12 * scale)
-        .background(Color(.systemGray6), in: .rect(cornerRadius: 16 * scale, style: .continuous))
+        .background(Color(.systemGray6), in: .compatRect(cornerRadius: 16 * scale, style: .continuous))
         .accessibilityHidden(true)
     }
 
@@ -413,13 +411,13 @@ private struct MiniMenu: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             row(symbol: "plus.app", text: AndroidAppsWords.menuAdd)
-                .background(Color.accentColor.opacity(0.16), in: .rect(cornerRadius: 10 * scale, style: .continuous))
+                .background(Color.accentColor.opacity(0.16), in: .compatRect(cornerRadius: 10 * scale, style: .continuous))
             row(symbol: "square.2.layers.3d", text: AndroidAppsWords.menuNewShortcut)
                 .opacity(0.5)
         }
         .padding(5 * scale)
         .frame(width: 200 * scale)
-        .background(.regularMaterial, in: .rect(cornerRadius: 16 * scale, style: .continuous))
+        .background(.regularMaterial, in: .compatRect(cornerRadius: 16 * scale, style: .continuous))
         .shadow(color: .black.opacity(0.12), radius: 8 * scale, y: 3 * scale)
         .accessibilityHidden(true)
     }
@@ -470,7 +468,7 @@ private struct MiniHomeSheet: View {
         }
         .padding(10 * scale)
         .frame(width: 210 * scale)
-        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 16 * scale, style: .continuous))
+        .background(Color(.secondarySystemGroupedBackground), in: .compatRect(cornerRadius: 16 * scale, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16 * scale, style: .continuous).stroke(Color(.separator), lineWidth: 0.5))
         .accessibilityHidden(true)
     }

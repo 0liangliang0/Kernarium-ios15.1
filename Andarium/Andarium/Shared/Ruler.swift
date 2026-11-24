@@ -133,8 +133,7 @@ struct Ruler: View {
             )
         }
         .frame(height: 52)
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
-        .interfaceFeedback(.selection, trigger: index)
+
         .accessibilityElement()
         .accessibilityLabel(accessibilityName)
         .accessibilityValue((valueText ?? label)(index))
@@ -244,19 +243,18 @@ struct SystemControls: View {
                 }
             }
         }
-        .glassEffect(.regular, in: .rect(cornerRadius: 30))
     }
 
     private var processor: some View {
         ControlRow(
-            title: String(localized: "Processor"), symbol: "cpu",
+            title: String(compatLocalized: "Processor"), symbol: "cpu",
             value: CountWords.vcpus(guest.cores)
         ) {
             Ruler(
                 index: Binding(get: { guest.cores - 1 }, set: { guest.setCores($0 + 1, on: host) }),
                 count: host.processorCount,
                 label: { "\($0 + 1)" },
-                accessibilityName: String(localized: "Processor")
+                accessibilityName: String(compatLocalized: "Processor")
             )
         } note: {
             EmptyView()
@@ -283,7 +281,7 @@ struct SystemControls: View {
         let safeMiB = host.memory.safeMemoryMiB(vCPUs: guest.cores)
         let distinct = safeMiB > graphicsLineMiB
         let risk = host.memory.risk(guest.memoryMiB, vCPUs: guest.cores, cameraLive: cameraLive)
-        return ControlRow(title: String(localized: "Memory"), symbol: "memorychip", value: Formats.size(mib: guest.memoryMiB)) {
+        return ControlRow(title: String(compatLocalized: "Memory"), symbol: "memorychip", value: Formats.size(mib: guest.memoryMiB)) {
             Ruler(
                 index: Binding(
                     get: { stops.lastIndex(where: { $0 <= guest.memoryMiB }) ?? 0 },
@@ -298,7 +296,7 @@ struct SystemControls: View {
                 valueText: { Formats.size(mib: stops[$0]) },
                 warnFrom: stops.firstIndex { $0 > graphicsLineMiB },
                 severeFrom: distinct ? stops.firstIndex { $0 > safeMiB } : nil,
-                accessibilityName: String(localized: "Memory")
+                accessibilityName: String(compatLocalized: "Memory")
             )
         } note: {
             switch risk {
@@ -327,8 +325,7 @@ struct GraphicsMemoryRow: View {
         VStack(alignment: .leading, spacing: 10) {
             ControlHeader(
                 title: GraphicsMemoryWarning.title, symbol: "cube",
-                value: String(
-                    localized: "\u{2248} \(Formats.size(mib: estimateMiB))",
+                value: String(compatLocalized: "\u{2248} \(Formats.size(mib: estimateMiB))",
                     comment: "An estimated size of graphics memory, as in ≈ 1.68 GiB: the sign for about, then the size."),
                 valueColor: warns ? .orange : .primary
             )
@@ -352,7 +349,7 @@ struct StoragePanel: View {
     let stops: [Int]
 
     var body: some View {
-        ControlRow(title: String(localized: "Storage"), symbol: "internaldrive", value: Formats.size(gib: guest.capacityGiB)) {
+        ControlRow(title: String(compatLocalized: "Storage"), symbol: "internaldrive", value: Formats.size(gib: guest.capacityGiB)) {
             Ruler(
                 index: Binding(
                     get: { stops.firstIndex { $0 >= guest.capacityGiB } ?? stops.count - 1 },
@@ -363,13 +360,12 @@ struct StoragePanel: View {
                 majorOffset: 3,
                 label: { "\(stops[$0])" },
                 valueText: { Formats.size(gib: stops[$0]) },
-                accessibilityName: String(localized: "Storage")
+                accessibilityName: String(compatLocalized: "Storage")
             )
         } note: {
             Text("\(Formats.size(bytes: host.freeStorageBytes)) free on this \(host.name)")
                 .foregroundStyle(.secondary)
         }
-        .glassEffect(.regular, in: .rect(cornerRadius: 30))
     }
 }
 
@@ -389,7 +385,7 @@ struct StorageRow: View {
 
     var body: some View {
         SystemRow(
-            symbol: "internaldrive", title: String(localized: "Storage"),
+            symbol: "internaldrive", title: String(compatLocalized: "Storage"),
             subtitle: MeterWords.storage(Formats.size(bytes: guest.usedBytes), of: Formats.size(gib: guest.capacityGiB)),
             button: SystemRowButton(
                 title: SystemRowButton.resize, identifier: "home-storage-resize", isEnabled: !atMaximum, action: resize
@@ -505,7 +501,7 @@ struct ResizeSheet: View {
     var body: some View {
         let guest = model.guest ?? Guest.fresh(on: model.host)
         let stops = model.capacityStopsGiB
-        NavigationStack {
+        NavigationView {
             VStack(spacing: 16) {
                 VStack(spacing: 2) {
                     Text(Formats.size(gib: capacity))
@@ -532,7 +528,7 @@ struct ResizeSheet: View {
                     majorOffset: 3,
                     label: { "\(stops[$0])" },
                     valueText: { Formats.size(gib: stops[$0]) },
-                    accessibilityName: String(localized: "Storage")
+                    accessibilityName: String(compatLocalized: "Storage")
                 )
                 .padding(.horizontal, 6)
                 UsageBar(used: guest.usedGiB, capacity: Double(capacity))
@@ -556,8 +552,6 @@ struct ResizeSheet: View {
                 }
             }
         }
-        .presentationDetents([.height(470)])
-        .presentationSizing(FixedSheetSizing(width: 540, height: 480))
         .onAppear {
             capacity = model.resizePreset ?? guest.effectiveCapacityGiB
         }
@@ -567,15 +561,15 @@ struct ResizeSheet: View {
     private func status(_ guest: Guest) -> some View {
         if capacity > guest.capacityGiB {
             line("arrow.up.circle.fill", .accentColor,
-                 String(localized: "Grows to \(Formats.size(gib: capacity)) at the next start"), nil)
+                 String(compatLocalized: "Grows to \(Formats.size(gib: capacity)) at the next start"), nil)
         } else if let pending = guest.pendingCapacityGiB {
             line("arrow.uturn.backward.circle.fill", .secondary,
-                 String(localized: "Stays at \(Formats.size(gib: guest.capacityGiB))"),
-                 String(localized: "The growth to \(Formats.size(gib: pending)) is cancelled."))
+                 String(compatLocalized: "Stays at \(Formats.size(gib: guest.capacityGiB))"),
+                 String(compatLocalized: "The growth to \(Formats.size(gib: pending)) is cancelled."))
         } else {
             line("internaldrive", .secondary,
-                 String(localized: "\(Formats.size(bytes: guest.usedBytes)) used of \(Formats.size(gib: guest.capacityGiB))"),
-                 String(localized: "Storage can only grow. A larger size applies at the next start."))
+                 String(compatLocalized: "\(Formats.size(bytes: guest.usedBytes)) used of \(Formats.size(gib: guest.capacityGiB))"),
+                 String(compatLocalized: "Storage can only grow. A larger size applies at the next start."))
         }
     }
 
@@ -597,7 +591,7 @@ struct ResizeSheet: View {
             Spacer(minLength: 0)
         }
         .padding(14)
-        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 20, style: .continuous))
+        .background(Color(.secondarySystemGroupedBackground), in: .compatRect(cornerRadius: 20, style: .continuous))
     }
 }
 

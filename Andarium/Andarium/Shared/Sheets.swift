@@ -19,14 +19,14 @@ struct NewGuestSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             ScrollView {
                 VStack(spacing: 22) {
                     if !model.canCreate {
                         NoticeCard(
                             symbol: "externaldrive.badge.exclamationmark", color: .orange,
                             title: StartSpaceWords.title,
-                            text: String(localized: "Setting up the virtual machine needs \(Formats.size(bytes: model.createRequirementBytes)) of free space. This \(model.host.name) has \(Formats.size(bytes: model.host.freeStorageBytes)). Free up space in Settings › General › \(model.host.name) Storage.")
+                            text: String(compatLocalized: "Setting up the virtual machine needs \(Formats.size(bytes: model.createRequirementBytes)) of free space. This \(model.host.name) has \(Formats.size(bytes: model.host.freeStorageBytes)). Free up space in Settings › General › \(model.host.name) Storage.")
                         )
                     }
                     StoragePanel(guest: draftBinding, host: model.host, stops: model.capacityStopsGiB)
@@ -83,7 +83,7 @@ struct SystemSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             ScrollView {
                 SystemControls(guest: draftBinding, host: model.host, cameraLive: model.cameraMode == .live)
                 .padding(.horizontal, 16)
@@ -113,8 +113,6 @@ struct SystemSheet: View {
                 }
             }
         }
-        .presentationDetents([.height(470)])
-        .presentationSizing(FixedSheetSizing(width: 540, height: 480))
         .onAppear { draft = model.guest }
     }
 }
@@ -133,7 +131,7 @@ struct InfoSheet: View {
     }
 
     var body: some View {
-        NavigationStack(path: $path) {
+        NavigationView(path: $path) {
             List {
                 Section {
                     HStack(spacing: 16) {
@@ -149,7 +147,7 @@ struct InfoSheet: View {
                     .padding(.vertical, 6)
                     .accessibilityElement(children: .combine)
                     if !model.whatsNew.releases.isEmpty {
-                        NavigationLink(value: InfoPage.whatsNew) {
+                        CompatNavigationLink(value: InfoPage.whatsNew) {
                             HStack(spacing: 12) {
                                 IconTile(symbol: "sparkles")
                                     .accessibilityHidden(true)
@@ -163,15 +161,15 @@ struct InfoSheet: View {
                     UpdateInfoSection(notice: notice) { StackMark(lit: true, width: 62) }
                 }
                 Section("System info") {
-                    LabeledContent("Build", value: model.system.buildLabel)
-                    LabeledContent("Android version", value: model.system.version)
+                    CompatLabeledContent("Build", value: model.system.buildLabel)
+                    CompatLabeledContent("Android version", value: model.system.version)
                     if let patch = model.system.securityPatch {
-                        LabeledContent("Security patch", value: patch)
+                        CompatLabeledContent("Security patch", value: patch)
                     }
-                    LabeledContent("Kernel", value: model.system.kernel)
-                    LabeledContent("Architecture", value: model.system.architecture)
+                    CompatLabeledContent("Kernel", value: model.system.kernel)
+                    CompatLabeledContent("Architecture", value: model.system.architecture)
                     if !model.system.abis.isEmpty {
-                        LabeledContent("Supported architectures", value: ListWords.join(model.system.abis))
+                        CompatLabeledContent("Supported architectures", value: ListWords.join(model.system.abis))
                     }
                 }
                 Section {
@@ -192,7 +190,7 @@ struct InfoSheet: View {
                         FollowXRow(profile: profile)
                     }
                     #endif
-                    NavigationLink(value: InfoPage.acknowledgements) {
+                    CompatNavigationLink(value: InfoPage.acknowledgements) {
                         HStack(spacing: 12) {
                             IconTile(symbol: "doc.text.fill")
                                 .accessibilityHidden(true)
@@ -203,7 +201,7 @@ struct InfoSheet: View {
             }
             .navigationTitle("Info")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationDestination(for: InfoPage.self) { page in
+            .compatNavigationDestination(for: InfoPage.self) { page in
                 switch page {
                 case .acknowledgements: AcknowledgementsView()
                 case .license(let id): LicenseView(projectID: id)
@@ -218,6 +216,5 @@ struct InfoSheet: View {
         }
         // Tall enough for every row, in any language, without scrolling to
         // the last one; the system keeps it inside a smaller window.
-        .presentationSizing(FixedSheetSizing(width: 540, height: 900))
     }
 }

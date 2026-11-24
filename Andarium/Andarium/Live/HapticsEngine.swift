@@ -61,7 +61,7 @@ nonisolated final class CoreHapticsPlayer: HapticPlayer, @unchecked Sendable {
         let engine: CHHapticEngine
         private let lock = NSLock()
         private var running = false
-        private var failedAt: ContinuousClock.Instant?
+        private var failedAt: CompatClockInstant?
         private var players: [any CHHapticPatternPlayer] = []
         private var tone: (any CHHapticPatternPlayer)?
         /// When the tone ends by itself, on the engine's clock.
@@ -92,7 +92,7 @@ nonisolated final class CoreHapticsPlayer: HapticPlayer, @unchecked Sendable {
         /// Starts the engine unless it runs. A failure is not tried again for a second.
         func ensureRunning() -> Bool {
             if lock.withLock({ running }) { return true }
-            let now = ContinuousClock.now
+            let now = CompatContinuousClock.now
             if let failed = lock.withLock({ failedAt }), now - failed < .seconds(1) { return false }
             do {
                 try engine.start()

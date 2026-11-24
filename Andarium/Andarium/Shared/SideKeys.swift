@@ -82,10 +82,10 @@ struct SideKeysOverlay: View {
             keys(in: geo.size)
         }
         .ignoresSafeArea(.keyboard)
-        .interfaceFeedback(.impact(weight: .light), trigger: keyPresses)
+
         .onAppear { publishEdge() }
         .onChange(of: leading) { publishEdge() }
-        .onChange(of: open) { _, isOpen in
+        .onChange(of: open) { isOpen in
             guard isOpen else { return }
             // VoiceOver goes to the first key once the keys have swollen.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
@@ -295,7 +295,6 @@ struct ClosedKeys: View {
         Capsule()
             .fill(.white.opacity(0.9))
             .frame(width: 9, height: height)
-            .glassEffect(.regular, in: .capsule)
             .shadow(color: .black.opacity(0.35), radius: 3, x: leading ? 1 : -1)
     }
 }
@@ -319,8 +318,8 @@ struct OpenKeys: View {
                 .accessibilityFocused(focus, equals: .power)
 
             KeyPair(
-                top: (recovery ? "chevron.up" : "plus", recovery ? String(localized: "Up") : String(localized: "Volume up"), volumeUp),
-                bottom: (recovery ? "chevron.down" : "minus", recovery ? String(localized: "Down") : String(localized: "Volume down"), volumeDown)
+                top: (recovery ? "chevron.up" : "plus", recovery ? String(compatLocalized: "Up") : String(compatLocalized: "Volume up"), volumeUp),
+                bottom: (recovery ? "chevron.down" : "minus", recovery ? String(compatLocalized: "Down") : String(compatLocalized: "Volume down"), volumeDown)
             )
             .matchedGeometryEffect(id: "rocker", in: space)
         }
@@ -350,7 +349,6 @@ struct PowerKey: View {
             }
         }
         .frame(width: size.width, height: size.height)
-        .glassEffect(.regular.interactive(), in: .capsule)
         .contentShape(.capsule)
         .onTapGesture(perform: power)
         .onLongPressGesture(minimumDuration: 0.6, perform: powerHold)
@@ -376,8 +374,8 @@ struct GuestKeys: View {
             SettingsKey(action: settings)
 
             KeyPair(
-                top: ("arrowtriangle.backward.fill", String(localized: "Back"), back),
-                bottom: ("circle.fill", String(localized: "Home"), home),
+                top: ("arrowtriangle.backward.fill", String(compatLocalized: "Back"), back),
+                bottom: ("circle.fill", String(compatLocalized: "Home"), home),
                 glyphSize: 16
             )
         }
@@ -398,7 +396,6 @@ struct SettingsKey: View {
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: .capsule)
         .accessibilityLabel("Settings")
         .accessibilityHint("Install apps, ADB, stats and options")
     }
@@ -435,7 +432,6 @@ struct KeyPair: View {
             }
         }
         .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: .capsule)
     }
 
     private func key(_ key: (symbol: String, label: String, action: () -> Void)) -> some View {
@@ -470,22 +466,22 @@ struct KeyRail: View {
         VStack(spacing: KeyMetrics.railGap) {
             PowerKey(recovery: recovery, lit: lit, size: key, power: { pressed(actions.power) }, powerHold: holdPower)
             KeyPair(
-                top: (recovery ? "chevron.up" : "plus", recovery ? String(localized: "Up") : String(localized: "Volume up"), { pressed(actions.volumeUp) }),
-                bottom: (recovery ? "chevron.down" : "minus", recovery ? String(localized: "Down") : String(localized: "Volume down"), { pressed(actions.volumeDown) }),
+                top: (recovery ? "chevron.up" : "plus", recovery ? String(compatLocalized: "Up") : String(compatLocalized: "Volume up"), { pressed(actions.volumeUp) }),
+                bottom: (recovery ? "chevron.down" : "minus", recovery ? String(compatLocalized: "Down") : String(compatLocalized: "Volume down"), { pressed(actions.volumeDown) }),
                 keyHeight: key.height
             )
             if !recovery {
                 SettingsKey(size: key, action: actions.settings)
                 KeyPair(
-                    top: ("arrowtriangle.backward.fill", String(localized: "Back"), { pressed(actions.back) }),
-                    bottom: ("circle.fill", String(localized: "Home"), { pressed(actions.home) }),
+                    top: ("arrowtriangle.backward.fill", String(compatLocalized: "Back"), { pressed(actions.back) }),
+                    bottom: ("circle.fill", String(compatLocalized: "Home"), { pressed(actions.home) }),
                     glyphSize: 16, keyHeight: key.height
                 )
             }
         }
         .foregroundStyle(.primary)
         .environment(\.colorScheme, .dark)
-        .interfaceFeedback(.impact(weight: .light), trigger: keyPresses)
+
         // The rail is not on an edge: the way back names none.
         .onAppear { model?.session.keysEdge = nil }
     }
@@ -516,8 +512,8 @@ struct KeyDeck: View {
         HStack(spacing: 0) {
             if !recovery {
                 KeyPair(
-                    top: ("arrowtriangle.backward.fill", String(localized: "Back"), { pressed(actions.back) }),
-                    bottom: ("circle.fill", String(localized: "Home"), { pressed(actions.home) }),
+                    top: ("arrowtriangle.backward.fill", String(compatLocalized: "Back"), { pressed(actions.back) }),
+                    bottom: ("circle.fill", String(compatLocalized: "Home"), { pressed(actions.home) }),
                     glyphSize: 16, axis: .horizontal
                 )
                 Spacer(minLength: 16)
@@ -527,9 +523,9 @@ struct KeyDeck: View {
                 Spacer(minLength: 0)
             }
             KeyPair(
-                top: (recovery ? "chevron.up" : "minus", recovery ? String(localized: "Up") : String(localized: "Volume down"),
+                top: (recovery ? "chevron.up" : "minus", recovery ? String(compatLocalized: "Up") : String(compatLocalized: "Volume down"),
                       { pressed(recovery ? actions.volumeUp : actions.volumeDown) }),
-                bottom: (recovery ? "chevron.down" : "plus", recovery ? String(localized: "Down") : String(localized: "Volume up"),
+                bottom: (recovery ? "chevron.down" : "plus", recovery ? String(compatLocalized: "Down") : String(compatLocalized: "Volume up"),
                          { pressed(recovery ? actions.volumeDown : actions.volumeUp) }),
                 axis: .horizontal
             )
@@ -540,7 +536,7 @@ struct KeyDeck: View {
         }
         .foregroundStyle(.primary)
         .environment(\.colorScheme, .dark)
-        .interfaceFeedback(.impact(weight: .light), trigger: keyPresses)
+
     }
 
     private func pressed(_ action: () -> Void) {
@@ -576,10 +572,10 @@ nonisolated struct SideKeysTip: Tip {
 
     /// The tip's words: the keys, and a second line for Install APK.
     static func words(offersInstall: Bool, locale: Locale = .current) -> String {
-        let keys = String(localized: LocalizedStringResource(
+        let keys = String(compatLocalized: CompatLocalizedStringResource(
             "Tap for Back, Home and Settings. Hold Power for the power menu. Drag to move.", locale: locale))
         guard offersInstall else { return keys }
-        return keys + "\n" + String(localized: LocalizedStringResource(
+        return keys + "\n" + String(compatLocalized: CompatLocalizedStringResource(
             "To install an app, open Settings here and choose Install APK.", locale: locale))
     }
 
@@ -622,11 +618,10 @@ struct SideKeysTipCard: View {
             TipView(tip)
                 .tipBackground(.clear)
         }
-        .scrollBounceBehavior(.basedOnSize)
         .frame(maxHeight: maxHeight)
         .frame(idealWidth: width, maxWidth: Self.widest)
         .fixedSize(horizontal: false, vertical: true)
-        .presentationCompactAdaptation(.popover)
+
         .background(PopoverPassthrough())
     }
 }

@@ -14,7 +14,7 @@ struct FilesBar: View {
     /// (`filesBarHeight`): content fades under the glass only while it moves.
     static let scrimReach: CGFloat = 28
 
-    @Bindable var browser: FileBrowserModel
+    @ObservedObject var browser: FileBrowserModel
     /// Android's storage is up, so the guest can be browsed: the trail and
     /// Import or Export show. A transfer or a question stays in view
     /// regardless.
@@ -103,13 +103,6 @@ struct FilesBar: View {
                     }
                 }
                 .scrollIndicators(.hidden)
-                .defaultScrollAnchor(.leading, for: .alignment)
-                .defaultScrollAnchor(.trailing, for: .initialOffset)
-                .defaultScrollAnchor(.trailing, for: .sizeChanges)
-                .scrollEdgeEffectHidden()
-                .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.x > 1 } action: { _, scrolled in
-                    trailScrolled = scrolled
-                }
                 .mask {
                     HStack(spacing: 0) {
                         LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
@@ -117,7 +110,7 @@ struct FilesBar: View {
                         Color.black
                     }
                 }
-                .onChange(of: browser.route) { _, route in
+                .onChange(of: browser.route) { route in
                     guard let last = route.last else { return }
                     withAnimation(.snappy) { proxy.scrollTo(last.path, anchor: .trailing) }
                 }
@@ -126,7 +119,6 @@ struct FilesBar: View {
         .padding(.leading, 12)
         .padding(.trailing, 16)
         .frame(height: Self.height)
-        .glassEffect(.regular.interactive(), in: .capsule)
     }
 
     private func crumb(_ index: Int, route: FolderRoute) -> some View {
@@ -172,7 +164,7 @@ struct FilesBar: View {
         .accessibilityHint("Shows what is selected")
         .popover(isPresented: $browser.reviewingSelection, arrowEdge: .bottom) {
             SelectionReview(browser: browser)
-                .presentationCompactAdaptation(.popover)
+
         }
     }
 
@@ -221,12 +213,19 @@ private struct FilesBarHeightKey: PreferenceKey {
     }
 }
 
+private struct CompatFilesBarHeightKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 0
+}
+
 extension EnvironmentValues {
     /// How much of the sheet's bottom the bar covers, 0 without a bar. The
     /// bar's safe area does not reach the lists on the sheet's navigation
     /// stack, so each ends above the bar by this margin, on top of its own
     /// safe area.
-    @Entry var filesBarHeight: CGFloat = 0
+    var filesBarHeight: CGFloat {
+        get { self[CompatFilesBarHeightKey.self] }
+        set { self[CompatFilesBarHeightKey.self] = newValue }
+    }
 }
 
 extension View {
@@ -238,7 +237,7 @@ extension View {
     /// Ends a list's content above the bar, and leaves the list's own bottom
     /// margin alone while there is no bar.
     func endingAboveFilesBar(_ height: CGFloat) -> some View {
-        contentMargins(.bottom, height > 0 ? height : nil, for: .scrollContent)
+        padding(.bottom, height > 0 ? height : nil)
     }
 }
 
@@ -253,7 +252,7 @@ private extension View {
 /// The system document picker, or what the preview shows in its place. It
 /// takes copies of the files (`CopyDocumentPicker`).
 struct ImportPickerPresenter: ViewModifier {
-    @Bindable var browser: FileBrowserModel
+    @ObservedObject var browser: FileBrowserModel
     /// Optional: the bar shown without a model is the phone's.
     @Environment(AppModel.self) private var model: AppModel?
 
@@ -275,7 +274,7 @@ struct ImportPickerPresenter: ViewModifier {
 
     private func failed(_ error: Error) {
         browser.picking = false
-        model?.documentPickerFailed(error, title: String(localized: "Not imported"))
+        model?.documentPickerFailed(error, title: String(compatLocalized: "Not imported"))
     }
 }
 
@@ -310,8 +309,7 @@ struct TransferCapsule: View {
             }
             summary
         }
-        .clipShape(.rect(cornerRadius: radius, style: .continuous))
-        .glassEffect(glass, in: .rect(cornerRadius: radius, style: .continuous))
+        .clipShape(.compatRect(cornerRadius: radius, style: .continuous))
         .animation(.snappy, value: transfer.expanded)
         .animation(.snappy, value: transfer.stage)
     }
@@ -353,7 +351,7 @@ struct TransferCapsule: View {
         .contentShape(.rect)
         .onTapGesture { if transfer.items.count > 1 { transfer.expanded.toggle() } }
         .accessibilityAddTraits(transfer.items.count > 1 ? .isButton : [])
-        .accessibilityHint(transfer.items.count > 1 ? (transfer.expanded ? String(localized: "Hides the files") : String(localized: "Shows the files")) : "")
+        .accessibilityHint(transfer.items.count > 1 ? (transfer.expanded ? String(compatLocalized: "Hides the files") : String(compatLocalized: "Shows the files")) : "")
     }
 
     @ViewBuilder private var progressFill: some View {
@@ -371,7 +369,7 @@ struct TransferCapsule: View {
         Image(systemName: glyphName)
             .font(.system(size: 15, weight: .bold))
             .foregroundStyle(.white)
-            .contentTransition(.symbolEffect(.replace))
+            .contentTransition()
             .frame(width: 36, height: 36)
             .background(glyphColor.gradient, in: .circle)
             .accessibilityHidden(true)
@@ -519,10 +517,10 @@ struct ConflictCard: View {
                 .accessibilityLabel("Cancel import")
             }
             HStack(spacing: 8) {
-                Button { browser.resolveConflict(.skip) } label: { choice(String(localized: "Skip")) }
+                Button { browser.resolveConflict(.skip) } label: { choice(String(compatLocalized: "Skip")) }
                     .buttonStyle(.bordered)
                     .tint(Color(.label))
-                Button(role: .destructive) { browser.resolveConflict(.replace) } label: { choice(String(localized: "Replace")) }
+                Button(role: .destructive) { browser.resolveConflict(.replace) } label: { choice(String(compatLocalized: "Replace")) }
                     .buttonStyle(.bordered)
                     .tint(.red)
                 Button { browser.resolveConflict(.keepBoth) } label: { choice("Keep Both") }
@@ -531,7 +529,6 @@ struct ConflictCard: View {
             .buttonBorderShape(.capsule)
         }
         .padding(16)
-        .glassEffect(.regular, in: .rect(cornerRadius: 24, style: .continuous))
     }
 
     private func choice(_ title: String) -> some View {
@@ -546,9 +543,9 @@ struct ConflictCard: View {
 
     private var title: String {
         if conflict.clashing.count == 1, let only = conflict.clashing.first {
-            return String(localized: "\u{201C}\(only.name)\u{201D} is already in \(folderName)")
+            return String(compatLocalized: "\u{201C}\(only.name)\u{201D} is already in \(folderName)")
         }
-        return String(localized: "\(conflict.clashing.count) names are already in \(folderName)")
+        return String(compatLocalized: "\(conflict.clashing.count) names are already in \(folderName)")
     }
 
     /// The names a count stands for.
@@ -556,6 +553,6 @@ struct ConflictCard: View {
         guard conflict.clashing.count > 1 else { return nil }
         let shown = conflict.clashing.prefix(2).map(\.name)
         let more = conflict.clashing.count - shown.count
-        return ListFormatter.localizedString(byJoining: shown + (more > 0 ? [String(localized: "\(more) more")] : []))
+        return ListFormatter.localizedString(byJoining: shown + (more > 0 ? [String(compatLocalized: "\(more) more")] : []))
     }
 }

@@ -36,13 +36,13 @@ public final class SpacePauser {
     /// ends, or every attempt to suspend it failed.
     public private(set) var isPaused = false
     private let effects: any SpacePauseEffects
-    private let wait: (Duration) async -> Void
+    private let wait: (CompatDuration) async -> Void
 
     /// `wait` is how the confirmation waits between its readings: real time
     /// unless a test says otherwise.
     public init(
         effects: any SpacePauseEffects,
-        wait: @escaping (Duration) async -> Void = { try? await Task.sleep(for: $0) }
+        wait: @escaping (CompatDuration) async -> Void = { try? await compatSleep(for: $0) }
     ) {
         self.effects = effects
         self.wait = wait

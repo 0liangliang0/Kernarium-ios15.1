@@ -31,7 +31,7 @@ struct SessionSettingsSheet: View {
 
     var body: some View {
         let session = model.session
-        NavigationStack(path: fileRoute) {
+        NavigationView(path: fileRoute) {
             ScrollViewReader { proxy in
                 List {
                     if offersInstall { apps }
@@ -49,22 +49,21 @@ struct SessionSettingsSheet: View {
                 }
                 .task {
                     guard let target = model.sessionPreset.settingsScroll else { return }
-                    try? await Task.sleep(for: .milliseconds(500))
+                    try? await compatSleep(for: .milliseconds(500))
                     proxy.scrollTo(target, anchor: .top)
                 }
                 .task {
                     // A launch argument of the preview opens the page directly.
                     guard model.sessionPreset.oldAppsPage else { return }
-                    try? await Task.sleep(for: .milliseconds(400))
+                    try? await compatSleep(for: .milliseconds(400))
                     oldAppsOpen = true
                 }
                 .task {
                     guard model.sessionPreset.addToHomePage, model.hostOffersAddToHomeScreen else { return }
-                    try? await Task.sleep(for: .milliseconds(400))
+                    try? await compatSleep(for: .milliseconds(400))
                     addToHomeOpen = true
                 }
             }
-            .listSectionSpacing(.compact)
             .endingAboveFilesBar(filesBarHeight)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
@@ -73,13 +72,13 @@ struct SessionSettingsSheet: View {
                     Button("Done", systemImage: "checkmark", action: close)
                 }
             }
-            .navigationDestination(for: FolderRoute.self) { route in
+            .compatNavigationDestination(for: FolderRoute.self) { route in
                 if let browser = model.fileBrowser {
                     FolderPage(browser: browser, route: route, close: close)
                 }
             }
-            .navigationDestination(isPresented: $oldAppsOpen) { OldAppsPage() }
-            .navigationDestination(isPresented: $addToHomeOpen) {
+            .sheet(isPresented: $oldAppsOpen) { OldAppsPage() }
+            .sheet(isPresented: $addToHomeOpen) {
                 AddToHomeScreenPage(query: model.sessionPreset.addToHomeQuery ?? "")
             }
         }
@@ -110,7 +109,6 @@ struct SessionSettingsSheet: View {
             }
         }
         .readFilesBarHeight(into: $filesBarHeight)
-        .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.bottom } action: { filesBarInset = $0 }
         .animation(.snappy, value: model.fileBrowser?.browsing)
         .interactiveDismissDisabled(model.fileBrowser?.running == true)
         .confirmationDialog("Stop the transfer?", isPresented: $confirmingStop, titleVisibility: .visible) {
@@ -121,7 +119,7 @@ struct SessionSettingsSheet: View {
             Button("Keep Going", role: .cancel) {}
         }
         // A browser wants the room.
-        .onChange(of: model.fileBrowser?.browsing) { _, browsing in
+        .onChange(of: model.fileBrowser?.browsing) { browsing in
             if browsing == true { detent = .large }
         }
         .task { await model.watchSettings() }
@@ -129,7 +127,6 @@ struct SessionSettingsSheet: View {
             model.fileBrowser?.sheetClosed()
             model.documentPickerProblem = nil
         }
-        .presentationDetents([.medium, .large], selection: $detent)
         .presentationBackground(Color(.systemGroupedBackground))
         .presentationBackgroundInteraction(.enabled(upThrough: .medium))
         // The picker takes a copy of the file (`CopyDocumentPicker`).
@@ -240,7 +237,7 @@ struct SessionSettingsSheet: View {
 
     private var files: some View {
         Section("File browser") {
-            NavigationLink(value: FolderRoute(path: GuestPath.root)) {
+            CompatNavigationLink(value: FolderRoute(path: GuestPath.root)) {
                 HStack(spacing: 12) {
                     IconTile(symbol: "folder.fill")
                     Text("Internal storage")
@@ -392,13 +389,13 @@ struct SessionSettingsSheet: View {
                     UIPasteboard.general.string = command
                     withAnimation(.snappy) { copied = true }
                     Task {
-                        try? await Task.sleep(for: .seconds(1.6))
+                        try? await compatSleep(for: .seconds(1.6))
                         withAnimation(.snappy) { copied = false }
                     }
                 } label: {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc")
                         .font(.system(size: 15, weight: .semibold))
-                        .contentTransition(.symbolEffect(.replace))
+                        .contentTransition()
                         .frame(width: 36, height: 36)
                 }
                 .buttonStyle(.borderless)
@@ -407,7 +404,7 @@ struct SessionSettingsSheet: View {
             .padding(.leading, 14)
             .padding(.trailing, 4)
             .frame(minHeight: 46)
-            .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 12, style: .continuous))
+            .background(Color(.tertiarySystemFill), in: .compatRect(cornerRadius: 12, style: .continuous))
         }
         .padding(.vertical, 4)
     }
@@ -427,7 +424,7 @@ struct SessionSettingsSheet: View {
 
     /// The text field a UI test types into while Settings is open.
     private func inputProbe(_ probe: InputProbe) -> some View {
-        @Bindable var probe = probe
+        @ObservedObject var probe = probe
         return Section {
             TextField(text: $probe.fieldText) { Text(verbatim: "Input probe") }
                 .autocorrectionDisabled()
@@ -439,10 +436,10 @@ struct SessionSettingsSheet: View {
     // MARK: Stats
 
     private func stats(_ session: SessionState) -> some View {
-        @Bindable var session = session
+        @ObservedObject var session = session
         let memoryMiB = model.guest?.memoryMiB ?? Limits.defaultMemoryRangeMiB.lowerBound
         return Section("Stats") {
-            LabeledContent {
+            CompatLabeledContent {
                 HStack(spacing: 10) {
                     Sparkline(values: session.readout.history)
                         .frame(width: 44, height: 18)
@@ -457,17 +454,17 @@ struct SessionSettingsSheet: View {
             // to every row.
             .onAppear { model.statistics(.settings, visible: true) }
             .onDisappear { model.statistics(.settings, visible: false) }
-            LabeledContent {
+            CompatLabeledContent {
                 usage(session.readout.memoryText(of: memoryMiB), share: session.readout.memoryFraction(of: memoryMiB))
             } label: {
                 rowLabel("Memory", symbol: "memorychip")
             }
-            LabeledContent {
+            CompatLabeledContent {
                 usage(session.readout.vramText, share: session.readout.vramFraction)
             } label: {
                 rowLabel("VRAM", symbol: "cube")
             }
-            LabeledContent {
+            CompatLabeledContent {
                 value(session.readout.fpsText)
             } label: {
                 rowLabel("Frame rate", symbol: "speedometer")

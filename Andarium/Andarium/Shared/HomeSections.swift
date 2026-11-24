@@ -27,7 +27,6 @@ struct HomeSection<Content: View, Footer: View>: View {
         VStack(alignment: .leading, spacing: 8) {
             title.homeSectionHeading()
             VStack(spacing: 0) { content }
-                .glassEffect(.regular, in: .rect(cornerRadius: 26))
             footer
         }
     }
@@ -70,7 +69,6 @@ struct HomeGroup<Content: View, Footer: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             VStack(spacing: 0) { content }
-                .glassEffect(.regular, in: .rect(cornerRadius: 26))
             footer
         }
     }
@@ -174,10 +172,10 @@ struct SystemSection: View {
         if let guest = model.guest {
             HomeSection(title: "Virtual machine") {
                 SystemRow(
-                    symbol: "cpu", title: String(localized: "CPU and memory"), subtitle: Self.summary(of: guest),
+                    symbol: "cpu", title: String(compatLocalized: "CPU and memory"), subtitle: Self.summary(of: guest),
                     button: SystemRowButton(
                         title: SystemRowButton.edit, identifier: "home-system-edit",
-                        accessibilityName: String(localized: "Edit system"),
+                        accessibilityName: String(compatLocalized: "Edit system"),
                         action: { model.sheet = .system }
                     )
                 )
@@ -206,8 +204,8 @@ struct SystemRowButton {
     var isEnabled = true
     let action: () -> Void
 
-    static let edit = String(localized: "Edit")
-    static let resize = String(localized: "Resize")
+    static let edit = String(compatLocalized: "Edit")
+    static let resize = String(compatLocalized: "Resize")
     static let manage = SnapshotWords.manage
 
     /// Every title a button of the section has: each button is as wide as the
@@ -350,7 +348,7 @@ struct HighRefreshRow: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        OptionRow(title: String(localized: "120 Hz"), symbol: "speedometer") {
+        OptionRow(title: String(compatLocalized: "120 Hz"), symbol: "speedometer") {
             Toggle("120 Hz", isOn: Binding(
                 get: { model.highRefreshOn },
                 set: { model.setHighRefresh($0) }
@@ -362,16 +360,16 @@ struct HighRefreshRow: View {
         // name, as it did when the note was in the cell.
         .accessibilityLabel(HighRefreshWords.spoken)
         // Voice Control matches the name alone, as it is on the screen.
-        .accessibilityInputLabels([String(localized: "120 Hz")])
+        .accessibilityInputLabels([String(compatLocalized: "120 Hz")])
         .id("high-refresh")
     }
 }
 
 /// The note beneath the 120 Hz group.
 enum HighRefreshWords {
-    static let note = String(localized: "Smoother motion, more battery use.")
+    static let note = String(compatLocalized: "Smoother motion, more battery use.")
     /// What VoiceOver says for the row: the note and the name.
-    static let spoken: String = "\(note), \(String(localized: "120 Hz"))"
+    static let spoken: String = "\(note), \(String(compatLocalized: "120 Hz"))"
 }
 
 /// The note beneath the 120 Hz group.
@@ -422,7 +420,7 @@ struct CapabilitiesSection: View {
 
 /// The words under Microphone while iOS refuses access.
 enum CapabilityWords {
-    static let microphoneDenied = String(localized: "Not allowed in Settings")
+    static let microphoneDenied = String(compatLocalized: "Not allowed in Settings")
 }
 
 struct MicrophoneRow: View {
@@ -431,7 +429,7 @@ struct MicrophoneRow: View {
     var body: some View {
         let denied = model.microphoneState == .denied
         OptionRow(
-            title: String(localized: "Microphone"), symbol: "mic.fill",
+            title: String(compatLocalized: "Microphone"), symbol: "mic.fill",
             detail: denied ? CapabilityWords.microphoneDenied : nil, dimmed: denied
         ) {
             Toggle("Microphone", isOn: Binding(
@@ -440,7 +438,7 @@ struct MicrophoneRow: View {
             ))
             .labelsHidden()
         }
-        .accessibilityHint(denied ? String(localized: "Andarium is not allowed to use the microphone. Turning this on offers to open Settings.") : "")
+        .accessibilityHint(denied ? String(compatLocalized: "Andarium is not allowed to use the microphone. Turning this on offers to open Settings.") : "")
     }
 }
 
@@ -479,7 +477,7 @@ struct HapticsRow: View {
     static let symbol = "iphone.radiowaves.left.and.right"
 
     var body: some View {
-        OptionRow(title: String(localized: "Haptics"), symbol: Self.symbol) {
+        OptionRow(title: String(compatLocalized: "Haptics"), symbol: Self.symbol) {
             Toggle("Haptics", isOn: Binding(
                 get: { model.hapticsOn },
                 set: { model.setHaptics($0) }
@@ -520,7 +518,7 @@ struct MicrophoneAccessAlert: ViewModifier {
     @Environment(AppModel.self) private var model
 
     func body(content: Content) -> some View {
-        @Bindable var model = model
+        @ObservedObject var model = model
         content.alert(
             "Allow microphone access", isPresented: Binding(
                 get: { model.permissionPrompt == .microphone },
@@ -530,7 +528,7 @@ struct MicrophoneAccessAlert: ViewModifier {
             Button("Open Settings") { model.openMicrophoneSettings() }
             Button("Not now", role: .cancel) {}
         } message: {
-            Text(String(localized: "iOS is not allowing Andarium to use the microphone. Turn on Microphone for Andarium in Settings, then come back to use it.").keepingTogether)
+            Text(String(compatLocalized: "iOS is not allowing Andarium to use the microphone. Turn on Microphone for Andarium in Settings, then come back to use it.").keepingTogether)
         }
     }
 }
@@ -546,7 +544,7 @@ struct LocationAccessAlert: ViewModifier {
     @Environment(AppModel.self) private var model
 
     func body(content: Content) -> some View {
-        @Bindable var model = model
+        @ObservedObject var model = model
         let words = LocationWords.alert(for: model.locationAuthorization)
         content.alert(
             words?.title ?? "", isPresented: Binding(
@@ -577,7 +575,7 @@ struct CameraAccessAlert: ViewModifier {
     @Environment(AppModel.self) private var model
 
     func body(content: Content) -> some View {
-        @Bindable var model = model
+        @ObservedObject var model = model
         let words = CameraWords.alert(for: model.cameraAccess)
         content.alert(
             words?.title ?? "", isPresented: Binding(
@@ -671,7 +669,7 @@ struct BackupOption: View {
     @Binding var isOn: Bool
 
     var body: some View {
-        OptionRow(title: String(localized: "Include in backups"), symbol: "icloud.fill") {
+        OptionRow(title: String(compatLocalized: "Include in backups"), symbol: "icloud.fill") {
             Toggle("Include in backups", isOn: $isOn).labelsHidden()
         }
     }

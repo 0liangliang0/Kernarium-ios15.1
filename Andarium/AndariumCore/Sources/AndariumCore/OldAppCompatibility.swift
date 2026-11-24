@@ -78,12 +78,12 @@ public struct OldAppCompatibility: Sendable {
     private static let notEligibleStatus = 2
 
     /// A listing is a few lines per app: it is bounded in the time it may take.
-    public static let listLimit = Duration.seconds(20)
+    public static let listLimit = CompatDuration.seconds(20)
     /// The listing taken around an install, which the install's result waits
     /// for: a longer one is not worth the wait for a hint.
-    public static let installListLimit = Duration.seconds(5)
-    static let setLimit = Duration.seconds(20)
-    static let runningLimit = Duration.seconds(10)
+    public static let installListLimit = CompatDuration.seconds(5)
+    static let setLimit = CompatDuration.seconds(20)
+    static let runningLimit = CompatDuration.seconds(10)
 
     /// The longest name the screens are given: a label is the app's own text.
     static let longestLabel = 200
@@ -97,7 +97,7 @@ public struct OldAppCompatibility: Sendable {
     // MARK: Questions
 
     /// Lists the eligible apps, within `limit`.
-    public func list(limit: Duration = OldAppCompatibility.listLimit) async -> OldAppListing {
+    public func list(limit: CompatDuration = OldAppCompatibility.listLimit) async -> OldAppListing {
         guard let answer = try? await shell.run(Self.listCommand, limit: limit) else { return .failed }
         return Self.parseListing(answer)
     }

@@ -24,11 +24,11 @@ nonisolated enum ApkInstallOperation {
     /// Sending the file is eight tenths of the bar; Android's own install,
     /// whose length is not known, holds there.
     static let sendingShare = 0.8
-    static let sendIdleLimit = Duration.seconds(60)
-    static let commitLimit = Duration.seconds(15 * 60)
+    static let sendIdleLimit = CompatDuration.seconds(60)
+    static let commitLimit = CompatDuration.seconds(15 * 60)
     /// Reading an archive's directory and manifests is quick; a file that
     /// takes this long, in the guest's running time, is not one.
-    static let inspectLimit = Duration.seconds(5 * 60)
+    static let inspectLimit = CompatDuration.seconds(5 * 60)
 
     /// Installs the file at `url`. What the install needs to know of the file
     /// (its size, and with it the room it takes) is read once the coordinated
@@ -49,7 +49,7 @@ nonisolated enum ApkInstallOperation {
         var result: Result<ApkInstallOutcome, Error> = .success(.installed)
         var coordinationError: NSError?
         // The read is coordinated, which brings an iCloud file down first.
-        update(BusyUpdate(detail: String(localized: "Getting the file\u{2026}")))
+        update(BusyUpdate(detail: String(compatLocalized: "Getting the file\u{2026}")))
         coordinator.current.coordinate(readingItemAt: url, options: [], error: &coordinationError) { readable in
             result = Result {
                 if InstallRefusal.isPlainApk(fileName: url.lastPathComponent) {
@@ -113,7 +113,7 @@ nonisolated enum ApkInstallOperation {
                 // The package manager gave up early; what it printed says why.
             }
             update(BusyUpdate(
-                progress: sendingShare, detail: String(localized: "The virtual machine is installing the app\u{2026}"),
+                progress: sendingShare, detail: String(compatLocalized: "The virtual machine is installing the app\u{2026}"),
                 cancellable: false))
             watchdog.arm(idle: nil, overall: commitLimit)
             let text = String(decoding: try stream.readToEnd(limit: PackageInstallCommand.replyBudgetBytes), as: UTF8.self)

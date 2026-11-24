@@ -144,7 +144,7 @@ struct TextMessageBar: View {
                     .opacity(sending ? 0.5 : 1)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
-                    .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 20))
+                    .background(Color(.tertiarySystemFill), in: .compatRect(cornerRadius: 20))
                     .accessibilityLabel(SmsMessages.message)
                     .accessibilityIdentifier("text-message-text")
                 // Send stays where it is while the message goes, disabled and
@@ -175,20 +175,19 @@ struct TextMessageBar: View {
         // Glass alone shows whatever Android draws behind it, and the words
         // measured under 4.5:1 over some screens. The opaque backing the screen
         // reader card has keeps every word readable over any screen.
-        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 28))
-        .glassEffect(.regular, in: .rect(cornerRadius: 28))
+        .background(Color(.secondarySystemGroupedBackground), in: .compatRect(cornerRadius: 28))
         .frame(maxWidth: 560)
         .padding(.horizontal, 10)
         .padding(.bottom, 6)
         .accessibilityElement(children: .contain)
         // The fields kept the keyboard through the send; once Android has
         // answered, the message box is where the typing goes on.
-        .onChange(of: sending) { was, now in
-            if was && !now { focus = .text }
+        .onChange(of: sending) { now in
+            if !now { focus = .text }
         }
         // Android is paused for lack of space: the keyboard goes, so that the
         // pause card does not cover the bar's title and Close.
-        .onChange(of: model.textMessageAvailability) { _, now in
+        .onChange(of: model.textMessageAvailability) { now in
             if now == .paused { focus = nil }
             // A result that waited for its line while Android was paused is shown now.
             model.presentTextMessageLine()
@@ -196,12 +195,12 @@ struct TextMessageBar: View {
         // A request to take VoiceOver to the status line: a result that was not
         // told yet, asked about again, or the cut-off line.
         .onChange(of: state.statusFocusRequests) { statusFocused = true }
-        .onChange(of: statusFocused) { _, focused in
+        .onChange(of: statusFocused) { focused in
             if focused { model.textMessageLineFocused() }
         }
         .task {
             guard state.progress != .sending else { return }
-            try? await Task.sleep(for: .milliseconds(300))
+            try? await compatSleep(for: .milliseconds(300))
             // The bar opened with the cut-off line while VoiceOver runs: it is
             // read first, and the keyboard's focus move waits for the person.
             if state.skipsKeyboardFocus {
@@ -213,7 +212,7 @@ struct TextMessageBar: View {
             if model.textMessageAvailability != .paused { focus = .text }
             // After the keyboard's focus, which VoiceOver would follow: it
             // starts on the title, then reads the line under it.
-            try? await Task.sleep(for: .milliseconds(400))
+            try? await compatSleep(for: .milliseconds(400))
             titleFocused = true
         }
     }

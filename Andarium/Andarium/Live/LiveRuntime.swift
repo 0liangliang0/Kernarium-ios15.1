@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import Combine
 import Foundation
 import GuestHostCore
-import Observation
+
 import UIKit
 
 /// The guest console, read on the runtime's thread for the boot's milestones.
@@ -53,6 +54,9 @@ final class LiveRuntime: RuntimeDriver {
     nonisolated private static let powerMenuHold = 0.8
 
     private weak var model: AppModel?
+    /// Observation is not available on iOS 15; the model's Combine publisher
+    /// carries the same change signal for these watchers.
+    private var watchCancellables = Set<AnyCancellable>()
     private let storage: TwoDiskStorage
     /// Android reached `sys.boot_completed` in the boot under way, which a
     /// clean end records. Recovery never does.
@@ -165,7 +169,7 @@ final class LiveRuntime: RuntimeDriver {
             let result = try await operations.shell(policy.command, limit: .seconds(15))
             guard result.exitCode == 0 else {
                 print("Andarium: display rotation command failed: \(result.text)")
-                throw AdbFailure(message: String(localized: "The virtual machine’s screen could not follow this window. Close and reopen Andarium to try again."))
+                throw AdbFailure(message: String(compatLocalized: "The virtual machine’s screen could not follow this window. Close and reopen Andarium to try again."))
             }
         }, changed: { [weak self] in
             self?.updateMotionSensors()
@@ -173,8 +177,8 @@ final class LiveRuntime: RuntimeDriver {
             print("Andarium: display rotation unavailable: \(error)")
             guard let model = self?.model, model.alert == nil else { return }
             model.alert = AppAlert(
-                title: String(localized: "Display rotation unavailable"),
-                message: String(localized: "The virtual machine’s screen could not follow this window. Close and reopen Andarium to try again."))
+                title: String(compatLocalized: "Display rotation unavailable"),
+                message: String(compatLocalized: "The virtual machine’s screen could not follow this window. Close and reopen Andarium to try again."))
         })
     private var normalRun = false
     /// The device body's turn last given to the camera in this run
@@ -373,7 +377,7 @@ final class LiveRuntime: RuntimeDriver {
     /// What a change of the guest's files says when a start or the run holds
     /// them: the snapshots' own words.
     private struct GuestFilesTaken: LocalizedError {
-        var errorDescription: String? { String(localized: "Not while the virtual machine is starting or running.") }
+        var errorDescription: String? { String(compatLocalized: "Not while the virtual machine is starting or running.") }
     }
 
     func save(_ guest: Guest) throws {
@@ -988,7 +992,7 @@ final class LiveRuntime: RuntimeDriver {
     /// The image's `kernarium_oldapp` command, over the application's own adb channel.
     private var oldApps: OldAppCompatibility { OldAppCompatibility(shell: AdbGuestShell(operations: operations)) }
 
-    func listOldApps(limit: Duration?) async -> OldAppListing {
+    func listOldApps(limit: CompatDuration?) async -> OldAppListing {
         await oldApps.list(limit: limit ?? OldAppCompatibility.listLimit)
     }
 
@@ -1022,7 +1026,7 @@ final class LiveRuntime: RuntimeDriver {
                     shell: shell, storageReady: { await self.storageReady() }, homeReached: homeReached)
             },
             now: { clock.now },
-            sleep: { try? await Task.sleep(for: $0) })
+            sleep: { try? await compatSleep(for: $0) })
     }
 
     func sendSms(_ request: GuestSmsRequest) async -> GuestSmsChannel.Outcome {
@@ -1226,7 +1230,7 @@ final class LiveRuntime: RuntimeDriver {
         guard !holdsGuestStill else { return }
         kernarium_runtime_loader_send_key(key.rawValue, 1)
         Task {
-            try? await Task.sleep(for: .seconds(seconds))
+            try? await compatSleep(for: .seconds(seconds))
             kernarium_runtime_loader_send_key(key.rawValue, 0)
         }
     }
@@ -1356,15 +1360,10 @@ final class LiveRuntime: RuntimeDriver {
     /// keys, and with them the pointer lock the guest's capture asked for.
     private func observeOverlay() {
         guard let model else { return }
-        withObservationTracking {
-            _ = model.guestHasKeys
-        } onChange: {
-            Task { @MainActor in
-                guard self.model != nil else { return }
-                self.updateKeyboardMouse()
-                self.observeOverlay()
-            }
-        }
+        model.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in self?.updateKeyboardMouse() }
+            .store(in: &watchCancellables)
     }
 
     func setPointerAsTouch(_ on: Bool) {
@@ -1461,7 +1460,7 @@ final class LiveRuntime: RuntimeDriver {
         }
     }
 
-    func readGraphicsMemory(minimumIdle: Duration, minimumBytes: UInt64) async -> GraphicsMemoryReading? {
+    func readGraphicsMemory(minimumIdle: CompatDuration, minimumBytes: UInt64) async -> GraphicsMemoryReading? {
         let (seconds, attoseconds) = minimumIdle.components
         let idle = UInt32(clamping: max(seconds, 0) * 1000 + max(attoseconds, 0) / 1_000_000_000_000_000)
         return await withCheckedContinuation { continuation in
@@ -1668,7 +1667,7 @@ final class LiveRuntime: RuntimeDriver {
                 pauseForSpace(freeBytes: free)
                 return
             }
-            try? await Task.sleep(for: RunSpace.nextCheck(freeBytes: free))
+            try? await compatSleep(for: RunSpace.nextCheck(freeBytes: free))
         }
     }
 
@@ -1731,12 +1730,12 @@ final class LiveRuntime: RuntimeDriver {
         await wakeGuest()
         guard !pause.isPausedForSpace else {
             shuttingDown = false
-            throw AdbFailure(message: String(localized: "Android is still paused."))
+            throw AdbFailure(message: String(compatLocalized: "Android is still paused."))
         }
         do {
             let result = try await operations.shell("reboot -p", limit: .seconds(30))
             if let code = result.exitCode, code != 0 {
-                throw AdbFailure(message: String(localized: "Android refused to power off (\(code))."))
+                throw AdbFailure(message: String(compatLocalized: "Android refused to power off (\(code))."))
             }
             // Android powers off after the command returns, which ends the
             // run; the screen goes with it. Until it has, it is going down.
@@ -1754,13 +1753,13 @@ final class LiveRuntime: RuntimeDriver {
         }
     }
 
-    private func waitForRunToEnd(_ limit: Duration) async throws {
-        let deadline = ContinuousClock.now + limit
+    private func waitForRunToEnd(_ limit: CompatDuration) async throws {
+        let deadline = CompatContinuousClock.now + limit
         while runActive {
-            guard ContinuousClock.now < deadline else {
-                throw AdbFailure(message: String(localized: "Android did not power off."))
+            guard CompatContinuousClock.now < deadline else {
+                throw AdbFailure(message: String(compatLocalized: "Android did not power off."))
             }
-            try await Task.sleep(for: .milliseconds(250))
+            try await compatSleep(for: .milliseconds(250))
         }
     }
 
@@ -1829,15 +1828,10 @@ final class LiveRuntime: RuntimeDriver {
 
     private func observeRotationPolicy() {
         guard let model else { return }
-        withObservationTracking {
-            _ = model.hostDrivesGuestRotation
-        } onChange: {
-            Task { @MainActor in
-                guard self.model != nil else { return }
-                self.updateGuestRotation()
-                self.observeRotationPolicy()
-            }
-        }
+        model.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in self?.updateGuestRotation() }
+            .store(in: &watchCancellables)
     }
 }
 
@@ -1992,7 +1986,7 @@ extension LiveRuntime: SnapshotDriver {
             let cancelled = Task.isCancelled
             if !cancelled { await settleSnapshotOperation() }
             // A guest being set up or erased changes the files under a listing.
-            while storageBusy, !Task.isCancelled { try? await Task.sleep(for: .milliseconds(50)) }
+            while storageBusy, !Task.isCancelled { try? await compatSleep(for: .milliseconds(50)) }
             let revision = snapshotRevision
             let quick = cancelled || Task.isCancelled
             // A cancellation reaches the measure, which stops between two

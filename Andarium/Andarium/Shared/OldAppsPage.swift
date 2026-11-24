@@ -52,7 +52,6 @@ struct OldAppsPage: View {
                 appsSection(state)
             }
         }
-        .listSectionSpacing(.compact)
         .navigationTitle(OldAppsWords.title)
         .navigationBarTitleDisplayMode(.inline)
         // The page lists afresh each time it opens, and an alert left over is gone.

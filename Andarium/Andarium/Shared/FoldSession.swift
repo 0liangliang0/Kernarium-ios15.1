@@ -23,7 +23,7 @@ struct FoldSessionOverlay: View {
     private var memoryMiB: Int { model.guest?.memoryMiB ?? Limits.defaultMemoryRangeMiB.lowerBound }
 
     var body: some View {
-        @Bindable var model = model
+        @ObservedObject var model = model
         GeometryReader { geo in
             let origin = geo.frame(in: .global).origin
             ZStack(alignment: .topLeading) {
@@ -118,7 +118,6 @@ struct RailStats: View {
         }
         .padding(.vertical, 10)
         .frame(width: 70)
-        .glassEffect(.regular, in: .rect(cornerRadius: 18))
         .environment(\.colorScheme, .dark)
         .allowsHitTesting(false)
         .accessibilityElement(children: .ignore)

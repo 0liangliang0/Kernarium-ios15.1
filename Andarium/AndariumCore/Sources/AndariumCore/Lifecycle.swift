@@ -185,25 +185,23 @@ public struct RunEnd: Equatable, Sendable {
             "\(system.kernel) · \(Formats.vcpus(guest?.cores ?? 0)) · \(Formats.size(mib: guest?.memoryMiB ?? 0))",
         ]
         let reason = if let startFailure {
-            String(localized: "it could not start (\(startFailure))", bundle: .module)
+            String(compatLocalized: "it could not start (\(startFailure))", bundle: .module)
         } else if let memoryRefusedMiB {
-            String(
-                localized: "it could not start (this device could not give it \(Formats.size(mib: memoryRefusedMiB)) of memory)",
+            String(compatLocalized: "it could not start (this device could not give it \(Formats.size(mib: memoryRefusedMiB)) of memory)",
                 bundle: .module)
         } else if stoppedByUser {
-            String(localized: "it was stopped from the boot screen", bundle: .module)
+            String(compatLocalized: "it was stopped from the boot screen", bundle: .module)
         } else if restartedInALoop {
-            String(localized: "the virtual machine kept restarting", bundle: .module)
+            String(compatLocalized: "the virtual machine kept restarting", bundle: .module)
         } else {
-            String(localized: "runtime result \(Int(result))", bundle: .module)
+            String(compatLocalized: "runtime result \(Int(result))", bundle: .module)
         }
         // A run the host refused for its memory never began, so it did not run
         // for any time, whatever the caller measured from its start.
         if let uptimeSeconds, memoryRefusedMiB == nil {
-            lines.append(String(
-                localized: "Virtual machine ended: \(reason) after \(Formats.elapsed(uptimeSeconds))", bundle: .module))
+            lines.append(String(compatLocalized: "Virtual machine ended: \(reason) after \(Formats.elapsed(uptimeSeconds))", bundle: .module))
         } else {
-            lines.append(String(localized: "Virtual machine ended: \(reason)", bundle: .module))
+            lines.append(String(compatLocalized: "Virtual machine ended: \(reason)", bundle: .module))
         }
         return lines.joined(separator: "\n")
     }

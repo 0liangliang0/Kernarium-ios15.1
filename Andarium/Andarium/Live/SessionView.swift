@@ -11,7 +11,7 @@ struct SessionView: View {
     let mode: StartMode
 
     var body: some View {
-        @Bindable var model = model
+        @ObservedObject var model = model
         content
             // The text message bar, over Android and above the keyboard.
             .overlay(alignment: .bottom) { TextMessageBarOverlay() }
@@ -24,7 +24,7 @@ struct SessionView: View {
             .sessionSettings(isPresented: $model.sessionSettingsOpen, large: false, model: model)
             // The screen over the session says why the guest is paused, and a
             // sheet would cover it.
-            .onChange(of: model.spacePause != nil) { _, paused in
+            .onChange(of: model.spacePause != nil) { paused in
                 if paused { model.sessionSettingsOpen = false }
             }
             .overlay(alignment: .bottomLeading) {
@@ -37,7 +37,7 @@ struct SessionView: View {
     /// guest's edge and the statistics hanging from its top.
     @ViewBuilder
     private var content: some View {
-        @Bindable var model = model
+        @ObservedObject var model = model
         if let plan = model.sessionPlan {
             Color.clear
                 .background { GameControllerEventInteraction().allowsHitTesting(false) }

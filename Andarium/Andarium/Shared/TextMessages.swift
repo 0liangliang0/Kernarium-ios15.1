@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import Combine
 import Foundation
 
 /// Whether Android can take a text message now.
@@ -35,8 +36,8 @@ struct TextMessageStatus: Equatable {
 /// send that is under way ends with it, and what a run's send came to is
 /// told once, in this run or by the notice (`TextMessageNotice`) at the next
 /// opening of the bar, and never twice.
-@Observable
-final class TextMessageState {
+final class TextMessageState: ObservableObject {
+
     /// How the last send ended.
     enum Progress: Equatable {
         case idle
@@ -62,38 +63,38 @@ final class TextMessageState {
     }
 
     /// The bar is up over Android.
-    var isOpen = false
+    @Published var isOpen = false
     /// What is typed, as typed: it is cleaned and judged where it is used.
-    private(set) var sender = GuestSms.defaultSender
-    private(set) var text = ""
-    var progress = Progress.idle
+    @Published private(set) var sender = GuestSms.defaultSender
+    @Published private(set) var text = ""
+    @Published var progress = Progress.idle
     /// The identifiers of the drafts whose send has no final result, and of the final results not yet shown.
-    var retries = GuestSms.Retries()
+    @Published var retries = GuestSms.Retries()
     /// The sender and text of the last send, for the words about it to
     /// apply to that draft alone.
-    private(set) var attempt: (sender: String, text: String)?
+    @Published private(set) var attempt: (sender: String, text: String)?
     /// The run is over: nothing of this is shown, and a late answer is lost.
-    private(set) var ended = false
-    @ObservationIgnored var sendTask: Task<Void, Never>?
+    @Published private(set) var ended = false
+    var sendTask: Task<Void, Never>?
     /// The line that has not been presented yet. It counts as presented once it
     /// was on screen in the open bar while the application was active and,
     /// under VoiceOver, announced or focused (`AppModel.presentTextMessageLine`).
-    private(set) var awaiting: Awaiting?
+    @Published private(set) var awaiting: Awaiting?
     /// VoiceOver announced the awaited line to its end, or its focus reached the line.
-    private(set) var announced = false
+    @Published private(set) var announced = false
     /// The bar opened with the cut-off line while VoiceOver ran: the keyboard's
     /// focus move is skipped, so that it cannot cut the announcement short.
-    private(set) var skipsKeyboardFocus = false
+    @Published private(set) var skipsKeyboardFocus = false
     /// Each request to give VoiceOver focus to the status line; the bar follows it.
-    private(set) var statusFocusRequests = 0
+    @Published private(set) var statusFocusRequests = 0
 
     /// What a field took that the model refused (a character typed while a
     /// message is being sent), until the next turn of the main loop. A field
     /// that took a character the model refused would go on showing it: the
     /// field shows this for that one turn and then the model's own text, which
     /// is a change for it to redraw.
-    private(set) var refusedSender: String?
-    private(set) var refusedText: String?
+    @Published private(set) var refusedSender: String?
+    @Published private(set) var refusedText: String?
 
     /// What the sender and the message box show.
     var shownSender: String { refusedSender ?? sender }
@@ -163,7 +164,7 @@ final class TextMessageState {
     @discardableResult
     func close() -> String? {
         guard progress != .sending else { return nil }
-        var unshown: String?
+        @Published var unshown: String?
         if case .result(let identifier)? = awaiting {
             unshown = identifier
             retries.forget(identifier: identifier)
@@ -507,7 +508,7 @@ extension AppModel {
                 outcome = await driver.sendSms(request)
             } else {
                 // The preview has no guest: Android takes it after a moment.
-                try? await Task.sleep(for: .milliseconds(600))
+                try? await compatSleep(for: .milliseconds(600))
                 outcome = .answered(Data("\(GuestSms.payloadVersion).handed-over.\(request.identifier).1".utf8))
             }
             guard !Task.isCancelled else { return }

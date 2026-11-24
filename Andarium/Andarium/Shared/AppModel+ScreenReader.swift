@@ -83,7 +83,7 @@ extension AppModel {
             while !Task.isCancelled {
                 guard let self, session === current, voiceOverRunning(), offersScreenReader else { return }
                 await refreshScreenReader()
-                try? await Task.sleep(for: screenReaderWatchInterval)
+                try? await compatSleep(for: screenReaderWatchInterval)
             }
         }
     }
@@ -303,7 +303,7 @@ extension AppModel {
         runStartAnnouncer(words) { _ in release() }
         let bound = runStartBound
         Task { @MainActor in
-            try? await Task.sleep(for: bound)
+            try? await compatSleep(for: bound)
             release()
         }
     }

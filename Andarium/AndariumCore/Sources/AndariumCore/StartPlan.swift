@@ -18,17 +18,17 @@ public enum StartBlock: Equatable, Sendable {
 }
 
 extension StartBlock {
-    public var title: String { String(localized: "This virtual machine cannot start", bundle: .module) }
+    public var title: String { String(compatLocalized: "This virtual machine cannot start", bundle: .module) }
 
     /// What Home says; erasing the guest is the way out of each.
     public var explanation: String {
         switch self {
         case .olderAndroid:
-            String(localized: "This app version is older than the one the virtual machine last started with, and its data does not go back. Install a newer version of Andarium, or erase the virtual machine to start again with this one.", bundle: .module)
+            String(compatLocalized: "This app version is older than the one the virtual machine last started with, and its data does not go back. Install a newer version of Andarium, or erase the virtual machine to start again with this one.", bundle: .module)
         case .newerDataLayout:
-            String(localized: "The virtual machine’s data uses a newer layout than this app version can open. Erase the virtual machine to start again with this one.", bundle: .module)
+            String(compatLocalized: "The virtual machine’s data uses a newer layout than this app version can open. Erase the virtual machine to start again with this one.", bundle: .module)
         case .mismatch:
-            String(localized: "The virtual machine’s files do not match this app version. Erase the virtual machine to start again.", bundle: .module)
+            String(compatLocalized: "The virtual machine’s files do not match this app version. Erase the virtual machine to start again.", bundle: .module)
         }
     }
 }

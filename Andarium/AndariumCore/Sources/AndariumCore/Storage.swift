@@ -97,11 +97,11 @@ public enum StorageError: Error, Equatable, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .notEnoughSpace:
-            return String(localized: "There is not enough free storage to set up the virtual machine.", bundle: .module)
+            return String(compatLocalized: "There is not enough free storage to set up the virtual machine.", bundle: .module)
         case .missingRelease:
-            return String(localized: "This copy of Andarium does not carry a system.", bundle: .module)
+            return String(compatLocalized: "This copy of Andarium does not carry a system.", bundle: .module)
         case .unusableDiskPath(let path):
-            return String(localized: "The virtual machine cannot start from \(path): its name has a space, comma, colon or quotation mark.", bundle: .module)
+            return String(compatLocalized: "The virtual machine cannot start from \(path): its name has a space, comma, colon or quotation mark.", bundle: .module)
         }
     }
 }

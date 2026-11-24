@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import Combine
 import Foundation
-import Observation
+
 import UIKit
 
 /// One folder on the Settings sheet's navigation stack.
@@ -24,9 +25,9 @@ enum FileSort: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .name: String(localized: "Name")
-        case .date: String(localized: "Date Modified")
-        case .size: String(localized: "Size")
+        case .name: String(compatLocalized: "Name")
+        case .date: String(compatLocalized: "Date Modified")
+        case .size: String(compatLocalized: "Size")
         }
     }
 }
@@ -46,8 +47,8 @@ enum ConflictChoice {
 
 /// One import or export. There is one at a time; it runs while the person
 /// goes on browsing.
-@Observable
-final class FileTransfer: Identifiable {
+final class FileTransfer: Identifiable, ObservableObject {
+
     enum Direction {
         case importing, exporting
     }
@@ -67,34 +68,34 @@ final class FileTransfer: Identifiable {
 
     struct Item: Identifiable, Equatable {
         let id = UUID()
-        var name: String
-        var size: UInt64
-        var isFolder = false
-        var moved: UInt64 = 0
-        var state: ItemState = .waiting
+        @Published var name: String
+        @Published var size: UInt64
+        @Published var isFolder = false
+        @Published var moved: UInt64 = 0
+        @Published var state: ItemState = .waiting
         /// Where an imported file goes in the guest.
-        var path: String?
+        @Published var path: String?
     }
 
     let id = UUID()
     let direction: Direction
     /// Where an import goes; an export names the folder it was started from.
     let folder: String
-    var items: [Item]
-    var stage = Stage.running
+    @Published var items: [Item]
+    @Published var stage = Stage.running
     /// The folders of an export are still being walked for their sizes.
-    var measuring = false
+    @Published var measuring = false
     /// The card shows every item.
-    var expanded = false
+    @Published var expanded = false
     /// The staged copies of an export, for the action menu.
-    var staged: [URL] = []
+    @Published var staged: [URL] = []
     /// A held screen stays as it is.
-    var stays = false
+    @Published var stays = false
     /// The export's own folder of the staging area, which holds every copy.
-    @ObservationIgnored var directory: URL?
+    var directory: URL?
     /// Why the transfer was stopped from outside, which its files then say.
-    @ObservationIgnored var interruption: String?
-    @ObservationIgnored var task: Task<Void, Never>?
+    var interruption: String?
+    var task: Task<Void, Never>?
 
     init(direction: Direction, folder: String, items: [Item]) {
         self.direction = direction
@@ -119,7 +120,7 @@ final class FileTransfer: Identifiable {
     private func what(_ items: [Item]) -> String {
         if items.count == 1, let only = items.first { return only.name }
         return items.contains(where: \.isFolder)
-            ? String(localized: "\(items.count) items") : String(localized: "\(items.count) files")
+            ? String(compatLocalized: "\(items.count) items") : String(compatLocalized: "\(items.count) files")
     }
 
     /// Short where buttons share the line: the name of a single file moves to
@@ -129,32 +130,32 @@ final class FileTransfer: Identifiable {
         let importing = direction == .importing
         switch stage {
         case .running:
-            return importing ? String(localized: "Importing \(what(items))") : String(localized: "Exporting \(what(items))")
+            return importing ? String(compatLocalized: "Importing \(what(items))") : String(compatLocalized: "Exporting \(what(items))")
         case .ready:
-            return single ? String(localized: "Ready to share") : String(localized: "\(what(items)) ready")
+            return single ? String(compatLocalized: "Ready to share") : String(compatLocalized: "\(what(items)) ready")
         case .finished:
-            return importing ? String(localized: "\(what(items)) imported") : String(localized: "\(what(items)) exported")
+            return importing ? String(compatLocalized: "\(what(items)) imported") : String(compatLocalized: "\(what(items)) exported")
         case .failed:
-            if single { return importing ? String(localized: "Not imported") : String(localized: "Not exported") }
+            if single { return importing ? String(compatLocalized: "Not imported") : String(compatLocalized: "Not exported") }
             return importing
-                ? String(localized: "\(failures.count) of \(items.count) not imported")
-                : String(localized: "\(failures.count) of \(items.count) not exported")
+                ? String(compatLocalized: "\(failures.count) of \(items.count) not imported")
+                : String(compatLocalized: "\(failures.count) of \(items.count) not exported")
         }
     }
 
     var detail: String {
         switch stage {
         case .running:
-            if measuring { return String(localized: "Counting files\u{2026}") }
+            if measuring { return String(compatLocalized: "Counting files\u{2026}") }
             let moved = MeterWords.of(Formats.size(bytes: movedBytes), Formats.size(bytes: totalBytes))
             guard items.count > 1, let index = items.firstIndex(where: { $0.state == .moving }) else { return moved }
-            return String(localized: "\(index + 1) of \(items.count) \u{00B7} \(moved)")
+            return String(compatLocalized: "\(index + 1) of \(items.count) \u{00B7} \(moved)")
         case .ready:
             let size = Formats.size(bytes: totalBytes)
             if items.count == 1, let only = items.first { return "\(only.name) \u{00B7} \(size)" }
             return size
         case .finished:
-            return direction == .importing ? String(localized: "In \(GuestPath.name(of: folder))") : Formats.size(bytes: totalBytes)
+            return direction == .importing ? String(compatLocalized: "In \(GuestPath.name(of: folder))") : Formats.size(bytes: totalBytes)
         case .failed:
             if case let .failed(reason)? = failures.first?.state { return reason }
             return ""
@@ -165,40 +166,40 @@ final class FileTransfer: Identifiable {
 /// The file browser behind Settings: where the person is, what is selected
 /// and the one transfer. It lasts for a run, and is emptied when Settings
 /// closes (`sheetClosed`) and when the run ends (`reset`).
-@Observable
-final class FileBrowserModel {
-    /// What a transfer's files say when iOS stopped the guest under it.
-    static let leftForegroundReason = String(localized: "Stopped when Andarium left the foreground.")
+final class FileBrowserModel: ObservableObject {
 
-    @ObservationIgnored let backend: any GuestFilesBackend
+    /// What a transfer's files say when iOS stopped the guest under it.
+    static let leftForegroundReason = String(compatLocalized: "Stopped when Andarium left the foreground.")
+
+    let backend: any GuestFilesBackend
     /// Whether the guest can be browsed now (its storage is up). Nothing is
     /// imported or exported while it cannot.
-    @ObservationIgnored var isAvailable: () -> Bool = { true }
+    var isAvailable: () -> Bool = { true }
 
     /// The Settings sheet's navigation path: empty on Settings itself, then
     /// internal storage and the folders below it.
-    var route: [FolderRoute] = []
-    var sort = FileSort.name
+    @Published var route: [FolderRoute] = []
+    @Published var sort = FileSort.name
     /// What Export takes: the selection follows the person between folders.
-    var selection: [GuestFile] = []
-    var reviewingSelection = false
-    var picking = false
-    var conflict: ImportConflict?
-    var transfer: FileTransfer?
+    @Published var selection: [GuestFile] = []
+    @Published var reviewingSelection = false
+    @Published var picking = false
+    @Published var conflict: ImportConflict?
+    @Published var transfer: FileTransfer?
     /// What the last import brought, marked in its folder.
-    var fresh: Set<String> = []
-    private(set) var freeBytes: UInt64?
-    private var listings: [String: FolderListing] = [:]
-    @ObservationIgnored private var retry: (() -> Void)?
-    @ObservationIgnored private var observer: NSObjectProtocol?
+    @Published var fresh: Set<String> = []
+    @Published private(set) var freeBytes: UInt64?
+    @Published private var listings: [String: FolderListing] = [:]
+    private var retry: (() -> Void)?
+    private var observer: NSObjectProtocol?
 
     /// The system's action menu; a test or a preview may put its own here.
-    @ObservationIgnored
+    
     var presentShare: ([URL], @escaping @MainActor (Bool) -> Void) -> Bool = { files, finished in
         BugReportSharing.present(files, completed: finished)
     }
 
-    @ObservationIgnored private let center: NotificationCenter
+    private let center: NotificationCenter
 
     /// `center` is where the application's notifications arrive; a test gives
     /// its own, so that one model's test never stops another's.
@@ -252,7 +253,7 @@ final class FileBrowserModel {
     /// new reading fails.
     func load(_ folder: String) async {
         let placeholder = Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(150))
+            try? await compatSleep(for: .milliseconds(150))
             guard !Task.isCancelled, let self, self.listings[folder] == nil else { return }
             self.listings[folder] = .loading
         }
@@ -314,9 +315,9 @@ final class FileBrowserModel {
         let bytes = selection.filter { !$0.isFolder }.reduce(0) { $0 + $1.size }
         let hasFolders = selection.contains(where: \.isFolder)
         guard bytes > 0, !hasFolders else {
-            return String(localized: "\(selection.count) selected")
+            return String(compatLocalized: "\(selection.count) selected")
         }
-        return String(localized: "\(selection.count) selected \u{00B7} \(Formats.size(bytes: bytes))")
+        return String(compatLocalized: "\(selection.count) selected \u{00B7} \(Formats.size(bytes: bytes))")
     }
 
     // MARK: Import
@@ -324,9 +325,9 @@ final class FileBrowserModel {
     /// One file of an import: where it goes and whether it takes the place of
     /// a file of that name.
     struct ImportStep {
-        var pick: FilePick
-        var path: String
-        var replacing: Bool
+        @Published var pick: FilePick
+        @Published var path: String
+        @Published var replacing: Bool
     }
 
     /// The picker's result, for the folder on screen. Picks of one name from
@@ -337,7 +338,7 @@ final class FileBrowserModel {
         let folder = current
         let names = GuestFileNames.distinct(picks.map(\.name))
         let renamed = zip(picks, names).map { pick, name -> FilePick in
-            var copy = pick
+            @Published var copy = pick
             copy.name = name
             return copy
         }
@@ -357,11 +358,11 @@ final class FileBrowserModel {
         guard let conflict else { return }
         self.conflict = nil
         let clashing = Set(conflict.clashing.map(\.name))
-        var taken = Set(entries(in: conflict.folder).map(\.name)).union(conflict.picks.map(\.name))
-        var plan: [ImportStep] = []
+        @Published var taken = Set(entries(in: conflict.folder).map(\.name)).union(conflict.picks.map(\.name))
+        @Published var plan: [ImportStep] = []
         for pick in conflict.picks {
-            var name = pick.name
-            var replacing = false
+            @Published var name = pick.name
+            @Published var replacing = false
             if clashing.contains(name) {
                 switch choice {
                 case .skip:
@@ -381,7 +382,7 @@ final class FileBrowserModel {
                     taken.insert(name)
                 }
             }
-            var renamed = pick
+            @Published var renamed = pick
             renamed.name = name
             plan.append(ImportStep(pick: renamed, path: GuestPath.child(name, of: conflict.folder), replacing: replacing))
         }
@@ -499,7 +500,7 @@ final class FileBrowserModel {
                 if transfer.directory == nil { transfer.directory = try GuestFileStaging.makeTransferDirectory() }
             } catch {
                 for index in indices {
-                    transfer.items[index].state = .failed(String(localized: "Andarium couldn\u{2019}t make room for the copy."))
+                    transfer.items[index].state = .failed(String(compatLocalized: "Andarium couldn\u{2019}t make room for the copy."))
                 }
                 self.exportEnded(transfer, rerun: again)
                 return
@@ -600,7 +601,7 @@ final class FileBrowserModel {
         retry = nil
         guard !transfer.stays else { return }
         Task { [weak self, weak transfer] in
-            try? await Task.sleep(for: .seconds(4))
+            try? await compatSleep(for: .seconds(4))
             guard let self, let transfer, self.transfer === transfer else { return }
             self.transfer = nil
         }

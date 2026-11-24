@@ -244,73 +244,56 @@ public struct SessionRecord: Equatable, Sendable {
         switch end {
         case "guest-panic":
             return SessionEndNotice(
-                title: String(
-                    localized: "Android’s kernel panicked", bundle: .module,
+                title: String(compatLocalized: "Android’s kernel panicked", bundle: .module,
                     comment: "Title of Home's card after Android's kernel panicked, the Linux kernel's own fatal error."),
                 text: message.map {
-                    String(
-                        localized: "Android stopped with a kernel panic: \($0).", bundle: .module,
+                    String(compatLocalized: "Android stopped with a kernel panic: \($0).", bundle: .module,
                         comment: "Home's card after a kernel panic. The argument is the kernel's own message, in English, which stays as it is.")
-                } ?? String(
-                    localized: "Android stopped with a kernel panic.", bundle: .module,
+                } ?? String(compatLocalized: "Android stopped with a kernel panic.", bundle: .module,
                     comment: "Home's card after a kernel panic that left no message.")
             )
         case "kernel-abort":
             return SessionEndNotice(
-                title: String(
-                    localized: "Android’s kernel crashed", bundle: .module,
+                title: String(compatLocalized: "Android’s kernel crashed", bundle: .module,
                     comment: "Title of Home's card after Android's kernel stopped on an error of its own."),
-                text: String(
-                    localized: "Android stopped on a kernel error.", bundle: .module,
+                text: String(compatLocalized: "Android stopped on a kernel error.", bundle: .module,
                     comment: "Home's card after Android's kernel stopped on an error of its own."))
         case "kernel-exit":
             return SessionEndNotice(
-                title: String(
-                    localized: "Android stopped", bundle: .module,
+                title: String(compatLocalized: "Android stopped", bundle: .module,
                     comment: "Title of Home's card after Android's kernel ended the session by itself, or after a stop with no known cause."),
-                text: String(
-                    localized: "Android’s kernel ended Andarium.", bundle: .module,
+                text: String(compatLocalized: "Android’s kernel ended Andarium.", bundle: .module,
                     comment: "Home's card after Android's kernel ended the session by itself."))
         case "hibernation-restore-failed":
             return SessionEndNotice(
-                title: String(
-                    localized: "Android could not resume", bundle: .module,
+                title: String(compatLocalized: "Android could not resume", bundle: .module,
                     comment: "Title of Home's card after a start that could not bring back the memory Android saved when it was paused."),
-                text: String(
-                    localized: "Android’s memory could not be restored, so it starts again from boot.", bundle: .module,
+                text: String(compatLocalized: "Android’s memory could not be restored, so it starts again from boot.", bundle: .module,
                     comment: "Home's card after a start that could not bring back the memory Android saved when it was paused."))
         case "host-fault", "process-exit":
             return SessionEndNotice(
-                title: String(
-                    localized: "Andarium crashed", bundle: .module,
+                title: String(compatLocalized: "Andarium crashed", bundle: .module,
                     comment: "Title of Home's card after Andarium itself crashed while Android was running."),
-                text: String(
-                    localized: "Andarium stopped on an error of its own while Android was running.", bundle: .module,
+                text: String(compatLocalized: "Andarium stopped on an error of its own while Android was running.", bundle: .module,
                     comment: "Home's card after Andarium itself crashed while Android was running."))
         case "running" where nearMemoryLimit:
             return SessionEndNotice(
-                title: String(
-                    localized: "iOS ended Andarium", bundle: .module,
+                title: String(compatLocalized: "iOS ended Andarium", bundle: .module,
                     comment: "Title of Home's card after iOS ended Andarium because the memory it used came near the limit."),
-                text: String(
-                    localized: "Android was using almost all the memory iOS allows Andarium. A smaller memory size is safer.",
+                text: String(compatLocalized: "Android was using almost all the memory iOS allows Andarium. A smaller memory size is safer.",
                     bundle: .module,
                     comment: "Home's card after iOS ended Andarium because the memory it used came near the limit."))
         case "running":
             return SessionEndNotice(
-                title: String(
-                    localized: "Andarium stopped unexpectedly", bundle: .module,
+                title: String(compatLocalized: "Andarium stopped unexpectedly", bundle: .module,
                     comment: "Title of Home's card after Andarium ended while Android was running, with no known cause."),
-                text: String(
-                    localized: "Andarium ended while Android was running.", bundle: .module,
+                text: String(compatLocalized: "Andarium ended while Android was running.", bundle: .module,
                     comment: "Home's card after Andarium ended while Android was running, with no known cause."))
         default:
             return SessionEndNotice(
-                title: String(
-                    localized: "Android stopped", bundle: .module,
+                title: String(compatLocalized: "Android stopped", bundle: .module,
                     comment: "Title of Home's card after Android's kernel ended the session by itself, or after a stop with no known cause."),
-                text: String(
-                    localized: "Android stopped unexpectedly.", bundle: .module,
+                text: String(compatLocalized: "Android stopped unexpectedly.", bundle: .module,
                     comment: "Home's card after a stop with no known cause."))
         }
     }

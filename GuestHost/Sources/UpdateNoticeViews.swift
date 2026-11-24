@@ -19,7 +19,7 @@ private struct UpdateTile: View {
             .font(.system(size: 14, weight: .semibold))
             .foregroundStyle(.white)
             .frame(width: 30, height: 30)
-            .background(Color.accentColor.gradient, in: .rect(cornerRadius: 8, style: .continuous))
+            .background(Color.accentColor.gradient, in: .compatRect(cornerRadius: 8, style: .continuous))
             // A row's words say it all.
             .accessibilityHidden(true)
     }
@@ -71,7 +71,7 @@ struct UpdateDetailList<Glyph: View>: View {
             }
         }
         .onAppear { if notice.offer == nil { dismiss() } }
-        .onChange(of: notice.offer == nil) { _, withdrawn in
+        .onChange(of: notice.offer == nil) { withdrawn in
             if withdrawn { dismiss() }
         }
     }
@@ -93,12 +93,12 @@ struct UpdateDetailList<Glyph: View>: View {
                 }
                 .padding(.vertical, 6)
                 .accessibilityElement(children: .combine)
-                LabeledContent(UpdateWords.released, value: offer.released.formatted())
-                LabeledContent(UpdateWords.size, value: UpdateWords.sizeText(offer))
+                CompatLabeledContent(UpdateWords.released, value: offer.released.formatted())
+                CompatLabeledContent(UpdateWords.size, value: UpdateWords.sizeText(offer))
                 if let minimum = offer.minimumOS {
-                    LabeledContent(UpdateWords.requires, value: UpdateWords.requiresValue(minimum))
+                    CompatLabeledContent(UpdateWords.requires, value: UpdateWords.requiresValue(minimum))
                 }
-                LabeledContent(UpdateWords.installed, value: notice.app.installedLabel)
+                CompatLabeledContent(UpdateWords.installed, value: notice.app.installedLabel)
             }
             if tools.isEmpty {
                 Section(UpdateWords.stepsTitle) {
@@ -154,7 +154,7 @@ struct UpdateDetailSheet<Glyph: View>: View {
     @ViewBuilder let glyph: () -> Glyph
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             UpdateDetailList(notice: notice, glyph: glyph)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
@@ -162,7 +162,6 @@ struct UpdateDetailSheet<Glyph: View>: View {
                     }
                 }
         }
-        .presentationSizing(.form)
     }
 }
 

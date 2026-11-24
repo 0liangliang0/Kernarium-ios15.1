@@ -192,15 +192,15 @@ public enum AndroidAppOpenOutcome: Equatable, Sendable {
 /// and the answers above.
 public protocol AndroidAppsTool: Sendable {
     /// Whether the apps changed since the answer with this digest.
-    func digest(limit: Duration) async -> AndroidAppDigestAnswer
+    func digest(limit: CompatDuration) async -> AndroidAppDigestAnswer
     /// The launchable apps, within `limit`.
-    func list(limit: Duration) async -> AndroidAppListing
+    func list(limit: CompatDuration) async -> AndroidAppListing
     /// The icons of up to `AndroidAppLimits.iconsPerAsk` apps, within `limit`,
     /// by the app's identifier. An app that is not in the answer was not
     /// answered for.
-    func icons(of apps: [AndroidApp], limit: Duration) async -> [String: AndroidAppIconAnswer]
+    func icons(of apps: [AndroidApp], limit: CompatDuration) async -> [String: AndroidAppIconAnswer]
     /// Starts one app's launcher activity.
-    func open(_ component: AndroidComponent, limit: Duration) async -> AndroidAppOpenAnswer
+    func open(_ component: AndroidComponent, limit: CompatDuration) async -> AndroidAppOpenAnswer
 }
 
 extension AndroidAppsTool {
@@ -224,7 +224,7 @@ extension AndroidAppsTool {
     /// as an answer. A command already sent is never withheld.
     public func open(
         _ component: AndroidComponent, launchersWhenSeen: Int? = nil,
-        listLimit: Duration = AndroidAppLimits.listLimit, openLimit: Duration = AndroidAppLimits.openLimit,
+        listLimit: CompatDuration = AndroidAppLimits.listLimit, openLimit: CompatDuration = AndroidAppLimits.openLimit,
         mayReplace: (@Sendable () async -> Bool)? = nil
     ) async -> AndroidAppOpenOutcome {
         let answer = await open(component, limit: openLimit)
@@ -259,11 +259,11 @@ extension AndroidAppsTool {
 /// The bounds of what the tool is asked and what Andarium keeps of the answer.
 public enum AndroidAppLimits {
     /// The tool's own deadlines sit inside these.
-    public static let digestLimit = Duration.seconds(15)
-    public static let listLimit = Duration.seconds(30)
+    public static let digestLimit = CompatDuration.seconds(15)
+    public static let listLimit = CompatDuration.seconds(30)
     /// One `icons` ask is at most about 28 s of the tool's work.
-    public static let iconLimit = Duration.seconds(40)
-    public static let openLimit = Duration.seconds(30)
+    public static let iconLimit = CompatDuration.seconds(40)
+    public static let openLimit = CompatDuration.seconds(30)
     /// The most apps one listing may hold, and the most icons one ask names.
     public static let mostApps = 1_024
     public static let iconsPerAsk = 8

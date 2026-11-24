@@ -24,9 +24,9 @@ public enum GuestProcFiles {
 
     /// How long the read may add to a bug report: connecting, then the
     /// command, each within half of it.
-    public static let timeBound = Duration.seconds(10)
-    public static var connectLimit: Duration { timeBound / 2 }
-    public static var commandLimit: Duration { timeBound / 2 }
+    public static let timeBound = CompatDuration.seconds(10)
+    public static var connectLimit: CompatDuration { timeBound / 2 }
+    public static var commandLimit: CompatDuration { timeBound / 2 }
 
     /// The command for the guest's shell. The integration test that runs it in
     /// an Android guest (`tests/integration/android/run_android_guest_proc.py`)

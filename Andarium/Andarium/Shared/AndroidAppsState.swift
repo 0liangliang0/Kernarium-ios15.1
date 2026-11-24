@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import Combine
 import AppIntents
 import CoreSpotlight
 import CryptoKit
 import Foundation
 import ImageIO
-import Observation
+
 import UIKit
 
 /// Where Android's apps come from and how one is opened, for Add to Home
@@ -75,7 +76,7 @@ nonisolated struct OneListingAtATimeTool: AndroidAppsTool {
     let base: any AndroidAppsTool
     let lane: ListingLane
 
-    func digest(limit: Duration) async -> AndroidAppDigestAnswer {
+    func digest(limit: CompatDuration) async -> AndroidAppDigestAnswer {
         guard await lane.enter() else { return .failed }
         var answer = AndroidAppDigestAnswer.failed
         if !Task.isCancelled { answer = await base.digest(limit: limit) }
@@ -83,7 +84,7 @@ nonisolated struct OneListingAtATimeTool: AndroidAppsTool {
         return answer
     }
 
-    func list(limit: Duration) async -> AndroidAppListing {
+    func list(limit: CompatDuration) async -> AndroidAppListing {
         guard await lane.enter() else { return .failed }
         var answer = AndroidAppListing.failed
         if !Task.isCancelled { answer = await base.list(limit: limit) }
@@ -91,11 +92,11 @@ nonisolated struct OneListingAtATimeTool: AndroidAppsTool {
         return answer
     }
 
-    func icons(of apps: [AndroidApp], limit: Duration) async -> [String: AndroidAppIconAnswer] {
+    func icons(of apps: [AndroidApp], limit: CompatDuration) async -> [String: AndroidAppIconAnswer] {
         await base.icons(of: apps, limit: limit)
     }
 
-    func open(_ component: AndroidComponent, limit: Duration) async -> AndroidAppOpenAnswer {
+    func open(_ component: AndroidComponent, limit: CompatDuration) async -> AndroidAppOpenAnswer {
         await base.open(component, limit: limit)
     }
 }
@@ -109,13 +110,13 @@ nonisolated struct OneListingAtATimeTool: AndroidAppsTool {
 nonisolated struct FlatteningAppsTool: AndroidAppsTool {
     let base: any AndroidAppsTool
 
-    func digest(limit: Duration) async -> AndroidAppDigestAnswer { await base.digest(limit: limit) }
-    func list(limit: Duration) async -> AndroidAppListing { await base.list(limit: limit) }
-    func open(_ component: AndroidComponent, limit: Duration) async -> AndroidAppOpenAnswer {
+    func digest(limit: CompatDuration) async -> AndroidAppDigestAnswer { await base.digest(limit: limit) }
+    func list(limit: CompatDuration) async -> AndroidAppListing { await base.list(limit: limit) }
+    func open(_ component: AndroidComponent, limit: CompatDuration) async -> AndroidAppOpenAnswer {
         await base.open(component, limit: limit)
     }
 
-    func icons(of apps: [AndroidApp], limit: Duration) async -> [String: AndroidAppIconAnswer] {
+    func icons(of apps: [AndroidApp], limit: CompatDuration) async -> [String: AndroidAppIconAnswer] {
         var answers = await base.icons(of: apps, limit: limit)
         for (id, answer) in answers {
             guard case let .png(data, _) = answer else { continue }
@@ -159,80 +160,80 @@ nonisolated struct FlatteningAppsTool: AndroidAppsTool {
 /// refresh under way, the request to open an app and the banner of how the last
 /// one ended. The list is the cache's, so the chooser and the App Intent have
 /// it while Android is off; the rest lasts for one run.
-@Observable
-final class AndroidAppsState {
+final class AndroidAppsState: ObservableObject {
+
     /// The apps of the last listing that was kept, in the order the person reads them.
-    private(set) var apps: [AndroidApp] = []
+    @Published private(set) var apps: [AndroidApp] = []
     /// When the cached list was made (Android's listing), for the page's note.
-    private(set) var listedAt: Date?
+    @Published private(set) var listedAt: Date?
     /// A refresh is under way.
-    private(set) var refreshing = false
+    @Published private(set) var refreshing = false
     /// Icons the refresh is still to fetch.
-    private(set) var iconsLeft = 0
+    @Published private(set) var iconsLeft = 0
     /// A listing answered this run (an empty one included).
-    private(set) var listed = false
+    @Published private(set) var listed = false
     /// The image has no listing tool, or speaks a version of it this Andarium
     /// does not know: nothing is offered.
-    private(set) var unavailable = false
+    @Published private(set) var unavailable = false
     /// The last refresh did not get an answer.
-    private(set) var failed = false
+    @Published private(set) var failed = false
     /// Changes whenever an icon arrives, so the screens read the pictures again.
-    private(set) var iconRevision = 0
+    @Published private(set) var iconRevision = 0
     /// The request to open an app and the banner of how the last one ended.
-    var open = AppOpenState()
+    @Published var open = AppOpenState()
     /// Whether Android's apps are offered to Search (the Spotlight index): the
     /// switch, as the hub keeps it.
-    var searchOn = true
+    @Published var searchOn = true
     /// A refresh's own number: the progress of a refresh that stop, erase or a
     /// newer one ended does not reach the screens.
-    @ObservationIgnored private(set) var refreshToken = 0
+    private(set) var refreshToken = 0
     /// A snapshot restore is under way, and the release of the requests it
     /// held waits for the model to have adopted what it restored.
-    @ObservationIgnored var restoring = false
+    var restoring = false
     /// The request that began this run's boot, or arrived while it ran: the
     /// launcher may not be up when the boot ends, so only that request waits
     /// for Android's home screen to resume. A request that comes once the boot
     /// is over does not, whatever is in front. Lasts for the run.
-    @ObservationIgnored var bootRequest: AppOpenRequest?
+    var bootRequest: AppOpenRequest?
     /// A change (an install) was announced while a refresh was under way: the
     /// refresh's owner makes one more after it, because what changed may have
     /// come after the listing it captured.
-    @ObservationIgnored var refreshAgain = false
+    var refreshAgain = false
     /// The cache: the catalog, the icons, and the record kept per icon.
-    @ObservationIgnored var store: AndroidAppStore
+    var store: AndroidAppStore
     /// The refresh under way, which a second asker joins.
-    @ObservationIgnored var inFlight: Task<AndroidAppRefresh.Result, Never>?
+    var inFlight: Task<AndroidAppRefresh.Result, Never>?
     /// The run's first refresh, asked again a few times if it got no answer.
-    @ObservationIgnored var first: Task<Void, Never>?
+    var first: Task<Void, Never>?
     /// Whose `first` is: each task made takes the next number, and only the
     /// one that holds the current number clears the handle or goes on after a wait.
-    @ObservationIgnored private(set) var firstToken = 0
+    private(set) var firstToken = 0
     /// The run's first listing is still to be made: Android was paused for
     /// space before the boot ended, or while the task waited, and the pause
     /// ending starts it again. Cleared by the answer and by the run's end.
-    @ObservationIgnored var firstOwed = false
+    var firstOwed = false
     /// A request that began the boot needs the list: the first listing is not made to wait.
-    @ObservationIgnored var firstNeedsList = false
+    var firstNeedsList = false
     /// The request that began this boot (Start's own boot is no request's).
-    @ObservationIgnored var bootStartedBy: AppOpenRequest?
+    var bootStartedBy: AppOpenRequest?
     /// Whose turn it is to ask the guest for a listing.
-    @ObservationIgnored let listingLane = ListingLane()
+    let listingLane = ListingLane()
     /// Android being made ready for the request, then the app being opened.
-    @ObservationIgnored var opening: Task<Void, Never>?
+    var opening: Task<Void, Never>?
     /// The wait for the next request or banner to run out.
-    @ObservationIgnored var expiry: Task<Void, Never>?
+    var expiry: Task<Void, Never>?
     /// The preview keeps a waiting request and a banner as they are, for a
     /// screen that must stay still.
-    @ObservationIgnored var holdsForever = false
+    var holdsForever = false
     /// The first refresh waits this long after Android reports its boot
     /// complete, so that it starts nothing in the guest while the guest settles
     /// from its boot.
-    @ObservationIgnored var startDelay = Duration.seconds(60)
+    var startDelay = CompatDuration.seconds(60)
     /// The first refresh's attempts wait twice as long as the one before.
-    @ObservationIgnored var retryInterval = Duration.seconds(5)
+    var retryInterval = CompatDuration.seconds(5)
     /// How the first refresh waits: a test holds the wait and lets it go.
-    @ObservationIgnored var sleep: @MainActor (Duration) async -> Void = { duration in
-        try? await Task.sleep(for: duration)
+    var sleep: @MainActor (CompatDuration) async -> Void = { duration in
+        try? await compatSleep(for: duration)
     }
     /// How many times the run's first refresh is asked.
     static let startAttempts = 5
@@ -393,7 +394,7 @@ final class AndroidAppsState {
         guard let deadline = nextDeadline() else { return }
         expiry = Task { [weak self] in
             let wait = max(deadline.timeIntervalSinceNow, 0) + 0.05
-            try? await Task.sleep(for: .seconds(wait))
+            try? await compatSleep(for: .seconds(wait))
             guard let self, !Task.isCancelled else { return }
             if open.expire(now: Date()) { changed() }
             scheduleExpiry(changed)
@@ -402,7 +403,7 @@ final class AndroidAppsState {
 
     private func nextDeadline() -> Date? {
         guard !holdsForever else { return nil }
-        var deadlines: [Date] = []
+        @Published var deadlines: [Date] = []
         if let pending = open.pending, case let .waiting(_, since) = pending.stage {
             deadlines.append(since.addingTimeInterval(AppOpenState.holdLimit))
         }

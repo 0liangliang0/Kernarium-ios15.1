@@ -21,7 +21,7 @@ nonisolated final class ScriptedAppsTool: AndroidAppsTool, @unchecked Sendable {
     private var pictures: [String: Data] = [:]
     private var listingOverride: AndroidAppListing?
     private var digestOverride: AndroidAppDigestAnswer?
-    private var delayValue = Duration.milliseconds(120)
+    private var delayValue = CompatDuration.milliseconds(120)
     private var holdsDigestsValue = false
 
     init(apps: [AndroidApp] = ScriptedAndroidApps.sampleApps) {
@@ -29,7 +29,7 @@ nonisolated final class ScriptedAppsTool: AndroidAppsTool, @unchecked Sendable {
     }
 
     /// How long each answer takes.
-    var delay: Duration {
+    var delay: CompatDuration {
         get { lock.withLock { delayValue } }
         set { lock.withLock { delayValue = newValue } }
     }
@@ -78,39 +78,39 @@ nonisolated final class ScriptedAppsTool: AndroidAppsTool, @unchecked Sendable {
         }
     }
 
-    func digest(limit: Duration) async -> AndroidAppDigestAnswer {
-        let (answer, wait): (AndroidAppDigestAnswer, Duration) = lock.withLock {
+    func digest(limit: CompatDuration) async -> AndroidAppDigestAnswer {
+        let (answer, wait): (AndroidAppDigestAnswer, CompatDuration) = lock.withLock {
             counts.digests += 1
             listingsNow += 1
             listingsMost = max(listingsMost, listingsNow)
             return (digestOverride ?? .digest("scripted-\(version)"), delayValue)
         }
-        try? await Task.sleep(for: wait)
+        try? await compatSleep(for: wait)
         while lock.withLock({ holdsDigestsValue }) {
-            await Task { try? await Task.sleep(for: .milliseconds(10)) }.value
+            await Task { try? await compatSleep(for: .milliseconds(10)) }.value
         }
         lock.withLock { listingsNow -= 1 }
         return answer
     }
 
-    func list(limit: Duration) async -> AndroidAppListing {
-        let (answer, wait): (AndroidAppListing, Duration) = lock.withLock {
+    func list(limit: CompatDuration) async -> AndroidAppListing {
+        let (answer, wait): (AndroidAppListing, CompatDuration) = lock.withLock {
             counts.lists += 1
             listingsNow += 1
             listingsMost = max(listingsMost, listingsNow)
             return (listingOverride ?? .apps(AndroidAppList(apps: current, digest: "scripted-\(version)")), delayValue)
         }
-        try? await Task.sleep(for: wait)
+        try? await compatSleep(for: wait)
         lock.withLock { listingsNow -= 1 }
         return answer
     }
 
-    func icons(of apps: [AndroidApp], limit: Duration) async -> [String: AndroidAppIconAnswer] {
+    func icons(of apps: [AndroidApp], limit: CompatDuration) async -> [String: AndroidAppIconAnswer] {
         let wait = lock.withLock {
             counts.icons += 1
             return delayValue
         }
-        try? await Task.sleep(for: wait)
+        try? await compatSleep(for: wait)
         var result: [String: AndroidAppIconAnswer] = [:]
         for app in apps {
             if ScriptedAppIcons.hasNoIcon(app) {
@@ -124,13 +124,13 @@ nonisolated final class ScriptedAppsTool: AndroidAppsTool, @unchecked Sendable {
         return result
     }
 
-    func open(_ component: AndroidComponent, limit: Duration) async -> AndroidAppOpenAnswer {
-        let (answer, wait): (AndroidAppOpenAnswer, Duration) = lock.withLock {
+    func open(_ component: AndroidComponent, limit: CompatDuration) async -> AndroidAppOpenAnswer {
+        let (answer, wait): (AndroidAppOpenAnswer, CompatDuration) = lock.withLock {
             asked.append(component)
             let known = current.contains { $0.component == component }
             return (answers[component] ?? (known ? .opened : .notFound), delayValue)
         }
-        try? await Task.sleep(for: wait)
+        try? await compatSleep(for: wait)
         return answer
     }
 }
@@ -143,7 +143,7 @@ final class ScriptedAndroidApps: AndroidAppsSource {
     let tool: ScriptedAppsTool
     /// How Android's readiness ends, and how long it takes.
     var readiness = AndroidAppReadiness.Outcome.ready
-    var readyDelay = Duration.milliseconds(400)
+    var readyDelay = CompatDuration.milliseconds(400)
     private(set) var readinessAsked = 0
     /// Plays the production check's first-HOME gate: while an app is in
     /// front (`homeInFront` false) Android is not ready for an open that
@@ -162,7 +162,7 @@ final class ScriptedAndroidApps: AndroidAppsSource {
     func awaitAndroidReady(homeReached: Bool) async -> AndroidAppReadiness.Outcome {
         readinessAsked += 1
         homeReachedAsked.append(homeReached)
-        try? await Task.sleep(for: readyDelay)
+        try? await compatSleep(for: readyDelay)
         if requiresHomeResumed, !homeReached, !homeInFront { return .timedOut }
         return readiness
     }

@@ -8,7 +8,7 @@ import Foundation
 public enum CountWords {
     /// "1 vCPU", "6 vCPUs".
     public static func vcpus(_ count: Int) -> String {
-        String(localized: "\(count) vCPUs", bundle: .module)
+        String(compatLocalized: "\(count) vCPUs", bundle: .module)
     }
 }
 
@@ -23,8 +23,7 @@ public enum Sentences {
         sentences.reduce("") { text, sentence in
             text.isEmpty
                 ? sentence
-                : String(
-                    localized: "sentence.join", defaultValue: "\(text) \(sentence)", bundle: .module,
+                : String(compatLocalized: "sentence.join", defaultValue: "\(text) \(sentence)", bundle: .module,
                     comment: "Joins two whole sentences: a space in English, none in Chinese and Japanese.")
         }
     }
@@ -36,8 +35,7 @@ public enum ListWords {
         parts.reduce("") { text, part in
             text.isEmpty
                 ? part
-                : String(
-                    localized: "list.join", defaultValue: "\(text), \(part)", bundle: .module,
+                : String(compatLocalized: "list.join", defaultValue: "\(text), \(part)", bundle: .module,
                     comment: "Joins two parts of a spoken list: a comma and a space in English, the language's own comma in Chinese and Japanese.")
         }
     }

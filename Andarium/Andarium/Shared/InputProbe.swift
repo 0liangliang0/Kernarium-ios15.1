@@ -1,6 +1,6 @@
+import Combine
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-import Observation
 
 /// A UI test's window on the guest's keyboard and mouse. The UI tests drive
 /// the real application in the Simulator with synthetic keys and pointer
@@ -9,12 +9,12 @@ import Observation
 /// would receive to this log, which the session shows as one accessibility
 /// element, and gives Settings a text field to prove that a sheet keeps the
 /// keys it takes.
-@Observable
-final class InputProbe {
+final class InputProbe: ObservableObject {
+
     /// The newest lines last.
-    private(set) var lines: [String] = []
+    @Published private(set) var lines: [String] = []
     /// The text field in Settings.
-    var fieldText = ""
+    @Published var fieldText = ""
 
     static let capacity = 400
 

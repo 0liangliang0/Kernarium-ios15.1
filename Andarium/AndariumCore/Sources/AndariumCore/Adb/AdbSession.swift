@@ -16,9 +16,9 @@ public final class AdbWatchdog: @unchecked Sendable {
     private let clock: GuestRunClock
     private let tick: TimeInterval
     private var transport: (any AdbTransport)?
-    private var idleLimit: Duration?
-    private var overallDeadline: Duration?
-    private var lastActivity: Duration
+    private var idleLimit: CompatDuration?
+    private var overallDeadline: CompatDuration?
+    private var lastActivity: CompatDuration
     private var armed = false
     private var cause = Cause.none
     private var stopped = false
@@ -61,7 +61,7 @@ public final class AdbWatchdog: @unchecked Sendable {
 
     /// Starts a phase: it ends when `idle` of running time passes without
     /// `touch`, or when `overall` of running time has passed since now.
-    public func arm(idle: Duration?, overall: Duration? = nil) {
+    public func arm(idle: CompatDuration?, overall: CompatDuration? = nil) {
         condition.withLock {
             idleLimit = idle
             overallDeadline = overall.map { clock.now + $0 }
@@ -135,18 +135,18 @@ public final class AdbWatchdog: @unchecked Sendable {
 /// when it ends.
 public final class AdbSession: @unchecked Sendable {
     /// Connect and handshake together may take this long, in running time.
-    public static let defaultConnectLimit = Duration.seconds(20)
+    public static let defaultConnectLimit = CompatDuration.seconds(20)
 
     private let connector: any AdbConnector
     private let signer: (any AdbSigner)?
-    private let connectLimit: Duration
+    private let connectLimit: CompatDuration
     private let retryInterval: TimeInterval
     public let clock: GuestRunClock
     public let watchdog: AdbWatchdog
 
     public init(
         connector: any AdbConnector, signer: (any AdbSigner)?, clock: GuestRunClock,
-        connectLimit: Duration = AdbSession.defaultConnectLimit, retryInterval: TimeInterval = 1,
+        connectLimit: CompatDuration = AdbSession.defaultConnectLimit, retryInterval: TimeInterval = 1,
         tick: TimeInterval = 0.25
     ) {
         self.connector = connector

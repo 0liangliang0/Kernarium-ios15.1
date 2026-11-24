@@ -89,10 +89,10 @@ struct AppEntry {
                 system = try SystemInfo(manifest: manifest, appVersion: version)
                 carried = try SystemFolder.release(in: systemFolder)
             } catch {
-                problem = String(localized: "This copy of Andarium does not carry a usable system: \(error.localizedDescription)")
+                problem = String(compatLocalized: "This copy of Andarium does not carry a usable system: \(error.localizedDescription)")
             }
         } else {
-            problem = String(localized: "This copy of Andarium does not carry a system.")
+            problem = String(compatLocalized: "This copy of Andarium does not carry a system.")
         }
 
         let locations = GuestLocations(directory: Self.guestDirectory(instance: launch.instance))
@@ -122,7 +122,7 @@ struct AppEntry {
         do {
             guest = try storage.load()
         } catch {
-            problem = problem ?? String(localized: "The virtual machine\u{2019}s settings could not be read: \(error.localizedDescription)")
+            problem = problem ?? String(compatLocalized: "The virtual machine\u{2019}s settings could not be read: \(error.localizedDescription)")
         }
         // A stored memory size above the bound of its vCPU count comes down to
         // it; a size the launch states stays as stated.
@@ -258,7 +258,7 @@ struct AppEntry {
         announceWhatsNew(
             on: model, hasGuest: guest != nil, vCPUs: guest?.cores ?? host.processorCount)
         model.appUpdate = makeAppUpdate(on: model)
-        model.alert = problem.map { AppAlert(title: String(localized: "Andarium is incomplete"), message: $0) }
+        model.alert = problem.map { AppAlert(title: String(compatLocalized: "Andarium is incomplete"), message: $0) }
         return model
     }
 
@@ -379,10 +379,10 @@ struct AppEntry {
     /// Waits for the busy overlay to go, within a bound; false if it did not.
     @MainActor
     private static func idle(_ model: AppModel) async -> Bool {
-        let deadline = ContinuousClock.now + .seconds(900)
+        let deadline = CompatContinuousClock.now + .seconds(900)
         while model.busy != nil {
-            if ContinuousClock.now > deadline { return false }
-            try? await Task.sleep(for: .milliseconds(200))
+            if CompatContinuousClock.now > deadline { return false }
+            try? await compatSleep(for: .milliseconds(200))
         }
         return model.alert == nil
     }

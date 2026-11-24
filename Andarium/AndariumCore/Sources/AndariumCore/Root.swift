@@ -261,7 +261,7 @@ public enum MagiskApp {
         return found
     }
 
-    public static func presence(shell: any GuestShell, limit: Duration) async -> Presence {
+    public static func presence(shell: any GuestShell, limit: CompatDuration) async -> Presence {
         guard let output = try? await shell.run(probeCommand, limit: limit) else { return .unknown }
         return presence(of: output)
     }
@@ -269,7 +269,7 @@ public enum MagiskApp {
     static let uninstallCommand = "pm uninstall --user 0 \(package)"
 
     /// Removes the app; whether the guest says it did.
-    public static func uninstall(shell: any GuestShell, limit: Duration) async -> Bool {
+    public static func uninstall(shell: any GuestShell, limit: CompatDuration) async -> Bool {
         guard let output = try? await shell.run(uninstallCommand, limit: limit) else { return false }
         return output.exitCode == 0
     }

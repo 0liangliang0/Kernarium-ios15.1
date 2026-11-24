@@ -120,7 +120,7 @@ public final class PauseController {
     /// its readings (`SpacePauser`): real time unless a test says otherwise.
     public init(
         effects: any PauseEffects, marker: PauseMarker, runClock: GuestRunClock? = nil,
-        spaceWait: @escaping (Duration) async -> Void = { try? await Task.sleep(for: $0) }
+        spaceWait: @escaping (CompatDuration) async -> Void = { try? await compatSleep(for: $0) }
     ) {
         self.effects = effects
         self.marker = marker

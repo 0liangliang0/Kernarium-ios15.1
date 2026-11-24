@@ -18,24 +18,23 @@ import Foundation
 /// The notice stays until the person dismisses it or `visibleFor` has passed.
 public struct GraphicsNotice: Equatable, Sendable {
     /// How often the count is read while a guest runs.
-    public static let pollInterval = Duration.seconds(2)
+    public static let pollInterval = CompatDuration.seconds(2)
     /// How long without a refusal ends a burst.
-    public static let quietInterval = Duration.seconds(60)
+    public static let quietInterval = CompatDuration.seconds(60)
     /// How long a notice stays up when nobody dismisses it.
-    public static let visibleFor = Duration.seconds(30)
+    public static let visibleFor = CompatDuration.seconds(30)
 
     /// The words of the notice.
-    public static let title = String(localized: "Android ran out of graphics memory", bundle: .module)
-    public static let detail = String(
-        localized: "If an app looks broken, swipe it away in Recents and open it again.", bundle: .module)
-    public static let dismissLabel = String(localized: "Dismiss", bundle: .module)
+    public static let title = String(compatLocalized: "Android ran out of graphics memory", bundle: .module)
+    public static let detail = String(compatLocalized: "If an app looks broken, swipe it away in Recents and open it again.", bundle: .module)
+    public static let dismissLabel = String(compatLocalized: "Dismiss", bundle: .module)
 
     /// A notice is up.
     public private(set) var isShowing = false
 
     private var count: UInt64?
-    private var shownAt: ContinuousClock.Instant?
-    private var lastRefusalAt: ContinuousClock.Instant?
+    private var shownAt: CompatClockInstant?
+    private var lastRefusalAt: CompatClockInstant?
 
     public init() {}
 
@@ -44,7 +43,7 @@ public struct GraphicsNotice: Equatable, Sendable {
     /// went backwards belongs to a new display and is a new baseline too.
     /// Returns whether a notice appeared with this reading.
     @discardableResult
-    public mutating func record(refusals: UInt64, at now: ContinuousClock.Instant) -> Bool {
+    public mutating func record(refusals: UInt64, at now: CompatClockInstant) -> Bool {
         expire(at: now)
         defer { count = refusals }
         guard let before = count, refusals > before else { return false }
@@ -62,7 +61,7 @@ public struct GraphicsNotice: Equatable, Sendable {
     }
 
     /// Takes the notice away after `visibleFor`, if nobody has yet.
-    public mutating func expire(at now: ContinuousClock.Instant) {
+    public mutating func expire(at now: CompatClockInstant) {
         guard isShowing, let shownAt, shownAt.duration(to: now) >= Self.visibleFor else { return }
         isShowing = false
         self.shownAt = nil

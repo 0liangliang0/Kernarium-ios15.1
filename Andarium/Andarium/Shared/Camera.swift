@@ -53,15 +53,15 @@ final class CameraController {
 /// notes under Capabilities and the notices in a session. They are one place so
 /// the text can change without touching the logic.
 enum CameraWords {
-    static let title = String(localized: "Camera")
-    static let denied = String(localized: "Not allowed in Settings")
-    static let restricted = String(localized: "Restricted on this device")
-    static let noCamera = String(localized: "This device has no camera to share.")
-    static let pausedTitle = String(localized: "Camera paused while other apps are on screen")
-    static let offTitle = String(localized: "Camera is off")
+    static let title = String(compatLocalized: "Camera")
+    static let denied = String(compatLocalized: "Not allowed in Settings")
+    static let restricted = String(compatLocalized: "Restricted on this device")
+    static let noCamera = String(compatLocalized: "This device has no camera to share.")
+    static let pausedTitle = String(compatLocalized: "Camera paused while other apps are on screen")
+    static let offTitle = String(compatLocalized: "Camera is off")
     /// The row only changes on Home, so the notice says to shut the guest down
     /// and turn it on there.
-    static let offDetail = String(localized: "Shut down the virtual machine, then turn on Camera in Capabilities.")
+    static let offDetail = String(compatLocalized: "Shut down the virtual machine, then turn on Camera in Capabilities.")
 
     /// The notice over the session: its one line, and the line under it where
     /// it has one.
@@ -92,9 +92,9 @@ enum CameraWords {
     static func hint(for access: CameraAccess) -> String {
         switch access {
         case .denied:
-            String(localized: "Andarium is not allowed to use the camera. Turning this on offers to open Settings.")
+            String(compatLocalized: "Andarium is not allowed to use the camera. Turning this on offers to open Settings.")
         case .restricted:
-            String(localized: "The camera is restricted on this device. Turning this on explains why.")
+            String(compatLocalized: "The camera is restricted on this device. Turning this on explains why.")
         case .unavailable, .notDetermined, .authorized:
             ""
         }
@@ -114,13 +114,13 @@ enum CameraWords {
         switch access {
         case .denied:
             Alert(
-                title: String(localized: "Allow camera access"),
-                message: String(localized: "iOS is not allowing Andarium to use the camera. Turn on Camera for Andarium in Settings, then come back to use it."),
+                title: String(compatLocalized: "Allow camera access"),
+                message: String(compatLocalized: "iOS is not allowing Andarium to use the camera. Turn on Camera for Andarium in Settings, then come back to use it."),
                 offersSettings: true)
         case .restricted:
             Alert(
-                title: String(localized: "Camera is restricted"),
-                message: String(localized: "This device\u{2019}s settings, such as Screen Time or a profile, do not let apps use the camera, so Andarium cannot share it."),
+                title: String(compatLocalized: "Camera is restricted"),
+                message: String(compatLocalized: "This device\u{2019}s settings, such as Screen Time or a profile, do not let apps use the camera, so Andarium cannot share it."),
                 offersSettings: false)
         case .unavailable, .notDetermined, .authorized:
             nil

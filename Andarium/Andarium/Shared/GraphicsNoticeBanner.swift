@@ -32,7 +32,6 @@ struct GraphicsNoticeBanner: View {
         .padding(.vertical, 10)
         .padding(.horizontal, 14)
         .frame(maxWidth: 480)
-        .glassEffect(.regular, in: .rect(cornerRadius: 22))
         .padding(.horizontal, 24)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("graphics-notice")
@@ -77,7 +76,6 @@ struct SessionNoticesOverlay: View {
                 column(denial: denial, opening: opening, failure: failure)
                     .padding(.horizontal, -Self.bannerInset)
             }
-            .scrollBounceBehavior(.basedOnSize)
             .padding(.horizontal, Self.bannerInset)
         }
         .padding(.top, showing ? StatsPlacement.noticeTop(statsShowing: model.session.showStats) : 0)
@@ -109,7 +107,7 @@ struct SessionNoticesOverlay: View {
     /// question's own: it ends with it.
     private func endQuestionWithoutAlert() async {
         guard model.askingToTurnOffHeatLimit else { return }
-        do { try await Task.sleep(for: patience) } catch { return }
+        do { try await compatSleep(for: patience) } catch { return }
         if model.askingToTurnOffHeatLimit && !alertIsUp() { model.cancelTurnOffHeatLimit() }
     }
 
@@ -152,15 +150,28 @@ struct SessionNoticesOverlay: View {
 
 /// The words of the alert that asks before the frame rate limit goes.
 enum HeatLimitAlert {
-    static let title = String(localized: "Turn off the frame rate limit?")
-    static let message = String(
-        localized: "This device gets hotter and the battery drains faster. iOS may dim the screen, slow everything down or close Andarium. You can turn it back on in Settings, under Performance.")
-    static let turnOff = String(localized: "Turn Off")
+    static let title = String(compatLocalized: "Turn off the frame rate limit?")
+    static let message = String(compatLocalized: "This device gets hotter and the battery drains faster. iOS may dim the screen, slow everything down or close Andarium. You can turn it back on in Settings, under Performance.")
+    static let turnOff = String(compatLocalized: "Turn Off")
+}
+
+private struct HeatQuestionPatienceKey: EnvironmentKey {
+    static let defaultValue: CompatDuration = .seconds(4)
+}
+
+private struct AlertIsUpKey: EnvironmentKey {
+    static let defaultValue: @MainActor () -> Bool = { PresentedAlert.isUp }
 }
 
 extension EnvironmentValues {
     /// How long the heat question waits for its alert before it ends.
-    @Entry var heatQuestionPatience: Duration = .seconds(4)
+    var heatQuestionPatience: CompatDuration {
+        get { self[HeatQuestionPatienceKey.self] }
+        set { self[HeatQuestionPatienceKey.self] = newValue }
+    }
     /// Whether UIKit shows an alert now; a hosted test says what it needs.
-    @Entry var alertIsUp: @MainActor () -> Bool = { PresentedAlert.isUp }
+    var alertIsUp: @MainActor () -> Bool {
+        get { self[AlertIsUpKey.self] }
+        set { self[AlertIsUpKey.self] = newValue }
+    }
 }

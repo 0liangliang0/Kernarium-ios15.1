@@ -92,6 +92,6 @@ nonisolated enum PickedFileFailure: Error, LocalizedError {
     case notTaken
 
     var errorDescription: String? {
-        String(localized: "Andarium couldn\u{2019}t take the file from Files.")
+        String(compatLocalized: "Andarium couldn\u{2019}t take the file from Files.")
     }
 }

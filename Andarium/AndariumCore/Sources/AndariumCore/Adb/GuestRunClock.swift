@@ -8,26 +8,26 @@ import Foundation
 /// guest could not have answered meanwhile.
 public final class GuestRunClock: @unchecked Sendable {
     private let lock = NSLock()
-    private let source: @Sendable () -> Duration
-    private var accumulated = Duration.zero
+    private let source: @Sendable () -> CompatDuration
+    private var accumulated = CompatDuration.zero
     /// The source's reading when the clock last resumed; nil while paused.
-    private var resumedAt: Duration?
+    private var resumedAt: CompatDuration?
 
     /// `source` is a monotonic reading; the default is the system's continuous
     /// clock, which also counts the time the device sleeps.
-    public init(source: @escaping @Sendable () -> Duration = GuestRunClock.continuousNow) {
+    public init(source: @escaping @Sendable () -> CompatDuration = GuestRunClock.continuousNow) {
         self.source = source
         resumedAt = source()
     }
 
-    public static let continuousNow: @Sendable () -> Duration = {
-        ContinuousClock.now - GuestRunClock.origin
+    public static let continuousNow: @Sendable () -> CompatDuration = {
+        CompatContinuousClock.now - GuestRunClock.origin
     }
 
-    private static let origin = ContinuousClock.now
+    private static let origin = CompatContinuousClock.now
 
     /// Running time since the clock was made, without the paused spans.
-    public var now: Duration {
+    public var now: CompatDuration {
         lock.withLock {
             guard let resumedAt else { return accumulated }
             return accumulated + (source() - resumedAt)

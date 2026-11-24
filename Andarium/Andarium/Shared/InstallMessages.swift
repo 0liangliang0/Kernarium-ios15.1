@@ -12,43 +12,43 @@ nonisolated enum PackageInstallMessages {
         (
             ["PARSE_FAILED_NOT_APK", "FAILED_INVALID_APK", "PARSE_FAILED_BAD_MANIFEST",
              "PARSE_FAILED_MANIFEST_MALFORMED", "PARSE_FAILED_UNEXPECTED_EXCEPTION"],
-            String(localized: "The file isn\u{2019}t a valid app.")
+            String(compatLocalized: "The file isn\u{2019}t a valid app.")
         ),
         (
             ["PARSE_FAILED_NO_CERTIFICATES", "PARSE_FAILED_INCONSISTENT_CERTIFICATES",
              "PARSE_FAILED_CERTIFICATE_ENCODING"],
-            String(localized: "The app isn\u{2019}t signed correctly.")
+            String(compatLocalized: "The app isn\u{2019}t signed correctly.")
         ),
         (
             ["FAILED_UPDATE_INCOMPATIBLE", "FAILED_SHARED_USER_INCOMPATIBLE"],
-            String(localized: "A version of this app signed by someone else is installed. Uninstall it in the virtual machine first.")
+            String(compatLocalized: "A version of this app signed by someone else is installed. Uninstall it in the virtual machine first.")
         ),
-        (["FAILED_VERSION_DOWNGRADE"], String(localized: "A newer version of this app is already installed.")),
-        (["FAILED_OLDER_SDK"], String(localized: "This app needs a newer system than this virtual machine runs.")),
+        (["FAILED_VERSION_DOWNGRADE"], String(compatLocalized: "A newer version of this app is already installed.")),
+        (["FAILED_OLDER_SDK"], String(compatLocalized: "This app needs a newer system than this virtual machine runs.")),
         (
             ["FAILED_DEPRECATED_SDK_VERSION"],
-            String(localized: "This app was made for a system version that this virtual machine no longer installs.")
+            String(compatLocalized: "This app was made for a system version that this virtual machine no longer installs.")
         ),
         (
             ["FAILED_NO_MATCHING_ABIS"],
-            String(localized: "This app has no code for this device\u{2019}s processor. Choose a version of the app made for ARM processors.")
+            String(compatLocalized: "This app has no code for this device\u{2019}s processor. Choose a version of the app made for ARM processors.")
         ),
         (
             ["FAILED_INSUFFICIENT_STORAGE"],
-            String(localized: "The virtual machine doesn\u{2019}t have enough free space. Free some up in the virtual machine, or give it more storage with Resize.")
+            String(compatLocalized: "The virtual machine doesn\u{2019}t have enough free space. Free some up in the virtual machine, or give it more storage with Resize.")
         ),
         (
             ["FAILED_MISSING_SPLIT"],
-            String(localized: "Some parts of this app are missing. Choose an .apks, .xapk or .apkm file that holds all of them.")
+            String(compatLocalized: "Some parts of this app are missing. Choose an .apks, .xapk or .apkm file that holds all of them.")
         ),
-        (["FAILED_MISSING_SHARED_LIBRARY"], String(localized: "The app needs a system library this virtual machine doesn\u{2019}t have.")),
+        (["FAILED_MISSING_SHARED_LIBRARY"], String(compatLocalized: "The app needs a system library this virtual machine doesn\u{2019}t have.")),
         (
             ["FAILED_DUPLICATE_PERMISSION", "FAILED_CONFLICTING_PROVIDER", "FAILED_DUPLICATE_PACKAGE"],
-            String(localized: "The app conflicts with an app that\u{2019}s already installed.")
+            String(compatLocalized: "The app conflicts with an app that\u{2019}s already installed.")
         ),
         (
             ["FAILED_USER_RESTRICTED", "FAILED_VERIFICATION_FAILURE", "FAILED_ABORTED"],
-            String(localized: "The virtual machine refused to install the app.")
+            String(compatLocalized: "The virtual machine refused to install the app.")
         ),
     ]
 
@@ -56,7 +56,7 @@ nonisolated enum PackageInstallMessages {
     /// the message for the person. Output with neither word is a failure that
     /// names nothing.
     static func failure(inOutput output: String) -> String? {
-        let generic = String(localized: "The virtual machine couldn\u{2019}t install the app.")
+        let generic = String(compatLocalized: "The virtual machine couldn\u{2019}t install the app.")
         switch PackageInstallResponse(output: output) {
         case .success:
             return nil
@@ -89,7 +89,7 @@ nonisolated enum PackageInstallMessages {
     }
 
     static func message(forCode code: String) -> String {
-        table.first { $0.codes.contains(code) }?.message ?? String(localized: "The virtual machine couldn\u{2019}t install the app (\(code)).")
+        table.first { $0.codes.contains(code) }?.message ?? String(compatLocalized: "The virtual machine couldn\u{2019}t install the app (\(code)).")
     }
 
     /// Every code the table maps, for the test that checks the table.
@@ -139,22 +139,22 @@ extension ApkInstallOutcome {
     private func baseWords(fileName name: String) -> BusyWords {
         switch self {
         case .installed:
-            BusyWords(title: String(localized: "App installed"), detail: String(localized: "\(name) is installed in the virtual machine."))
+            BusyWords(title: String(compatLocalized: "App installed"), detail: String(compatLocalized: "\(name) is installed in the virtual machine."))
         case .installedWithoutData:
             BusyWords(
                 title: Self.warningTitle,
-                detail: String(localized: "\(name) is installed in the virtual machine, but not all of its data files were copied. The app may not work without them. Install the file again to copy them."),
+                detail: String(compatLocalized: "\(name) is installed in the virtual machine, but not all of its data files were copied. The app may not work without them. Install the file again to copy them."),
                 style: .warning)
         case .installedDataNotPlaced:
             BusyWords(
                 title: Self.warningTitle,
-                detail: String(localized: "\(name) is installed in the virtual machine, but not all of its data files were copied. The app may not work without them."),
+                detail: String(compatLocalized: "\(name) is installed in the virtual machine, but not all of its data files were copied. The app may not work without them."),
                 style: .warning)
         }
     }
 
     /// The title of the card of an install whose app is in but whose data is not all there.
-    static var warningTitle: String { String(localized: "App installed, some data missing") }
+    static var warningTitle: String { String(compatLocalized: "App installed, some data missing") }
 }
 
 /// The package manager refused an app for the version of Android it was built
@@ -171,17 +171,15 @@ nonisolated struct LegacyApkRefused: LocalizedError, Equatable {
 /// a much older version of Android. It says why Android blocks such an app and
 /// that the app may not work; it promises nothing and shows no code.
 nonisolated enum LegacyInstallWords {
-    static let title = String(localized: "Install this app anyway?")
+    static let title = String(compatLocalized: "Install this app anyway?")
 
-    static let install = String(localized: "Install anyway")
+    static let install = String(compatLocalized: "Install anyway")
 
     /// The message, with the versions when the package manager named both.
     static func message(for target: LegacyTarget) -> String {
-        let body = String(
-            localized: "This app was built for a much older version of Android. Android blocks apps like this because they predate its newer privacy and security protections. If you install it anyway, it may not work properly.")
+        let body = String(compatLocalized: "This app was built for a much older version of Android. Android blocks apps like this because they predate its newer privacy and security protections. If you install it anyway, it may not work properly.")
         guard let app = target.appLevel, let required = target.requiredLevel else { return body }
-        let detail = String(
-            localized: "This app was built for API level \(app). Android in this virtual machine normally installs only apps built for API level \(required) or later.",
+        let detail = String(compatLocalized: "This app was built for API level \(app). Android in this virtual machine normally installs only apps built for API level \(required) or later.",
             comment: "API level is Android's number for a version; both are plain numbers (7, 24).")
         return body + "\n\n" + detail
     }

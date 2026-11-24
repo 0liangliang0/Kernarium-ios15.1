@@ -20,12 +20,10 @@ public enum InstallRoom {
         public func message(device: String) -> String {
             switch self {
             case let .device(needed, free):
-                String(
-                    localized: "There isn\u{2019}t enough free space on this \(device) to install this app (\(Formats.size(bytes: needed)) needed, \(Formats.size(bytes: free)) available). Free up space in Settings \u{203A} General \u{203A} \(device) Storage and try again.",
+                String(compatLocalized: "There isn\u{2019}t enough free space on this \(device) to install this app (\(Formats.size(bytes: needed)) needed, \(Formats.size(bytes: free)) available). Free up space in Settings \u{203A} General \u{203A} \(device) Storage and try again.",
                     bundle: .module)
             case let .virtualMachine(needed, free):
-                String(
-                    localized: "The virtual machine doesn\u{2019}t have enough free space to install this app (\(Formats.size(bytes: needed)) needed, \(Formats.size(bytes: free)) available). Free some up in the virtual machine, or give it more storage with Resize.",
+                String(compatLocalized: "The virtual machine doesn\u{2019}t have enough free space to install this app (\(Formats.size(bytes: needed)) needed, \(Formats.size(bytes: free)) available). Free some up in the virtual machine, or give it more storage with Resize.",
                     bundle: .module)
             }
         }

@@ -239,7 +239,7 @@ protocol RuntimeDriver: AnyObject, OldAppsSource, AndroidAppsSource {
     /// nil when no guest runs or its GPU has not started. It reads counters,
     /// never waits for the guest and may be asked while the statistics are not
     /// shown.
-    func readGraphicsMemory(minimumIdle: Duration, minimumBytes: UInt64) async -> GraphicsMemoryReading?
+    func readGraphicsMemory(minimumIdle: CompatDuration, minimumBytes: UInt64) async -> GraphicsMemoryReading?
     /// Frees graphics memory by asking Android to end the cached app that
     /// holds the most of it (`GraphicsReclaim.reclaim`), within the guest's
     /// shell; nothing is ended that the activity manager does not list under
@@ -289,7 +289,7 @@ protocol RuntimeDriver: AnyObject, OldAppsSource, AndroidAppsSource {
 
 extension RuntimeDriver {
     /// A driver with no image to ask lists no old app: the feature is not offered.
-    func listOldApps(limit: Duration?) async -> OldAppListing { .unavailable }
+    func listOldApps(limit: CompatDuration?) async -> OldAppListing { .unavailable }
     func setOldApp(_ package: String, on: Bool) async -> OldAppWrite { .failed }
     func isOldAppOpen(_ package: String) async -> Bool? { nil }
     /// A driver with no image to ask has no apps to offer and cannot open one.

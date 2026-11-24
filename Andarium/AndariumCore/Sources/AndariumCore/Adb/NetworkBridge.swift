@@ -137,7 +137,7 @@ public final class AdbNetworkBridge: @unchecked Sendable {
     /// Waits until every thread of the bridge has ended; false when `timeout`
     /// passed first. For tests, and for a caller that must be sure nothing
     /// still touches a descriptor.
-    public func waitUntilIdle(timeout: Duration) -> Bool {
+    public func waitUntilIdle(timeout: CompatDuration) -> Bool {
         let deadline = Date().addingTimeInterval(
             Double(timeout.components.seconds) + Double(timeout.components.attoseconds) / 1e18)
         threadsIdle.lock()

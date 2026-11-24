@@ -164,7 +164,7 @@ extension AppModel {
             var holdingForAnOpen = false
             while attempt < AndroidAppsState.startAttempts {
                 guard let state else { return }
-                let wait: Duration
+                let wait: CompatDuration
                 if holdingForAnOpen {
                     wait = state.retryInterval
                 } else if attempt == 0 {

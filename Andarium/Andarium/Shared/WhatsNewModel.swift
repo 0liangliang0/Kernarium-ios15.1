@@ -1,30 +1,30 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
+import Combine
 import Foundation
-import Observation
 
 /// The notes the screens show: every release's, for Info, and what the
 /// ribbon above Start offers this launch. The notes, the rules and the
 /// record are `AndariumCore`'s (`WhatsNewRules`).
-@Observable
-final class WhatsNewModel {
+final class WhatsNewModel: ObservableObject {
+
     /// Every release's notes, newest first. Info lists them; without any,
     /// Info has no What's New row.
-    private(set) var releases: [WhatsNewRelease] = []
+    @Published private(set) var releases: [WhatsNewRelease] = []
     /// What this launch's rules offer the ribbon, newest first; empty when it
     /// is not shown. The ribbon and its notes show `announced`.
-    private(set) var pending: [WhatsNewRelease] = []
+    @Published private(set) var pending: [WhatsNewRelease] = []
     /// The build this launch runs.
-    private(set) var currentBuild = 0
+    @Published private(set) var currentBuild = 0
     /// Writes the record for the next launch: the device keeps it in its
     /// defaults. Nil keeps nothing, as in a harness launch and the preview.
-    @ObservationIgnored var keep: ((WhatsNewRecord) -> Void)?
+    var keep: ((WhatsNewRecord) -> Void)?
     /// Whether this device shows a feature, by the feature's own rule
     /// (`AppModel` states it: Add to Home Screen, in Settings). The launch's
     /// offer (`pending`) does not ask it; the ribbon and the notes do, each
     /// time they are drawn.
-    @ObservationIgnored var showsFeature: (WhatsNewFeature) -> Bool = { _ in true }
+    var showsFeature: (WhatsNewFeature) -> Bool = { _ in true }
 
     /// What the ribbon and its notes announce now: `pending` without the
     /// entries about a feature this device does not show, and without a

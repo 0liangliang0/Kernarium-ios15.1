@@ -11,9 +11,9 @@ import Foundation
 /// state records it. A cancelled caller is released at once.
 public enum RootAppStep {
     /// The hard bound on the check and the install together.
-    public static let limit = Duration.seconds(45)
+    public static let limit = CompatDuration.seconds(45)
     /// The bound on the short command that checks for the app.
-    static let commandLimit = Duration.seconds(10)
+    static let commandLimit = CompatDuration.seconds(10)
 
     public enum Outcome: Equatable, Sendable {
         /// Nothing was installed.
@@ -35,20 +35,20 @@ public enum RootAppStep {
     /// the check, the install and the opening, so that a timer that starts late
     /// still ends at it. A test replaces both.
     public struct Clocking: Sendable {
-        public var now: @Sendable () -> ContinuousClock.Instant
-        public var wait: @Sendable (ContinuousClock.Instant) async -> Void
+        public var now: @Sendable () -> CompatClockInstant
+        public var wait: @Sendable (CompatClockInstant) async -> Void
 
         public init(
-            now: @escaping @Sendable () -> ContinuousClock.Instant,
-            wait: @escaping @Sendable (ContinuousClock.Instant) async -> Void
+            now: @escaping @Sendable () -> CompatClockInstant,
+            wait: @escaping @Sendable (CompatClockInstant) async -> Void
         ) {
             self.now = now
             self.wait = wait
         }
 
         public static let live = Clocking(
-            now: { ContinuousClock.now },
-            wait: { try? await Task.sleep(until: $0, clock: ContinuousClock()) })
+            now: { CompatContinuousClock.now },
+            wait: { try? await compatSleep(until: $0, clock: CompatContinuousClock()) })
     }
 
     /// Runs the step. `installing` is told once, when an install is about to
@@ -60,9 +60,9 @@ public enum RootAppStep {
         shell: any GuestShell, release: RootRelease, state: RootState,
         installing: @escaping @Sendable () async -> Void,
         install: @escaping @Sendable () async throws -> Void,
-        limit: Duration = RootAppStep.limit,
+        limit: CompatDuration = RootAppStep.limit,
         opening: MagiskAppOpening.Policy = .standard,
-        sleep: @escaping @Sendable (Duration) async -> Void = MagiskAppOpening.pause,
+        sleep: @escaping @Sendable (CompatDuration) async -> Void = MagiskAppOpening.pause,
         clocking: Clocking = .live
     ) async -> Outcome {
         let attempt = Attempt(state)
@@ -119,7 +119,7 @@ public enum RootAppStep {
     /// its cancellation. The timer waits until the instant itself, not for
     /// the time left when it starts, so a late start does not move it.
     static func bounded<Value: Sendable>(
-        until deadline: ContinuousClock.Instant, _ clocking: Clocking, _ work: @escaping @Sendable () async -> Value
+        until deadline: CompatClockInstant, _ clocking: Clocking, _ work: @escaping @Sendable () async -> Value
     ) async -> Value? {
         let gate = Gate<Value>()
         let task = Task { gate.finish(await work()) }

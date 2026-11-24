@@ -123,21 +123,17 @@ nonisolated enum JitAnswer: Equatable, Sendable {
         switch self {
         case .ready, .disabled: nil
         case .noDebugger:
-            String(
-                localized: "Started without JIT: StikDebug is not connected.", table: "JIT",
+            String(compatLocalized: "Started without JIT: StikDebug is not connected.", table: "JIT",
                 comment: "Shown after a start that asked for JIT and ran without it. JIT and StikDebug are names and stay as they are.")
         case .failed:
-            String(
-                localized: "Started without JIT: StikDebug could not prepare it.", table: "JIT",
+            String(compatLocalized: "Started without JIT: StikDebug could not prepare it.", table: "JIT",
                 comment: "Shown after a start that asked for JIT and ran without it. JIT and StikDebug are names and stay as they are.")
         case .otherSettings:
-            String(
-                localized: "Started without JIT: the CPU or memory changed after StikDebug prepared it. Open Andarium from StikDebug again.",
+            String(compatLocalized: "Started without JIT: the CPU or memory changed after StikDebug prepared it. Open Andarium from StikDebug again.",
                 table: "JIT",
                 comment: "Shown after a start that asked for JIT and ran without it because the virtual machine's CPU or memory was changed after StikDebug prepared the memory. JIT and StikDebug are names and stay as they are.")
         case .unsupported:
-            String(
-                localized: "Started without JIT: this copy of Andarium cannot use it.", table: "JIT",
+            String(compatLocalized: "Started without JIT: this copy of Andarium cannot use it.", table: "JIT",
                 comment: "Shown after a start that asked for JIT and ran without it. JIT is a name and stays as it is.")
         }
     }
@@ -197,18 +193,14 @@ struct JitStatus: Equatable, Sendable {
         usable && lastStart?.fallbackSentence == nil
     }
 
-    static let ready = String(
-        localized: "Ready. Applies to the next start.", table: "JIT",
+    static let ready = String(compatLocalized: "Ready. Applies to the next start.", table: "JIT",
         comment: "Under the JIT switch on Home: JIT is prepared and the next start uses it. JIT is a name and stays as it is.")
-    static let needsStikDebug = String(
-        localized: "To use JIT, open Andarium from StikDebug.", table: "JIT",
+    static let needsStikDebug = String(compatLocalized: "To use JIT, open Andarium from StikDebug.", table: "JIT",
         comment: "Under the JIT switch on Home: no debugger is attached. JIT and StikDebug are names and stay as they are.")
-    static let changed = String(
-        localized: "The CPU or memory changed after JIT was prepared. Open Andarium from StikDebug again to use it.", table: "JIT",
+    static let changed = String(compatLocalized: "The CPU or memory changed after JIT was prepared. Open Andarium from StikDebug again to use it.", table: "JIT",
         comment: "Under the JIT switch on Home: the virtual machine's CPU or memory no longer matches what StikDebug prepared. JIT and StikDebug are names and stay as they are.")
     /// "Preparing JIT" on the boot screen while the debugger works.
-    static let preparing = String(
-        localized: "Preparing JIT", table: "JIT",
+    static let preparing = String(compatLocalized: "Preparing JIT", table: "JIT",
         comment: "The detail of the system step on the boot screen while StikDebug prepares JIT. JIT is a name and stays as it is.")
 
     var footer: String {

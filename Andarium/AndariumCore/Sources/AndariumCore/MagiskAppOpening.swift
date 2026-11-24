@@ -32,15 +32,15 @@ public enum MagiskAppOpening {
         /// How many times user 0 is asked whether it is unlocked, `pollInterval`
         /// apart, before the tries begin; they begin whatever the answers were.
         public var unlockPolls: Int
-        public var pollInterval: Duration
+        public var pollInterval: CompatDuration
         /// How many times the app is started and checked, `retryInterval` apart.
         public var attempts: Int
-        public var retryInterval: Duration
+        public var retryInterval: CompatDuration
         /// The bound on each command.
-        public var commandLimit: Duration
+        public var commandLimit: CompatDuration
 
         public init(
-            unlockPolls: Int, pollInterval: Duration, attempts: Int, retryInterval: Duration, commandLimit: Duration
+            unlockPolls: Int, pollInterval: CompatDuration, attempts: Int, retryInterval: CompatDuration, commandLimit: CompatDuration
         ) {
             self.unlockPolls = unlockPolls
             self.pollInterval = pollInterval
@@ -56,15 +56,15 @@ public enum MagiskAppOpening {
     }
 
     /// Waits for `duration`; a cancelled caller is released at once.
-    public static func pause(_ duration: Duration) async {
-        try? await Task.sleep(for: duration)
+    public static func pause(_ duration: CompatDuration) async {
+        try? await compatSleep(for: duration)
     }
 
     /// Whether the app was on the guest's screen when the last try ended.
     /// `sleep` is the wait between asks, which a test replaces.
     public static func run(
         shell: any GuestShell, policy: Policy = .standard,
-        sleep: @Sendable (Duration) async -> Void = MagiskAppOpening.pause
+        sleep: @Sendable (CompatDuration) async -> Void = MagiskAppOpening.pause
     ) async -> Bool {
         var polls = 0
         while polls < policy.unlockPolls {
@@ -83,13 +83,13 @@ public enum MagiskAppOpening {
         return false
     }
 
-    static func isUnlocked(shell: any GuestShell, limit: Duration) async -> Bool {
+    static func isUnlocked(shell: any GuestShell, limit: CompatDuration) async -> Bool {
         guard let answer = try? await shell.run(MagiskApp.userStateCommand, limit: limit) else { return false }
         return MagiskApp.isUnlocked(answer)
     }
 
     /// One try: the launcher activity is resolved, started, and found in focus.
-    static func tryOnce(shell: any GuestShell, limit: Duration) async -> Bool {
+    static func tryOnce(shell: any GuestShell, limit: CompatDuration) async -> Bool {
         guard let resolved = try? await shell.run(MagiskApp.resolveCommand, limit: limit),
             let component = MagiskApp.launcherComponent(in: resolved)
         else { return false }

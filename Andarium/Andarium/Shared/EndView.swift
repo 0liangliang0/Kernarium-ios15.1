@@ -35,7 +35,7 @@ struct EndView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(14)
-            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 16))
+            .background(Color(.secondarySystemGroupedBackground), in: .compatRect(cornerRadius: 16))
             .frame(maxWidth: 380)
             .padding(.top, 24)
             Button {
@@ -49,8 +49,8 @@ struct EndView: View {
             }
             .buttonStyle(.glass)
             .padding(.top, 14)
-            .onChange(of: copied) { _, now in
-                if now { VoiceOver.announce(String(localized: "Report copied")) }
+            .onChange(of: copied) { now in
+                if now { VoiceOver.announce(String(compatLocalized: "Report copied")) }
             }
 
             Spacer(minLength: 24)
@@ -83,18 +83,17 @@ struct EndWords: Equatable {
     let advice: String
 
     init(_ end: RunEnd, leastOfferedMiB: Int) {
-        let again = String(localized: "To start it again, close Andarium in the App Switcher and open it again.")
+        let again = String(compatLocalized: "To start it again, close Andarium in the App Switcher and open it again.")
         if let memoryRefusedMiB = end.memoryRefusedMiB {
-            headline = String(localized: "The virtual machine could not start")
+            headline = String(compatLocalized: "The virtual machine could not start")
             advice = end.canLowerMemory(leastOfferedMiB: leastOfferedMiB)
-                ? String(
-                    localized: "This device could not give it \(Formats.size(mib: memoryRefusedMiB)) of memory. Close Andarium in the App Switcher and open it again, then lower the memory with Edit under Virtual machine."
+                ? String(compatLocalized: "This device could not give it \(Formats.size(mib: memoryRefusedMiB)) of memory. Close Andarium in the App Switcher and open it again, then lower the memory with Edit under Virtual machine."
                 )
                 : again
         } else {
             headline = end.stoppedByUser
-                ? String(localized: "You stopped the virtual machine")
-                : String(localized: "The virtual machine stopped unexpectedly")
+                ? String(compatLocalized: "You stopped the virtual machine")
+                : String(compatLocalized: "The virtual machine stopped unexpectedly")
             advice = again
         }
     }

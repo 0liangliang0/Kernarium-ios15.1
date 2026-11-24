@@ -12,10 +12,10 @@ struct SnapshotsSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        @Bindable var store = model.snapshots
+        @ObservedObject var store = model.snapshots
         GeometryReader { geo in
             let wide = geo.size.width >= 660 && !store.items.isEmpty
-            NavigationStack(path: $store.route) {
+            NavigationView(path: $store.route) {
                 Group {
                     if wide {
                         SnapshotsSplit()
@@ -38,7 +38,7 @@ struct SnapshotsSheet: View {
                             .accessibilityIdentifier("snapshots-done")
                     }
                 }
-                .navigationDestination(for: SnapshotPage.self) { page in
+                .compatNavigationDestination(for: SnapshotPage.self) { page in
                     switch page {
                     case .snapshot(let id): SnapshotDetail(id: id, pushed: true).id(id)
                     case .space: SnapshotSpacePage(pushed: true)
@@ -47,7 +47,6 @@ struct SnapshotsSheet: View {
             }
         }
         .modifier(SnapshotPrompts())
-        .presentationSizing(FixedSheetSizing(width: 780, height: 820))
         .task { await store.reload() }
         // The sheet opens at its list again next time.
         .onDisappear {
@@ -80,7 +79,7 @@ struct SnapshotsSplit: View {
                 case .snapshot(let id): SnapshotDetail(id: id, pushed: false).id(id)
                 case .space: SnapshotSpacePage(pushed: false)
                 case nil:
-                    ContentUnavailableView("No snapshot selected", systemImage: "clock.arrow.circlepath")
+                    CompatContentUnavailableView("No snapshot selected", systemImage: "clock.arrow.circlepath")
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -97,13 +96,13 @@ struct SnapshotList: View {
     let selectable: Bool
 
     var body: some View {
-        @Bindable var store = model.snapshots
+        @ObservedObject var store = model.snapshots
         Group {
             if store.listing == nil {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if store.items.isEmpty {
-                ContentUnavailableView {
+                CompatContentUnavailableView {
                     Label("No snapshots", systemImage: "clock.arrow.circlepath")
                 } description: {
                     Text("Take one to keep the virtual machine\u{2019}s data as it is now and go back to it later.")
@@ -176,7 +175,7 @@ struct SnapshotList: View {
         if selectable {
             label().tag(page)
         } else {
-            NavigationLink(value: page, label: label)
+            CompatNavigationLink(value: page, label: label)
         }
     }
 }
@@ -306,7 +305,6 @@ struct SnapshotTakeBar: View {
             .font(.body.weight(.semibold))
             .foregroundStyle(.white)
             .background(Capsule().fill(Color.accentColor))
-            .glassEffect(.regular.tint(Color.accentColor).interactive(), in: .capsule)
             .opacity(refusal == nil ? 1 : 0.4)
             .disabled(refusal != nil)
             .accessibilityIdentifier("snapshots-take")
@@ -364,12 +362,12 @@ struct SnapshotDetail: View {
                         .accessibilityIdentifier("snapshot-name")
                 }
                 Section {
-                    LabeledContent("Taken", value: SnapshotWords.takenLong(item.created))
-                    LabeledContent("System image", value: SnapshotWords.revision(of: item.releaseID))
-                    LabeledContent("Frees if deleted") {
+                    CompatLabeledContent("Taken", value: SnapshotWords.takenLong(item.created))
+                    CompatLabeledContent("System image", value: SnapshotWords.revision(of: item.releaseID))
+                    CompatLabeledContent("Frees if deleted") {
                         figure(store.frees(item))
                     }
-                    LabeledContent("Virtual machine data") {
+                    CompatLabeledContent("Virtual machine data") {
                         figure(store.kept(item))
                     }
                 }
@@ -404,14 +402,14 @@ struct SnapshotDetail: View {
                 if store.focusName {
                     store.focusName = false
                     Task { @MainActor in
-                        try? await Task.sleep(for: .milliseconds(500))
+                        try? await compatSleep(for: .milliseconds(500))
                         nameFocused = true
                     }
                 }
             }
             .onDisappear { Task { await store.flushName() } }
         } else {
-            ContentUnavailableView("No snapshot selected", systemImage: "clock.arrow.circlepath")
+            CompatContentUnavailableView("No snapshot selected", systemImage: "clock.arrow.circlepath")
         }
     }
 
@@ -462,7 +460,7 @@ struct SnapshotSpacePage: View {
                 }
             }
             Section {
-                LabeledContent("All snapshots") {
+                CompatLabeledContent("All snapshots") {
                     if let total = store.total {
                         Text(SnapshotWords.size(total)).monospacedDigit()
                     } else {
@@ -470,12 +468,12 @@ struct SnapshotSpacePage: View {
                     }
                 }
                 if let guest = model.guest {
-                    LabeledContent("Virtual machine data", value: Formats.size(bytes: guest.usedBytes))
+                    CompatLabeledContent("Virtual machine data", value: Formats.size(bytes: guest.usedBytes))
                 }
                 if let copy = store.updateCopy {
-                    LabeledContent("Unfinished update", value: SnapshotWords.size(copy))
+                    CompatLabeledContent("Unfinished update", value: SnapshotWords.size(copy))
                 }
-                LabeledContent("Free on this \(device)", value: Formats.size(bytes: model.host.freeStorageBytes))
+                CompatLabeledContent("Free on this \(device)", value: Formats.size(bytes: model.host.freeStorageBytes))
             }
             Section {
                 ForEach(
@@ -517,7 +515,7 @@ struct SnapshotPrompts: ViewModifier {
     @Environment(AppModel.self) private var model
 
     func body(content: Content) -> some View {
-        @Bindable var store = model.snapshots
+        @ObservedObject var store = model.snapshots
         let endsUpdate = store.endsUpdate
         content
             .alert(SnapshotWords.take, isPresented: $store.taking) {
