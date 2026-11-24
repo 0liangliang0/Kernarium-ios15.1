@@ -59,7 +59,7 @@ jobs:
           cmake --version | head -1
           echo "SDKs:"; xcodebuild -showsdks
           python3 -c 'import mako, packaging, yaml' || \
-            python3 -m pip install --user mako packaging pyyaml
+            python3 -m pip install --user --break-system-packages mako packaging pyyaml
 
       - name: Verify iOS 15.1 deployment target
         run: |
