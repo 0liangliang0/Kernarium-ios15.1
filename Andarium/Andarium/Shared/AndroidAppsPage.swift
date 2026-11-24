@@ -2,7 +2,6 @@
 
 import AndariumCore
 import GuestHostCore
-import AppIntents
 import SwiftUI
 
 /// The Apps section's row that opens Add to Home Screen. Settings offers it
@@ -38,7 +37,8 @@ struct AddToHomeScreenRow: View {
 /// Shortcuts. The list is the cache's, shown at once while Android is asked for
 /// a fresher one, and the switch for Search is at the foot.
 struct AddToHomeScreenPage: View {
-    @EnvironmentObject private var model: AppModel@State private var query: String
+    @EnvironmentObject private var model: AppModel
+    @State private var query: String
     @State private var guided: AndroidApp?
 
     init(query: String = "") {
@@ -271,7 +271,7 @@ struct AddToHomeScreenGuide: View {
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(.white)
                 .frame(width: 26, height: 26)
-                .background(Color.accentColor, in: .circle)
+                .background(Color.accentColor, in: Circle())
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -295,7 +295,7 @@ struct ShortcutsLinkBar: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            ShortcutsLink()
+            EmptyView()
                 .accessibilityIdentifier("shortcuts-link")
             Text(caption.keepingTogether)
                 .font(.caption)
@@ -339,7 +339,7 @@ private struct ShortcutsTag: View {
         .foregroundStyle(.secondary)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .background(Color(.tertiarySystemFill), in: .capsule)
+        .background(Color(.tertiarySystemFill), in: Capsule())
         .accessibilityHidden(true)
     }
 }
@@ -368,7 +368,7 @@ private struct MiniTiles: View {
                     .font(.system(size: 17 * scale, weight: .medium))
                     .foregroundStyle(Color.accentColor)
                     .frame(width: 42 * scale, height: 42 * scale)
-                    .background(Color.accentColor.opacity(0.16), in: .circle)
+                    .background(Color.accentColor.opacity(0.16), in: Circle())
             }
             .opacity(0.45)
             tile(label: app.label) {
@@ -445,7 +445,7 @@ private struct MiniHomeSheet: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 11 * scale, weight: .semibold))
                     .frame(width: 26 * scale, height: 26 * scale)
-                    .background(Color(.systemGray5), in: .circle)
+                    .background(Color(.systemGray5), in: Circle())
                 Spacer()
                 Text(verbatim: AndroidAppsWords.sheetTitle)
                     .font(.system(size: 12 * scale, weight: .semibold))
@@ -454,7 +454,7 @@ private struct MiniHomeSheet: View {
                     .font(.system(size: 12 * scale, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 26 * scale, height: 26 * scale)
-                    .background(Color.accentColor, in: .circle)
+                    .background(Color.accentColor, in: Circle())
                     .overlay(Circle().stroke(Color.accentColor.opacity(0.35), lineWidth: 5 * scale).padding(-5 * scale))
             }
             AndroidAppIconView(app: app, size: 40 * scale)
@@ -464,7 +464,7 @@ private struct MiniHomeSheet: View {
                 .lineLimit(1)
                 .padding(.horizontal, 7 * scale)
                 .padding(.vertical, 2 * scale)
-                .background(Color(.systemGray), in: .capsule)
+                .background(Color(.systemGray), in: Capsule())
         }
         .padding(10 * scale)
         .frame(width: 210 * scale)

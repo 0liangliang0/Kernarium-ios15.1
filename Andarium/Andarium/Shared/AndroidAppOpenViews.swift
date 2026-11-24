@@ -12,7 +12,8 @@ import SwiftUI
 /// The boot screen's card while Android starts for a request: what it is for,
 /// when the app opens, and the way to not open it (Android keeps starting).
 struct AppOpenBootCard: View {
-    @EnvironmentObject private var model: AppModellet request: AppOpenRequest
+    @EnvironmentObject private var model: AppModel
+    let request: AppOpenRequest
     let dimmed: Bool
 
     var body: some View {
@@ -48,7 +49,8 @@ struct AppOpenBootCard: View {
 /// little free space): which app waits, and why. The notice keeps its own
 /// buttons; the close mark here drops the request.
 struct AppOpenWaitingCard: View {
-    @EnvironmentObject private var model: AppModellet request: AppOpenRequest
+    @EnvironmentObject private var model: AppModel
+    let request: AppOpenRequest
     let hold: AppOpenHold
 
     var body: some View {
@@ -133,7 +135,7 @@ struct AppOpenFailureBanner: View {
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 20, height: 20)
-                    .background(banner.failure == .notInAndroid ? Color.gray : Color.orange, in: .circle)
+                    .background(banner.failure == .notInAndroid ? Color.gray : Color.orange, in: Circle())
                     .offset(x: 5, y: 5)
             }
             .accessibilityHidden(true)

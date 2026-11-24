@@ -16,7 +16,7 @@ enum SceneCoverage {
 
     static func covers(_ scene: UIWindowScene) -> Bool {
         covers(
-            sceneSize: scene.effectiveGeometry.coordinateSpace.bounds.size,
+            sceneSize: scene.screen.bounds.size,
             screenSize: scene.screen.bounds.size
         )
     }
@@ -56,11 +56,7 @@ final class SceneCoverageView: UIView {
         super.didMoveToWindow()
         observation = nil
         guard let scene = window?.windowScene else { return }
-        observation = scene.observe(
-            \.effectiveGeometry, options: [.initial, .new]
-        ) { [weak self] scene, _ in
-            MainActor.assumeIsolated { self?.update(from: scene) }
-        }
+        update(from: scene)
     }
 
     override func layoutSubviews() {

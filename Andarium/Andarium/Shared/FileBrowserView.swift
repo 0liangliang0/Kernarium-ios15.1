@@ -8,7 +8,8 @@ import SwiftUI
 /// A tap goes into a folder and selects a file: there is nothing else a file
 /// can do here, so selecting needs no mode.
 struct FolderPage: View {
-    @EnvironmentObject private var model: AppModel@Environment(\.filesBarHeight) private var barHeight
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.filesBarHeight) private var barHeight
     let browser: FileBrowserModel
     let route: FolderRoute
     let close: () -> Void
@@ -113,13 +114,13 @@ struct FolderPage: View {
         let label = FileRow(
             file: file, selected: selected, fresh: browser.fresh.contains(file.path), wide: wide,
             dateWidth: dateWidth,
-            toggle: { withAnimation(.snappy) { browser.toggle(file) } }
+            toggle: { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { browser.toggle(file) } }
         )
         Button {
             if file.isFolder {
                 browser.route.append(FolderRoute(path: file.path))
             } else {
-                withAnimation(.snappy) { browser.toggle(file) }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { browser.toggle(file) }
             }
         } label: {
             label
@@ -129,7 +130,7 @@ struct FolderPage: View {
         .contextMenu {
             if file.isFolder {
                 Button(selected ? "Deselect" : "Select", systemImage: selected ? "minus.circle" : "checkmark.circle") {
-                    withAnimation(.snappy) { browser.toggle(file) }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { browser.toggle(file) }
                 }
             }
             Button("Export", systemImage: "square.and.arrow.up") {
@@ -155,7 +156,7 @@ struct FolderPage: View {
 
     private func columnButton(_ sort: FileSort, title: String) -> some View {
         Button {
-            withAnimation(.snappy) { browser.sort = sort }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { browser.sort = sort }
         } label: {
             HStack(spacing: 3) {
                 Text(title)
@@ -192,15 +193,15 @@ struct FolderPage: View {
             Menu {
                 if browser.allSelected(in: path) {
                     Button("Clear Selection", systemImage: "checkmark.circle.badge.xmark") {
-                        withAnimation(.snappy) { browser.clearSelection() }
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { browser.clearSelection() }
                     }
                 } else {
                     Button("Select All", systemImage: "checkmark.circle") {
-                        withAnimation(.snappy) { browser.selectAll(in: path) }
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { browser.selectAll(in: path) }
                     }
                     .disabled(browser.entries(in: path).allSatisfy(\.isFolder))
                 }
-                Picker("Sort By", systemImage: "arrow.up.arrow.down", selection: $browser.sort.animation(.snappy)) {
+                Picker("Sort By", systemImage: "arrow.up.arrow.down", selection: $browser.sort.animation(.spring(response: 0.3, dampingFraction: 0.8))) {
                     ForEach(FileSort.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.menu)
@@ -382,7 +383,7 @@ struct SelectionReview: View {
                 Text(browser.selectionSummary)
                     .font(.subheadline.weight(.semibold))
                 Spacer()
-                Button("Clear") { withAnimation(.snappy) { browser.clearSelection() } }
+                Button("Clear") { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { browser.clearSelection() } }
                     .font(.subheadline)
             }
             .padding(.horizontal, 16)
@@ -414,7 +415,7 @@ struct SelectionReview: View {
             }
             Spacer(minLength: 4)
             Button {
-                withAnimation(.snappy) { browser.toggle(file) }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { browser.toggle(file) }
                 if browser.selection.isEmpty { browser.reviewingSelection = false }
             } label: {
                 Image(systemName: "xmark.circle.fill")

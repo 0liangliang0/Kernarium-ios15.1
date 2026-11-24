@@ -9,7 +9,8 @@ import UIKit
 /// One the person chose, with Stop on the boot screen's notice, says so and
 /// is not drawn as a fault.
 struct EndView: View {
-    @EnvironmentObject private var model: AppModel@State private var copied = false
+    @EnvironmentObject private var model: AppModel
+    @State private var copied = false
 
     var body: some View {
         let stopped = model.runEnd.stoppedByUser

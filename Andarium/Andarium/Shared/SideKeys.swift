@@ -59,7 +59,7 @@ struct SideKeysOverlay: View {
     /// The tip's popover is up: while the closed keys are on screen and the
     /// tip wants to show.
     @State private var tipShown = false
-    @Environment(\.compatAppModel) private var model: AppModel?
+    @EnvironmentObject private var model: AppModel
     @AccessibilityFocusState private var focus: SideKeyFocus?
 
     /// `tip` is the tip beside the closed keys. It says where Install APK is
@@ -167,13 +167,13 @@ struct SideKeysOverlay: View {
     @ViewBuilder
     private var closedKeysActions: some View {
         Button(leading ? "Move to the right edge" : "Move to the left edge") {
-            withAnimation(.snappy) { leading.toggle() }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { leading.toggle() }
         }
         if fraction > 0.15 {
-            Button("Move up") { withAnimation(.snappy) { fraction = max(0.1, fraction - 0.15) } }
+            Button("Move up") { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { fraction = max(0.1, fraction - 0.15) } }
         }
         if fraction < 0.85 {
-            Button("Move down") { withAnimation(.snappy) { fraction = min(0.9, fraction + 0.15) } }
+            Button("Move down") { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { fraction = min(0.9, fraction + 0.15) } }
         }
     }
 
@@ -211,7 +211,7 @@ struct SideKeysOverlay: View {
     private func holdPower() {
         guard mode == .normal else { return }
         actions.powerHold()
-        withAnimation(.snappy) { open = false }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { open = false }
     }
 
     private func openSettings() {
@@ -220,7 +220,7 @@ struct SideKeysOverlay: View {
     }
 
     private func dragKeys(size: CGSize) -> some Gesture {
-        DragGesture(minimumDistance: 6, coordinateSpace: .local)
+        DragGesture(minimumDistance: 6)
             .onChanged { value in
                 if dragStart == nil {
                     dragStart = CGPoint(x: leading ? 0 : size.width, y: size.height * fraction)
@@ -233,9 +233,9 @@ struct SideKeysOverlay: View {
                 // Dragged across the middle: the keys move to the other edge.
                 let x = value.location.x
                 if leading && x > size.width * 0.6 {
-                    withAnimation(.snappy) { leading = false }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { leading = false }
                 } else if !leading && x < size.width * 0.4 {
-                    withAnimation(.snappy) { leading = true }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { leading = true }
                 }
                 dragStart = nil
             }
@@ -458,7 +458,7 @@ struct KeyRail: View {
     let lit: Bool
     let actions: SideKeyActions
     @State private var keyPresses = 0
-    @Environment(\.compatAppModel) private var model: AppModel?
+    @EnvironmentObject private var model: AppModel
 
     var body: some View {
         let recovery = mode == .recovery

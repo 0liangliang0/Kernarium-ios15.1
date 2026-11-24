@@ -65,7 +65,7 @@ struct WhatsNewRibbon: View {
                     .font(.footnote.weight(.bold))
                     .foregroundStyle(.secondary)
                     .frame(width: closeSize, height: closeSize)
-                    .background(Color(.tertiarySystemFill), in: .circle)
+                    .background(Color(.tertiarySystemFill), in: Circle())
                     .contentShape(.circle)
             }
             .buttonStyle(.plain)
@@ -146,7 +146,7 @@ struct WhatsNewRibbon: View {
                 if distance > Self.closingPull {
                     close()
                 } else {
-                    withAnimation(.snappy) { pull = 0 }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { pull = 0 }
                 }
             }
     }

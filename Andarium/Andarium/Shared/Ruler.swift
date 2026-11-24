@@ -111,14 +111,15 @@ struct Ruler: View {
                     .overlay(Capsule().strokeBorder(.white.opacity(0.95), lineWidth: 1.5))
                     .shadow(color: Color.accentColor.opacity(0.45), radius: dragging ? 6 : 3, y: 1)
                     .position(x: x(index), y: track / 2)
-                    .animation(.snappy(duration: 0.22), value: index)
+                    .animation(.spring(response: 0.22, dampingFraction: 0.8), value: index)
             }
             .contentShape(Rectangle())
-            .onTapGesture(coordinateSpace: .local) { location in
-                set(at: location.x, step: step)
-            }
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onEnded { value in set(at: value.startLocation.x, step: step) }
+            )
             .simultaneousGesture(
-                DragGesture(minimumDistance: 6, coordinateSpace: .local)
+                DragGesture(minimumDistance: 6)
                     .onChanged { value in
                         if horizontal == nil {
                             horizontal = abs(value.translation.width) > abs(value.translation.height)
@@ -431,7 +432,7 @@ struct ControlHeader: View {
                 .monospacedDigit()
                 .foregroundStyle(valueColor)
 
-                .animation(.snappy, value: value)
+                .animation(.spring(response: 0.3, dampingFraction: 0.8), value: value)
         }
     }
 }
@@ -495,7 +496,8 @@ struct UsageBar: View {
 /// grows: the sizes below the current one are hatched and out of reach, and
 /// growth applies at the next start.
 struct ResizeSheet: View {
-    @EnvironmentObject private var model: AppModel@Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
     @State private var capacity = 16
 
     var body: some View {
@@ -517,7 +519,7 @@ struct ResizeSheet: View {
                     index: Binding(
                         get: { stops.firstIndex { $0 >= capacity } ?? stops.count - 1 },
                         set: { value in
-                            withAnimation(.snappy) { capacity = stops[min(max(value, 0), stops.count - 1)] }
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { capacity = stops[min(max(value, 0), stops.count - 1)] }
                         }
                     ),
                     count: stops.count,
@@ -595,12 +597,3 @@ struct ResizeSheet: View {
     }
 }
 
-/// A form-width sheet of a set size on iPad. On iPhone the detents decide.
-nonisolated struct FixedSheetSizing: PresentationSizing {
-    let width: CGFloat
-    let height: CGFloat
-
-    func proposedSize(for root: PresentationSizingRoot, context: PresentationSizingContext) -> ProposedViewSize {
-        ProposedViewSize(width: width, height: height)
-    }
-}

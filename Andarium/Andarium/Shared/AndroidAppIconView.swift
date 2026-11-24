@@ -36,7 +36,8 @@ enum AndroidAppImages {
 /// square, never masked), or, where there is none, a tile with the app's
 /// initial. The picture is decoration: the name beside it is what is read.
 struct AndroidAppIconView: View {
-    @EnvironmentObject private var model: AppModellet id: String
+    @EnvironmentObject private var model: AppModel
+    let id: String
     let label: String
     var size: CGFloat = 40
     /// Drawn grey: the app is no longer in Android.

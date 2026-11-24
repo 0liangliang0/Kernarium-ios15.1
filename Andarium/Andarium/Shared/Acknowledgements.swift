@@ -191,7 +191,8 @@ extension Acknowledgements.Project {
 
 /// The list of projects, grouped, ending with the line about names and marks.
 struct AcknowledgementsView: View {
-    @EnvironmentObject private var model: AppModelprivate let acknowledgements = Acknowledgements.bundled
+    @EnvironmentObject private var model: AppModel
+    private let acknowledgements = Acknowledgements.bundled
 
     var body: some View {
         List {
@@ -226,7 +227,8 @@ struct AcknowledgementsView: View {
 
 /// One project: who holds the copyright, the license, and its full text.
 struct LicenseView: View {
-    @EnvironmentObject private var model: AppModellet projectID: String
+    @EnvironmentObject private var model: AppModel
+    let projectID: String
     private let acknowledgements = Acknowledgements.bundled
 
     var body: some View {

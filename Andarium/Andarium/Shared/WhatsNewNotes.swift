@@ -7,7 +7,8 @@ import SwiftUI
 /// The notes the ribbon opens: the releases since the last one the person
 /// saw, newest first. Done closes them, and the ribbon then goes.
 struct WhatsNewSheet: View {
-    @EnvironmentObject private var model: AppModel@Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
     /// The releases as they were when the notes opened: the ribbon may be
     /// put away while they show.
     @State private var releases: [WhatsNewRelease]
@@ -34,7 +35,7 @@ struct WhatsNewSheet: View {
             // lands on it first.
             Task { @MainActor in
                 try? await compatSleep(for: .milliseconds(350))
-                withAnimation(.snappy) { model.whatsNew.putAway() }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { model.whatsNew.putAway() }
             }
         }
     }
@@ -42,7 +43,8 @@ struct WhatsNewSheet: View {
 
 /// Every release's notes, in Info.
 struct WhatsNewHistoryPage: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         WhatsNewNotesList(releases: model.whatsNew.releases)
             .navigationTitle("What\u{2019}s New")
             .navigationBarTitleDisplayMode(.inline)

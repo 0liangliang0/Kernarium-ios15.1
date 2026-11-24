@@ -8,7 +8,8 @@ import SwiftUI
 /// vCPU the device offers and the default memory (`Guest.fresh`), which the
 /// System section of Home can change afterwards.
 struct NewGuestSheet: View {
-    @EnvironmentObject private var model: AppModel@Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
     @State private var draft: Guest?
 
     private var draftBinding: Binding<Guest> {
@@ -67,7 +68,8 @@ struct NewGuestSheet: View {
 /// rulers, with the limits of the device. Save applies them; they take effect
 /// when the guest next starts.
 struct SystemSheet: View {
-    @EnvironmentObject private var model: AppModel@Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
     @State private var draft: Guest?
 
     private var current: Guest { model.guest ?? Guest.fresh(on: model.host) }
@@ -121,7 +123,8 @@ struct InfoSheet: View {
     /// The project's page on GitHub.
     static let projectURL = URL(string: "https://github.com/imxieyi/Kernarium")!
 
-    @EnvironmentObject private var model: AppModel@Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
     @State private var path: [InfoPage]
 
     init(page: InfoPage?) {

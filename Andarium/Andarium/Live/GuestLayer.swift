@@ -7,7 +7,8 @@ import SwiftUI
 /// from the first frame to the last. The runtime draws into it; the boot
 /// screen covers it until the guest has something to show.
 struct GuestLayer: View {
-    @EnvironmentObject private var model: AppModel/// Whether the window scene fills the screen. Until the view is in a
+    @EnvironmentObject private var model: AppModel
+    /// Whether the window scene fills the screen. Until the view is in a
     /// scene, it is taken to be a window, which is the system's own default.
     @State private var coversScreen = false
 

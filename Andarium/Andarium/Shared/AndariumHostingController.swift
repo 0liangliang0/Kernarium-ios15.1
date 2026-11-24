@@ -118,7 +118,7 @@ final class AndariumHostingController<Content: View>: UIHostingController<Conten
         guard reading != model.fold else { return }
         let rotated = interfaceRotates
         model.fold = reading
-        if interfaceRotates != rotated { setNeedsUpdateOfSupportedInterfaceOrientations() }
+        if interfaceRotates != rotated { UIViewController.attemptRotationToDeviceOrientation() }
         scheduleUpdate()
     }
 
@@ -201,11 +201,10 @@ final class AndariumHostingController<Content: View>: UIHostingController<Conten
     private func currentInputs() -> SceneUpdateInputs? {
         if let inputsSource { return inputsSource() }
         guard let scene = view.window?.windowScene else { return nil }
-        let geometry = scene.effectiveGeometry
         return SceneUpdateInputs(
             scene: ObjectIdentifier(scene), driver: model.driver.map { ObjectIdentifier($0) },
-            sceneSize: geometry.coordinateSpace.bounds.size, screenSize: scene.screen.bounds.size,
-            interfaceOrientation: geometry.interfaceOrientation.rawValue, phase: model.phase,
+            sceneSize: view.window?.bounds.size ?? scene.screen.bounds.size, screenSize: scene.screen.bounds.size,
+            interfaceOrientation: scene.interfaceOrientation.rawValue, phase: model.phase,
             interfaceRotates: interfaceRotates)
     }
 

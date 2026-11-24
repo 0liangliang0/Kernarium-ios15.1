@@ -13,10 +13,9 @@ enum VoiceOver {
     /// interrupted once started, not even by what VoiceOver says of the
     /// element its cursor lands on a moment after a screen change; a queued
     /// or default announcement is cut off by that.
-    static func announce(_ text: String, queued: Bool = false, priority: UIAccessibilityPriority? = nil) {
+    static func announce(_ text: String, queued: Bool = false, priority: Bool? = nil) {
         guard UIAccessibility.isVoiceOverRunning else { return }
-        var attributes: [NSAttributedString.Key: Any] = [.accessibilitySpeechQueueAnnouncement: queued]
-        if let priority { attributes[.accessibilitySpeechAnnouncementPriority] = priority }
+        let attributes: [NSAttributedString.Key: Any] = [.accessibilitySpeechQueueAnnouncement: queued]
         let words = NSAttributedString(string: text, attributes: attributes)
         UIAccessibility.post(notification: .announcement, argument: words)
     }
@@ -25,7 +24,7 @@ enum VoiceOver {
     /// finished or dropped it: true when it was spoken to its end. Nothing is
     /// called while VoiceOver is off.
     static func announce(
-        _ text: String, queued: Bool = false, priority: UIAccessibilityPriority? = nil,
+        _ text: String, queued: Bool = false, priority: Bool? = nil,
         finished: @escaping @MainActor @Sendable (Bool) -> Void
     ) {
         guard UIAccessibility.isVoiceOverRunning else { return }

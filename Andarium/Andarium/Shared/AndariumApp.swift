@@ -126,7 +126,8 @@ final class AndariumSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 /// Clean power-off returns to Home; a failed run waits for a fresh process.
 struct RootView: View {
-    @EnvironmentObject private var model: AppModellet entry: AppEntry
+    @EnvironmentObject private var model: AppModel
+    let entry: AppEntry
 
     /// What VoiceOver is told as a run begins (`AppModel.announceRunStart`);
     /// other screens speak for themselves from their first element.
@@ -218,7 +219,8 @@ struct RootView: View {
 /// nothing else closes it. It sits on a view of its own, since a view that
 /// carries two alerts presents only one of them reliably.
 private struct LegacyInstallAlert: ViewModifier {
-    @EnvironmentObject private var model: AppModel/// The alert is taken away for a moment so that it is presented again.
+    @EnvironmentObject private var model: AppModel
+    /// The alert is taken away for a moment so that it is presented again.
     @State private var withdrawn = false
 
     func body(content: Content) -> some View {

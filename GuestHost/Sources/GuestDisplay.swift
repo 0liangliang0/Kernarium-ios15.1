@@ -148,20 +148,6 @@ final class GuestDisplayViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        guard sceneGeometryObservation == nil,
-              let scene = view.window?.windowScene else { return }
-        // An interactive window resize reports no transition of its own to
-        // hold across, so the scene's geometry says when the gesture runs.
-        sceneGeometryObservation = scene.observe(
-            \.effectiveGeometry, options: [.initial, .new]
-        ) { [weak self] scene, _ in
-            MainActor.assumeIsolated {
-                guard let self else { return }
-                self.perform(self.resizeHold.interactiveResizeChanged(
-                    scene.effectiveGeometry.isInteractivelyResizing
-                ))
-            }
-        }
     }
 
     private func perform(_ action: GuestResizeHold.Action) {
@@ -353,7 +339,6 @@ class GuestMetalView: MTKView, UIGestureRecognizerDelegate, UIPointerInteraction
         element.accessibilityHint = accessibility.hint
         // The trait first: the options apply to a direct-touch element.
         element.accessibilityTraits = .allowsDirectInteraction
-        element.accessibilityDirectTouchOptions = .silentOnTouch
         element.accessibilityFrameInContainerSpace = bounds
         directTouchElement = element
         accessibilityElements = [element]
@@ -690,7 +675,6 @@ class GuestMetalView: MTKView, UIGestureRecognizerDelegate, UIPointerInteraction
         switch recognizer.state {
         case .began, .changed:
             // A hovering Apple Pencil is not a mouse.
-            guard recognizer.zOffset == 0 else { return }
             let point = recognizer.location(in: self)
             hardwareInput.hover(pointerMapping()?.position(of: point), at: point, beginning: recognizer.state == .began)
         case .ended, .cancelled, .failed:

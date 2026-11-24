@@ -13,20 +13,20 @@ import UniformTypeIdentifiers
 /// and, last, turn Android's screen reader (TalkBack) on and off. An operation on the guest dismisses
 /// Settings and shows the full-screen progress, and then how it ended.
 struct SessionSettingsSheet: View {
-    @EnvironmentObject private var model: AppModel@Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
     @State private var importing = false
     @State private var copied = false
     @State private var confirmingStop = false
     @State private var filesBarInset: CGFloat = 0
     @State private var filesBarHeight: CGFloat = 0
-    @State private var detent: PresentationDetent
     /// The Old app compatibility page is pushed.
     @State private var oldAppsOpen = false
     /// The Add to Home Screen page is pushed.
     @State private var addToHomeOpen = false
 
     init(large: Bool) {
-        _detent = State(initialValue: large ? .large : .medium)
+        _ = large
     }
 
     var body: some View {
@@ -103,7 +103,7 @@ struct SessionSettingsSheet: View {
         // The bar is outside the pages, so folders slide under it.
 
         .readFilesBarHeight(into: $filesBarHeight)
-        .animation(.snappy, value: model.fileBrowser?.browsing)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: model.fileBrowser?.browsing)
         .interactiveDismissDisabled(model.fileBrowser?.running == true)
         .confirmationDialog("Stop the transfer?", isPresented: $confirmingStop, titleVisibility: .visible) {
             Button("Stop and Close", role: .destructive) {
@@ -114,14 +114,13 @@ struct SessionSettingsSheet: View {
         }
         // A browser wants the room.
         .onChange(of: model.fileBrowser?.browsing) { browsing in
-            if browsing == true { detent = .large }
+            _ = browsing
         }
         .task { await model.watchSettings() }
         .onDisappear {
             model.fileBrowser?.sheetClosed()
             model.documentPickerProblem = nil
         }
-        .presentationBackground(Color(.systemGroupedBackground))
 
         // The picker takes a copy of the file (`CopyDocumentPicker`).
         .documentCopyPicker(isPresented: $importing, types: InstallRefusal.pickerTypes) { result in
@@ -381,10 +380,10 @@ struct SessionSettingsSheet: View {
                 Spacer(minLength: 0)
                 Button {
                     UIPasteboard.general.string = command
-                    withAnimation(.snappy) { copied = true }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { copied = true }
                     Task {
                         try? await compatSleep(for: .seconds(1.6))
-                        withAnimation(.snappy) { copied = false }
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { copied = false }
                     }
                 } label: {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc")
@@ -463,7 +462,7 @@ struct SessionSettingsSheet: View {
             } label: {
                 rowLabel("Frame rate", symbol: "speedometer")
             }
-            Toggle(isOn: $session.showStats.animation(.snappy)) {
+            Toggle(isOn: $session.showStats.animation(.spring(response: 0.3, dampingFraction: 0.8))) {
                 rowLabel("Show on screen", symbol: "rectangle.topthird.inset.filled")
             }
         }

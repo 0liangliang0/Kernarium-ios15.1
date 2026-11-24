@@ -7,7 +7,8 @@ import SwiftUI
 /// The only screen before a run: the guest's storage, processors and memory,
 /// its options and Start. Without a guest it offers to set one up.
 struct HomeView: View {
-    @EnvironmentObject private var model: AppModel@Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The notes zoom out of the ribbon and back into it.
     @Namespace private var whatsNewZoom
     let hints: ScreenHints
@@ -343,7 +344,7 @@ struct HomeView: View {
                 WhatsNewRibbon(
                     entries: model.whatsNew.pendingEntries,
                     open: { model.sheet = .whatsNew },
-                    close: { withAnimation(.snappy) { model.whatsNew.putAway() } }
+                    close: { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { model.whatsNew.putAway() } }
                 )
                 .matchedTransitionSource(id: Self.ribbonID, in: whatsNewZoom)
                 .transition(
@@ -378,7 +379,8 @@ struct HomeView: View {
 
 /// The main action starts Android normally.
 struct StartButton: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         Button {
             model.start(.normal)
         } label: {
@@ -409,7 +411,8 @@ struct StartButton: View {
 
 /// Home's Info button, the toolbar's trailing item.
 struct HomeInfoButton: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         Button {
             model.sheet = .info
         } label: {
@@ -443,7 +446,7 @@ struct IconTile: View {
     var body: some View {
         glyphView
             .frame(width: 30, height: 30)
-            .background(color.gradient, in: .compatRect(cornerRadius: 8, style: .continuous))
+            .background(LinearGradient(colors: [color, color.opacity(0.65)], startPoint: .top, endPoint: .bottom), in: .compatRect(cornerRadius: 8, style: .continuous))
             // It marks a row whose words say it all.
             .accessibilityHidden(true)
     }
@@ -466,7 +469,8 @@ struct IconTile: View {
 
 /// First launch: there is no guest yet.
 struct WelcomeView: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         // While the device is bent a half can be shorter than the column: it
         // scrolls only then.
         column
@@ -591,7 +595,8 @@ struct NoticeCard: View {
 /// An update that did not reach its end. Start tries it again; the one
 /// button, Restore, puts the data back to what the update started from.
 struct UnfinishedUpdateCard: View {
-    @EnvironmentObject private var model: AppModellet release: String
+    @EnvironmentObject private var model: AppModel
+    let release: String
     let canRetry: Bool
     let canRestore: Bool
 
@@ -641,7 +646,8 @@ struct UnfinishedUpdateCard: View {
 /// Erasing the guest: the one row, in a card of its own after the sections,
 /// with no heading and the spacing the other cards have.
 struct EraseCard: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         Button {
             model.confirmingErase = true
         } label: {

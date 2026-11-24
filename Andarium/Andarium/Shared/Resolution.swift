@@ -75,7 +75,8 @@ enum ResolutionWords {
 struct ResolutionRow: View {
     static let symbol = "squareshape.split.3x3"
 
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         let choices = model.resolutionChoices
         let end = choices.end(at: model.resolutionIndex)
         let layout = model.resolutionLayout
@@ -97,7 +98,8 @@ struct ResolutionRow: View {
 /// resolution and its density. Save keeps the one ticked; it takes effect
 /// when the guest next starts.
 struct ResolutionSheet: View {
-    @EnvironmentObject private var model: AppModel@Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
     @State private var draft: Int?
 
     var body: some View {
@@ -186,7 +188,8 @@ struct ResolutionSheet: View {
 /// screen. It follows the window's size as it changes. On a display that folds
 /// the size is the session plan's guest (`SessionPlan`).
 struct DisplayAreaProbe: View {
-    @EnvironmentObject private var model: AppModellet cornerEdges: Edge.Set
+    @EnvironmentObject private var model: AppModel
+    let cornerEdges: Edge.Set
     @State private var size = CGSize.zero
     @State private var window: WindowReading?
 

@@ -35,7 +35,8 @@ enum TranslatedLibrariesWords {
 /// translated code, the row is dimmed, its switch cannot be changed, and the
 /// line beneath the group says so.
 struct TranslatedLibrariesRow: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         let unused = model.jitInUseForNextStart
         let title = TranslatedLibrariesWords.title
         let spoken: String = "\(title), \(TranslatedLibrariesWords.line(unused: unused))"
@@ -62,7 +63,8 @@ struct TranslatedLibrariesRow: View {
 /// The line beneath the AOT group. The row says it for VoiceOver, so this is
 /// not read again.
 struct TranslatedLibrariesNote: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         SpokenNote(TranslatedLibrariesWords.line(unused: model.jitInUseForNextStart))
     }
 }

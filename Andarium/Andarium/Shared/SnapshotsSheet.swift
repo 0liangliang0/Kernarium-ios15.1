@@ -9,7 +9,8 @@ import SwiftUI
 /// pushed; on iPad the list and the selected page stand side by side. The
 /// sheet opens only from Home, which exists only while the guest is stopped.
 struct SnapshotsSheet: View {
-    @EnvironmentObject private var model: AppModel@Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         @ObservedObject var store = model.snapshots
@@ -67,7 +68,8 @@ struct SnapshotsSheet: View {
 /// iPad: the list on the left, the selected snapshot or the space page on
 /// the right.
 struct SnapshotsSplit: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         HStack(spacing: 0) {
             SnapshotList(selectable: true)
                 .frame(width: 340)
@@ -89,7 +91,8 @@ struct SnapshotsSplit: View {
 /// The snapshots, newest first, then the link to how they use space; the
 /// empty state when there are none. Take snapshot rides at the foot.
 struct SnapshotList: View {
-    @EnvironmentObject private var model: AppModel/// iPad: rows select instead of pushing.
+    @EnvironmentObject private var model: AppModel
+    /// iPad: rows select instead of pushing.
     let selectable: Bool
 
     var body: some View {
@@ -275,7 +278,8 @@ struct SnapshotRow: View {
 
 /// Take snapshot at the foot of the list, and why it is unavailable when it is.
 struct SnapshotTakeBar: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         let store = model.snapshots
         let refusal = store.takeRefusal
         VStack(spacing: 10) {
@@ -326,7 +330,8 @@ struct SnapshotTakeBar: View {
 
 /// A snapshot's page: its name, what it is, Restore and Delete.
 struct SnapshotDetail: View {
-    @EnvironmentObject private var model: AppModel@FocusState private var nameFocused: Bool
+    @EnvironmentObject private var model: AppModel
+    @FocusState private var nameFocused: Bool
     /// What the name field holds while it is being typed in; nil shows the
     /// snapshot's own name.
     @State private var draft: String?
@@ -438,7 +443,8 @@ struct SnapshotDetail: View {
 
 /// How snapshots use space, with the figures that say it.
 struct SnapshotSpacePage: View {
-    @EnvironmentObject private var model: AppModellet pushed: Bool
+    @EnvironmentObject private var model: AppModel
+    let pushed: Bool
 
     var body: some View {
         let store = model.snapshots
@@ -505,7 +511,8 @@ struct PageTitle: ViewModifier {
 /// name from the list's menu, the confirmations of Restore and Delete, and
 /// an operation that did not go ahead.
 struct SnapshotPrompts: ViewModifier {
-    @EnvironmentObject private var model: AppModelfunc body(content: Content) -> some View {
+    @EnvironmentObject private var model: AppModel
+    func body(content: Content) -> some View {
         @ObservedObject var store = model.snapshots
         let endsUpdate = store.endsUpdate
         content

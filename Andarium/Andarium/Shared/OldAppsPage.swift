@@ -7,7 +7,8 @@ import SwiftUI
 /// for at least one app. Settings offers it only when the last listing found an
 /// app the switch can apply to.
 struct OldAppsRow: View {
-    @EnvironmentObject private var model: AppModellet open: () -> Void
+    @EnvironmentObject private var model: AppModel
+    let open: () -> Void
 
     var body: some View {
         Button(action: open) {
@@ -38,7 +39,8 @@ struct OldAppsRow: View {
 /// a switch. The image's listing decides which apps appear and whether each
 /// switch is on; a change is written only after the person has been asked.
 struct OldAppsPage: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         let state = model.session.oldApps
         List {
             if state.failed {
@@ -130,7 +132,8 @@ struct OldAppsPage: View {
 
 /// One app: its name from Android, its package name beneath, and its switch.
 private struct OldAppRow: View {
-    @EnvironmentObject private var model: AppModellet app: OldApp
+    @EnvironmentObject private var model: AppModel
+    let app: OldApp
     /// A change is being asked about or written, or the virtual machine cannot
     /// be asked: no switch moves.
     let busy: Bool

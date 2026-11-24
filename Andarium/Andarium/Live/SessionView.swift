@@ -7,7 +7,8 @@ import SwiftUI
 /// the side keys on its edge. The keys are Android's: Power and volume, Back
 /// and Home, as the keyboard events a phone's hardware keys would raise.
 struct SessionView: View {
-    @EnvironmentObject private var model: AppModellet mode: StartMode
+    @EnvironmentObject private var model: AppModel
+    let mode: StartMode
 
     var body: some View {
         @ObservedObject var model = model
@@ -39,13 +40,11 @@ struct SessionView: View {
         @ObservedObject var model = model
         if let plan = model.sessionPlan {
             Color.clear
-                .background { GameControllerEventInteraction().allowsHitTesting(false) }
                 .overlay { FoldSessionOverlay(plan: plan, mode: mode, lit: true, actions: actions) }
         } else {
             Color.clear
                 // Controller events go to the Game Controller framework only, so
                 // iOS makes no focus or press event of them in these screens.
-                .background { GameControllerEventInteraction().allowsHitTesting(false) }
                 .overlay(alignment: .top) {
                     if model.session.showStats {
                         StatsOverlay(memoryMiB: model.guest?.memoryMiB ?? Limits.defaultMemoryRangeMiB.lowerBound, recovery: mode == .recovery)

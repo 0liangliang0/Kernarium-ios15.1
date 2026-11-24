@@ -19,7 +19,7 @@ private struct UpdateTile: View {
             .font(.system(size: 14, weight: .semibold))
             .foregroundStyle(.white)
             .frame(width: 30, height: 30)
-            .background(Color.accentColor.gradient, in: .compatRect(cornerRadius: 8, style: .continuous))
+            .background(LinearGradient(colors: [Color.accentColor, Color.accentColor.opacity(0.65)], startPoint: .top, endPoint: .bottom), in: .compatRect(cornerRadius: 8, style: .continuous))
             // A row's words say it all.
             .accessibilityHidden(true)
     }

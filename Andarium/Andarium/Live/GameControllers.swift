@@ -1,3 +1,4 @@
+#if false  // GameController live-input APIs require iOS 16/17; disabled on iOS 15.1
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import AndariumCore
@@ -569,3 +570,5 @@ struct GameControllerEventInteraction: UIViewRepresentable {
 
     func updateUIView(_ view: UIView, context: Context) {}
 }
+
+#endif

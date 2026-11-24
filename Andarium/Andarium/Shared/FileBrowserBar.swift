@@ -24,7 +24,7 @@ struct FilesBar: View {
     /// bar's padding would feed its own measurement.
     let bottomInset: CGFloat
     /// Optional: the bar shown without a model is the phone's.
-    @Environment(\.compatAppModel) private var model: AppModel?
+    @EnvironmentObject private var model: AppModel
     @State private var trailScrolled = false
 
     /// On the folding iPhone's cover the toolbar's buttons stand in a column
@@ -58,10 +58,10 @@ struct FilesBar: View {
         .background {
             GeometryReader { Color.clear.preference(key: FilesBarHeightKey.self, value: $0.size.height) }
         }
-        .animation(.snappy, value: browser.selection.isEmpty)
-        .animation(.snappy, value: browser.route)
-        .animation(.snappy, value: browser.transfer?.id)
-        .animation(.snappy, value: browser.conflict == nil)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: browser.selection.isEmpty)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: browser.route)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: browser.transfer?.id)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: browser.conflict == nil)
         .modifier(ImportPickerPresenter(browser: browser))
     }
 
@@ -103,7 +103,6 @@ struct FilesBar: View {
                         }
                     }
                 }
-                .scrollIndicators(.hidden)
                 .mask {
                     HStack(spacing: 0) {
                         LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
@@ -113,7 +112,7 @@ struct FilesBar: View {
                 }
                 .onChange(of: browser.route) { route in
                     guard let last = route.last else { return }
-                    withAnimation(.snappy) { proxy.scrollTo(last.path, anchor: .trailing) }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { proxy.scrollTo(last.path, anchor: .trailing) }
                 }
             }
         }
@@ -158,7 +157,7 @@ struct FilesBar: View {
 
                 .frame(minWidth: 28, minHeight: 28)
                 .padding(.horizontal, browser.selection.count > 9 ? 4 : 0)
-                .background(Color.accentColor, in: .capsule)
+                .background(Color.accentColor, in: Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(browser.selection.count) selected")
@@ -246,7 +245,7 @@ private extension View {
     /// The trail scrolls inside its capsule, which needs no scroll-edge
     /// treatment of its own.
     func scrollEdgeEffectHidden() -> some View {
-        scrollEdgeEffectStyle(.none, for: .horizontal)
+        self
     }
 }
 
@@ -255,7 +254,7 @@ private extension View {
 struct ImportPickerPresenter: ViewModifier {
     @ObservedObject var browser: FileBrowserModel
     /// Optional: the bar shown without a model is the phone's.
-    @Environment(\.compatAppModel) private var model: AppModel?
+    @EnvironmentObject private var model: AppModel
 
     func body(content: Content) -> some View {
         if let standIn = browser.backend.importPickerStandIn(deliver: { browser.received($0) }) {
@@ -311,8 +310,8 @@ struct TransferCapsule: View {
             summary
         }
         .clipShape(.compatRect(cornerRadius: radius, style: .continuous))
-        .animation(.snappy, value: transfer.expanded)
-        .animation(.snappy, value: transfer.stage)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: transfer.expanded)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: transfer.stage)
     }
 
     private var summary: some View {
@@ -368,7 +367,7 @@ struct TransferCapsule: View {
             .foregroundStyle(.white)
 
             .frame(width: 36, height: 36)
-            .background(glyphColor.gradient, in: .circle)
+            .background(LinearGradient(colors: [glyphColor, glyphColor.opacity(0.65)], startPoint: .top, endPoint: .bottom), in: Circle())
             .accessibilityHidden(true)
     }
 

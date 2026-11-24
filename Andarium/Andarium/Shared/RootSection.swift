@@ -11,7 +11,8 @@ import SwiftUI
 /// without it has no trace of the feature. The switch applies at the next
 /// start; Home is only shown while Android is stopped.
 struct RootSection: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         if model.guest != nil, model.rootAvailable {
             HomeSection(title: RootWords.sectionTitle) {
                 RootRow()
@@ -24,7 +25,8 @@ struct RootSection: View {
 }
 
 struct RootRow: View {
-    @EnvironmentObject private var model: AppModel/// A key, which is what the person holds to Android as root.
+    @EnvironmentObject private var model: AppModel
+    /// A key, which is what the person holds to Android as root.
     static let symbol = "key.fill"
 
     var body: some View {
@@ -44,7 +46,8 @@ struct RootRow: View {
 
 /// The alert that asks before root is turned on: what a granted app can do.
 struct RootWarningAlert: ViewModifier {
-    @EnvironmentObject private var model: AppModelfunc body(content: Content) -> some View {
+    @EnvironmentObject private var model: AppModel
+    func body(content: Content) -> some View {
         content.alert(
             RootWords.warningTitle,
             isPresented: Binding(
@@ -69,7 +72,8 @@ extension View {
 /// (`RootFallbackRule`): paused with the two ways out, turned off, or a start
 /// the person stopped. Only where the release carries root.
 struct RootNoticeCard: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         if model.rootAvailable, let attention = model.rootAttention {
             switch attention {
             case .failedStart:

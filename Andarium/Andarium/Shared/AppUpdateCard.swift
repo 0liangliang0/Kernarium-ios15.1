@@ -9,7 +9,8 @@ import SwiftUI
 /// are `UpdateWords`, shared with Kernarium; from the version file only the
 /// version appears in them.
 struct AppUpdateCard: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         if let notice = model.appUpdate, notice.showsCard, let offer = notice.offer {
             NoticeCard(
                 symbol: "arrow.down.app.fill", color: .accentColor,

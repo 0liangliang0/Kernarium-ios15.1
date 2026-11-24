@@ -56,7 +56,8 @@ struct GraphicsNoticeBanner: View {
 /// taller than the room, so every Dismiss can be reached and the side keys stay
 /// tappable.
 struct SessionNoticesOverlay: View {
-    @EnvironmentObject private var model: AppModel@Environment(\.heatQuestionPatience) private var patience
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.heatQuestionPatience) private var patience
     @Environment(\.alertIsUp) private var alertIsUp
 
     /// The side padding every banner draws itself with.

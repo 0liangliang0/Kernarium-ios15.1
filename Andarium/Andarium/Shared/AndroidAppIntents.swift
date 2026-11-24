@@ -101,9 +101,7 @@ extension AndroidAppQuery: IndexedEntityQuery {
 }
 
 /// The error a request that names nothing Android could open ends with.
-nonisolated struct AndroidAppRequestError: Error, CustomLocalizedStringResourceConvertible {
-    var localizedStringResource: CompatLocalizedStringResource { "This isn\u{2019}t an Android app that Andarium can open." }
-}
+nonisolated struct AndroidAppRequestError: Error {}
 
 /// Opens an app in Android. Andarium comes to the front and starts Android first
 /// when it is not running; what happens then is the application's

@@ -8,7 +8,8 @@ import SwiftUI
 /// (`TextMessageState.isOpen`). Android stays in sight above it, so the app
 /// that waits for a code can be read while the code is typed.
 struct TextMessageBarOverlay: View {
-    @EnvironmentObject private var model: AppModelvar body: some View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
         ZStack {
             if model.session.textMessage.isOpen {
                 TextMessageBar()
@@ -16,7 +17,7 @@ struct TextMessageBarOverlay: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.snappy, value: model.session.textMessage.isOpen)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: model.session.textMessage.isOpen)
         // A line counts as told only while the application is active. The application's own state is
         // read, never SwiftUI's scenePhase: the root is hosted by UIKit (`AndariumHostingController`), where
         // scenePhase stays at .background, so no line would ever have counted as told.
@@ -52,7 +53,8 @@ private extension Color {
 /// that who the message is from. It is one view so that the edge can change
 /// without the fields under it changing.
 private struct TextMessageBarHeader: View {
-    @EnvironmentObject private var model: AppModelvar focus: FocusState<TextMessageField?>.Binding
+    @EnvironmentObject private var model: AppModel
+    var focus: FocusState<TextMessageField?>.Binding
     /// VoiceOver starts on the title when the bar comes up.
     var titleFocused: AccessibilityFocusState<Bool>.Binding
 
@@ -115,7 +117,8 @@ private struct TextMessageBarHeader: View {
 /// went between them. What is typed and the send are the run's
 /// (`TextMessageState`), so the bar holds nothing of its own but the focus.
 struct TextMessageBar: View {
-    @EnvironmentObject private var model: AppModel@FocusState private var focus: TextMessageField?
+    @EnvironmentObject private var model: AppModel
+    @FocusState private var focus: TextMessageField?
     @AccessibilityFocusState private var titleFocused: Bool
     @AccessibilityFocusState private var statusFocused: Bool
 

@@ -103,7 +103,7 @@ struct FileGlyph: View {
             .font(.system(size: size * 0.44, weight: .bold))
             .foregroundStyle(.white)
             .frame(width: size, height: size)
-            .background(Color.accentColor.gradient, in: .compatRect(cornerRadius: size * 0.26, style: .continuous))
+            .background(LinearGradient(colors: [Color.accentColor, Color.accentColor.opacity(0.65)], startPoint: .top, endPoint: .bottom), in: .compatRect(cornerRadius: size * 0.26, style: .continuous))
     }
 
     private var folder: some View {
@@ -112,7 +112,7 @@ struct FileGlyph: View {
             Image(systemName: "folder.fill")
                 .resizable()
                 .scaledToFit()
-                .foregroundStyle(Color.accentColor.gradient)
+                .foregroundStyle(LinearGradient(colors: [Color.accentColor, Color.accentColor.opacity(0.65)], startPoint: .top, endPoint: .bottom))
             if let inner, size >= 26 {
                 Image(systemName: inner)
                     .font(.system(size: size * 0.3, weight: .semibold))

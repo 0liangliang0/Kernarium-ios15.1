@@ -1284,7 +1284,7 @@ final class AppModel: ObservableObject {
             session.adbProblem = AdbNetworkMessages.cannotStart(error)
             return
         }
-        withAnimation(.snappy) {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
             session.adb = true
             session.adbProblem = nil
             session.adbAddress = driver?.localNetworkAddress() ?? (driver == nil ? SessionState.previewAddress : nil)
@@ -1298,7 +1298,7 @@ final class AppModel: ObservableObject {
         adbWatcher = nil
         driver?.stopAdbOverNetwork()
         guard session.adb || session.adbAddress != nil else { return }
-        withAnimation(.snappy) {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
             session.adb = false
             session.adbAddress = nil
         }

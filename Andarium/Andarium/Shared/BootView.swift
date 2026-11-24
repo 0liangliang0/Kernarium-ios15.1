@@ -32,7 +32,8 @@ import UIKit
 /// visible, and the screen asks the render server for no blur of it.
 /// Recovery keeps an opaque screen.
 struct BootView: View {
-    @EnvironmentObject private var model: AppModel@Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.colorScheme) private var colorScheme
     let kind: BootKind
 
     @State private var stage = 0
@@ -100,11 +101,11 @@ struct BootView: View {
                 return
             }
             for (index, step) in steps.enumerated() {
-                withAnimation(.snappy) { stage = index }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { stage = index }
                 try? await compatSleep(for: .seconds(step.seconds))
                 if Task.isCancelled { return }
             }
-            withAnimation(.snappy) { stage = steps.count }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { stage = steps.count }
             try? await compatSleep(for: .seconds(0.4))
             model.finishBoot(kind)
         }
@@ -159,17 +160,17 @@ struct BootView: View {
     private func followRuntime(stepCount: Int) async {
         while !Task.isCancelled && !model.bootTracker.isReady {
             let live = min(model.liveBootStage(), stepCount - 1)
-            if live != stage { withAnimation(.snappy) { stage = live } }
+            if live != stage { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { stage = live } }
             try? await compatSleep(for: .milliseconds(200))
         }
         if Task.isCancelled { return }
         // Android is up. With root, the Magisk app is checked and put in before
         // the screen ends: the fifth step is added only when an install begins.
         await model.runRootAppStep(kind: kind) {
-            withAnimation(.snappy) { stage = BootSteps.rootAppStep }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { stage = BootSteps.rootAppStep }
         }
         if Task.isCancelled { return }
-        withAnimation(.snappy) { stage = model.rootAppInstalling ? BootSteps.countWithRootApp : stepCount }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { stage = model.rootAppInstalling ? BootSteps.countWithRootApp : stepCount }
         try? await compatSleep(for: .seconds(0.4))
         if Task.isCancelled { return }
         model.finishBoot(kind)
@@ -349,8 +350,7 @@ struct BootView: View {
     /// that choosing it moves nothing.
     @ViewBuilder
     private func slowButtons(lineLimit: Int?, axis: Axis) -> some View {
-        let layout = axis == .horizontal
-            ? AnyLayout(EqualWidthRow(spacing: 12)) : AnyLayout(VStackLayout(alignment: .leading, spacing: 10))
+        let layout = CompatRowLayout(horizontal: axis == .horizontal)
         layout {
             Button(role: .destructive) {
                 model.askToStop()
@@ -540,30 +540,15 @@ struct BootView: View {
 /// Buttons side by side at one width: the ideal width of the widest label, so
 /// that `CompatViewThatFits` stacks them as soon as either needs more than half of
 /// the row, and a label that changes does not move the other.
-private struct EqualWidthRow: Layout {
-    let spacing: CGFloat
+private struct CompatRowLayout {
+    let horizontal: Bool
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        // One button is as wide as it is, and not as the row is.
-        if subviews.count == 1 { return subviews[0].sizeThatFits(ProposedViewSize(width: proposal.width, height: nil)) }
-        let ideals = subviews.map { $0.sizeThatFits(.unspecified) }
-        let cell = ideals.map(\.width).max() ?? 0
-        let ideal = cell * CGFloat(subviews.count) + spacing * CGFloat(max(subviews.count - 1, 0))
-        return CGSize(width: proposal.width ?? ideal, height: ideals.map(\.height).max() ?? 0)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        guard !subviews.isEmpty else { return }
-        if subviews.count == 1 {
-            subviews[0].place(at: bounds.origin, proposal: ProposedViewSize(width: bounds.width, height: bounds.height))
-            return
-        }
-        let gaps = spacing * CGFloat(subviews.count - 1)
-        let cell = (bounds.width - gaps) / CGFloat(subviews.count)
-        for (index, subview) in subviews.enumerated() {
-            subview.place(
-                at: CGPoint(x: bounds.minX + CGFloat(index) * (cell + spacing), y: bounds.minY),
-                proposal: ProposedViewSize(width: cell, height: bounds.height))
+    @ViewBuilder
+    func callAsFunction<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        if horizontal {
+            HStack(spacing: 12) { content() }
+        } else {
+            VStack(alignment: .leading, spacing: 10) { content() }
         }
     }
 }
@@ -604,7 +589,7 @@ struct ProgressBar: View {
             }
         }
         .frame(height: height)
-        .animation(.snappy, value: value)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: value)
         .accessibilityElement()
         .accessibilityLabel(label)
         .accessibilityValue("\(Int((value * 100).rounded())) percent")
