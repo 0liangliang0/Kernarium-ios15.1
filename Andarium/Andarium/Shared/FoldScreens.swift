@@ -48,7 +48,7 @@ private struct OnCardHalf: ViewModifier {
     @State private var measured: CGRect?
 
     func body(content: Content) -> some View {
-        let fold = model?.fold
+        let fold = model.fold
         // Only while the device is bent: flat is the no-hinge path.
         let halves = fold.flatMap(FoldHalves.init)
         let bent = halves != nil
@@ -88,7 +88,7 @@ private struct ScrollsWhenTall: ViewModifier {
     @EnvironmentObject private var model: AppModel
 
     func body(content: Content) -> some View {
-        if model?.fold?.pose.spreads == true {
+        if model.fold?.pose.spreads == true {
             GeometryReader { geo in
                 ScrollView {
                     content.frame(maxWidth: .infinity, minHeight: geo.size.height)

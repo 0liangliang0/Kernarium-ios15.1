@@ -32,7 +32,7 @@ struct FilesBar: View {
     /// trail has the bar to itself until something is selected: Export, which
     /// replaces Import then, stays here.
     private var importIsInToolbar: Bool {
-        (model?.foldPose.importIsInToolbar ?? false) && browser.selection.isEmpty
+        model.foldPose.importIsInToolbar && browser.selection.isEmpty
     }
 
     var body: some View {
@@ -274,7 +274,7 @@ struct ImportPickerPresenter: ViewModifier {
 
     private func failed(_ error: Error) {
         browser.picking = false
-        model?.documentPickerFailed(error, title: String(compatLocalized: "Not imported"))
+        model.documentPickerFailed(error, title: String(compatLocalized: "Not imported"))
     }
 }
 

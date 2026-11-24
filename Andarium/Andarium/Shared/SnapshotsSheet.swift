@@ -16,7 +16,7 @@ struct SnapshotsSheet: View {
         @ObservedObject var store = model.snapshots
         GeometryReader { geo in
             let wide = geo.size.width >= 660 && !store.items.isEmpty
-            NavigationView(path: $store.route) {
+            NavigationView {
                 Group {
                     if wide {
                         SnapshotsSplit()
@@ -234,7 +234,6 @@ struct SnapshotRow: View {
                     two: [SnapshotWords.takenDate(item.created), SnapshotWords.takenTime(item.created)],
                     wrapped: SnapshotWords.taken(item.created)
                 )
-                .fontWeight(.medium)
                 Text(SnapshotWords.revision(of: item.releaseID)).font(.subheadline).foregroundStyle(.secondary)
             } else {
                 Text(SnapshotWords.title(of: item))

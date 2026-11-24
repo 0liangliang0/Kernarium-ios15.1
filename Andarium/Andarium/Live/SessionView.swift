@@ -18,7 +18,6 @@ struct SessionView: View {
             .statusBarHidden(true)
             // The system honours the bottom edge's deferral only while the
             // home indicator is visible: with it hidden, one swipe goes Home.
-            .persistentSystemOverlays(.visible)
             // The model knows Settings is open, because the guest gives the
             // sheet the keys meanwhile (`GuestLayer`).
             .sessionSettings(isPresented: $model.sessionSettingsOpen, large: false, model: model)

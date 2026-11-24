@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import AndariumCore
+import GuestHostCore
 import Foundation
 import MetricKit
-import Synchronization
 
 /// The exit counts and diagnostics iOS delivers through MetricKit, kept on the
 /// device beside the session records (`MetricKitReports`) for the bug report:
@@ -13,7 +13,7 @@ nonisolated final class ExitReports: NSObject, MXMetricManagerSubscriber, Sendab
     static let shared = ExitReports()
 
     /// Set once, before the subscription starts.
-    private let directory = Mutex<URL?>(nil)
+    private let directory = CompatMutex<URL?>(nil)
 
     func start(keepingIn directory: URL) {
         let first = self.directory.withLock { kept -> Bool in

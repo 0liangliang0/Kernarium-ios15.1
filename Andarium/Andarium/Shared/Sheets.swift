@@ -56,7 +56,6 @@ struct NewGuestSheet: View {
                         model.create(draft ?? Guest.fresh(on: model.host))
                         dismiss()
                     }
-                    .fontWeight(.semibold)
                     .disabled(!model.canCreate)
                 }
             }
@@ -109,7 +108,6 @@ struct SystemSheet: View {
                         }
                         dismiss()
                     }
-                    .fontWeight(.semibold)
                     .disabled(!changed)
                 }
             }
@@ -132,7 +130,7 @@ struct InfoSheet: View {
     }
 
     var body: some View {
-        NavigationView(path: $path) {
+        NavigationView {
             List {
                 Section {
                     HStack(spacing: 16) {

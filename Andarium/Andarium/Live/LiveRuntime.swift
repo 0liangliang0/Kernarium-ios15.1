@@ -1139,7 +1139,6 @@ final class LiveRuntime: RuntimeDriver {
         spaceAlertOpen = false
         motion.stop()
         haptics.restart()
-        gameControllers.restart()
         thermal.restart()
         location.guestRestarted()
         keyboardMouse.guestRestarted()
@@ -1448,7 +1447,9 @@ final class LiveRuntime: RuntimeDriver {
     }
 
     func readGraphicsMemory(minimumIdle: CompatDuration, minimumBytes: UInt64) async -> GraphicsMemoryReading? {
-        let (seconds, attoseconds) = minimumIdle.components
+        let components = minimumIdle.components
+        let seconds = components.seconds
+        let attoseconds = components.attoseconds
         let idle = UInt32(clamping: max(seconds, 0) * 1000 + max(attoseconds, 0) / 1_000_000_000_000_000)
         return await withCheckedContinuation { continuation in
             statsQueue.async {

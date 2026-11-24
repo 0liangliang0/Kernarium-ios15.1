@@ -84,7 +84,7 @@ struct SideKeysOverlay: View {
         .ignoresSafeArea(.keyboard)
 
         .onAppear { publishEdge() }
-        .onChange(of: leading) { publishEdge() }
+        .onChange(of: leading) { _ in publishEdge() }
         .onChange(of: open) { isOpen in
             guard isOpen else { return }
             // VoiceOver goes to the first key once the keys have swollen.
@@ -244,7 +244,7 @@ struct SideKeysOverlay: View {
     /// The session says where the keys are, so the words that send a person back
     /// to them name the edge they are on.
     private func publishEdge() {
-        model?.session.keysEdge = leading ? .left : .right
+        model.session.keysEdge = leading ? .left : .right
     }
 
     private func setOpen(_ value: Bool) {
@@ -483,7 +483,7 @@ struct KeyRail: View {
         .environment(\.colorScheme, .dark)
 
         // The rail is not on an edge: the way back names none.
-        .onAppear { model?.session.keysEdge = nil }
+        .onAppear { model.session.keysEdge = nil }
     }
 
     private func pressed(_ action: () -> Void) {
@@ -580,6 +580,18 @@ nonisolated struct SideKeysTip {
     }
 
     var image: Image? { Image(systemName: "hand.tap") }
+
+    /// iOS 15 has no TipKit: offer the tip once whenever the keys appear.
+    var shouldDisplayUpdates: AsyncStream<Bool> {
+        AsyncStream { continuation in
+            continuation.yield(true)
+            continuation.finish()
+        }
+    }
+
+    enum InvalidationReason { case actionPerformed }
+
+    func invalidate(reason: InvalidationReason) {}
 }
 
 /// The tip in its popover, drawn as TipKit draws a popover tip: the popover's

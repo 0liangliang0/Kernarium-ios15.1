@@ -100,9 +100,6 @@ struct SystemCameraSource: CameraAccessSource {
             .builtInWideAngleCamera, .builtInUltraWideCamera, .builtInTelephotoCamera,
             .builtInDualCamera, .builtInDualWideCamera, .builtInTripleCamera,
         ]
-        if #available(iOS 27.1, *) {
-            types += [.builtInOuterUltraWideCamera, .builtInInnerUltraWideCamera]
-        }
         return !AVCaptureDevice.DiscoverySession(deviceTypes: types, mediaType: .video, position: .front)
             .devices.isEmpty
     }

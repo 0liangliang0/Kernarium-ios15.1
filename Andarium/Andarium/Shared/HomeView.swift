@@ -346,7 +346,6 @@ struct HomeView: View {
                     open: { model.sheet = .whatsNew },
                     close: { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { model.whatsNew.putAway() } }
                 )
-                .matchedTransitionSource(id: Self.ribbonID, in: whatsNewZoom)
                 .transition(
                     reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity)
                 )

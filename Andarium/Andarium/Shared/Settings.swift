@@ -31,7 +31,7 @@ struct SessionSettingsSheet: View {
 
     var body: some View {
         let session = model.session
-        NavigationView(path: fileRoute) {
+        NavigationView {
             ScrollViewReader { proxy in
                 List {
                     if offersInstall { apps }

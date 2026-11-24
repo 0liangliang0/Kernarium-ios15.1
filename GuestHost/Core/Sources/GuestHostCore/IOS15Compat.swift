@@ -74,10 +74,16 @@ public struct CompatClockInstant: Sendable, Comparable {
     }
 
     public static func + (instant: CompatClockInstant, duration: CompatDuration) -> CompatClockInstant {
-        let delta = duration.isFinite ? max(0, duration) : 0
-        return CompatClockInstant(
-            uptimeNanoseconds: instant.uptimeNanoseconds &+ UInt64(min(delta, 1e9) * 1e9)
-        )
+        // Signed so `instant - interval` can move the instant backwards (the
+        // throttle in LiveGuestFiles seeds `last` one interval in the past).
+        let delta = duration.isFinite ? min(max(duration, -1e9), 1e9) : 0
+        let shift = Int64((delta * 1e9).rounded())
+        let base = Int64(clamping: instant.uptimeNanoseconds)
+        return CompatClockInstant(uptimeNanoseconds: UInt64(clamping: base + shift))
+    }
+
+    public static func - (instant: CompatClockInstant, duration: CompatDuration) -> CompatClockInstant {
+        instant + (-duration)
     }
 
     public static func - (lhs: CompatClockInstant, rhs: CompatClockInstant) -> CompatDuration {
@@ -113,6 +119,10 @@ public struct CompatContinuousClock {
 
     public init() {}
 
+    /// `clock.now` call sites that hold a clock value, matching the stdlib
+    /// `Clock.now` instance property (MetalShaderCache).
+    public var now: CompatClockInstant { CompatClockInstant.now }
+
     public static var now: CompatClockInstant {
         CompatClockInstant(uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds)
     }
@@ -128,6 +138,8 @@ public struct CompatSuspendingClock {
     public typealias Instant = CompatClockInstant
 
     public init() {}
+
+    public var now: CompatClockInstant { CompatClockInstant.now }
 
     public static var now: CompatClockInstant {
         CompatClockInstant(uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds)
@@ -244,4 +256,33 @@ public extension String {
             comment: resource.comment ?? ""
         )
     }
+}
+
+// MARK: - Mutex (Synchronization is iOS 18+)
+
+/// A value protected by an `NSLock`, standing in for `Mutex` (iOS 18+). The
+/// `withLock` signature matches `Mutex.withLock`, so call sites keep their
+/// `inout` closures unchanged.
+public final class CompatMutex<Value>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value: Value
+
+    public init(_ value: Value) { self.value = value }
+
+    public func withLock<R>(_ body: (inout Value) throws -> R) rethrows -> R {
+        lock.lock()
+        defer { lock.unlock() }
+        return try body(&value)
+    }
+}
+
+// MARK: - Unsigned duration conveniences
+
+/// `entry.idle_ms` from the C runtime is a `UInt64`; the stdlib `Duration`
+/// factories accepted it, so `CompatDuration` needs the same overloads.
+public extension TimeInterval {
+    static func seconds(_ value: UInt64) -> TimeInterval { Double(value) }
+    static func milliseconds(_ value: UInt64) -> TimeInterval { Double(value) / 1_000 }
+    static func microseconds(_ value: UInt64) -> TimeInterval { Double(value) / 1_000_000 }
+    static func nanoseconds(_ value: UInt64) -> TimeInterval { Double(value) / 1_000_000_000 }
 }

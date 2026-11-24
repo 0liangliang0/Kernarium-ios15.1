@@ -731,7 +731,7 @@ final class AppModel: ObservableObject {
     var voiceOverRunning: @MainActor () -> Bool = { UIAccessibility.isVoiceOverRunning }
     /// What VoiceOver is told of its own accord; a test collects it.
     var announcer: @MainActor (_ text: String, _ queued: Bool, _ highPriority: Bool) -> Void = {
-        VoiceOver.announce($0, queued: $1, priority: nil)
+        VoiceOver.announce($0, queued: $1, priority: $2)
     }
     /// Says what a run is as it begins, at high priority (VoiceOver's own
     /// speech of the element it lands on after the screen change would cut a

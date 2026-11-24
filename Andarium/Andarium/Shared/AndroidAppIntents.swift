@@ -113,7 +113,7 @@ nonisolated struct AndroidAppRequestError: Error {}
 /// which runs by name.
 @available(iOS 27.0, *)
 struct OpenAndroidAppIntent: OpenIntent {
-    static let title: CompatLocalizedStringResource = "Open Android App"
+    static let title: LocalizedStringResource = "Open Android App"
     static let description = IntentDescription("Opens an app in Android.")
     static var supportedModes: IntentModes { .foreground(.immediate) }
 

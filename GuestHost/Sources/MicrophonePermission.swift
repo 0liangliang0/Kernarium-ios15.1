@@ -20,7 +20,7 @@ protocol MicrophonePermission {
 
 nonisolated struct SystemMicrophonePermission: MicrophonePermission {
     var access: MicrophoneAccess {
-        switch AVAudioSession.sharedInstance().recordPermission() {
+        switch AVAudioSession.sharedInstance().recordPermission {
         case .granted: .granted
         case .undetermined: .notAsked
         default: .denied

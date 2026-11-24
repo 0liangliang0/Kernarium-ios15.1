@@ -92,16 +92,6 @@ final class AndariumSceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// The process's model, which this scene shows.
     private(set) var model: AppModel?
 
-    func windowScene(_ windowScene: UIWindowScene, didUpdateEffectiveGeometry previousGeometry: UIWindowScene.Geometry) {
-        // Called whenever a scene moves between screens: what the new screen
-        // shows is what Home's "120 Hz" is offered by, and what holds the
-        // guest of a run on the 120 Hz display.
-        model?.screenDidChange(
-            nativeScale: Double(windowScene.screen.nativeScale),
-            maximumFramesPerSecond: windowScene.screen.maximumFramesPerSecond)
-        (window?.rootViewController as? SceneGeometryObserver)?.sceneGeometryDidChange()
-    }
-
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options: UIScene.ConnectionOptions) {
         guard let scene = scene as? UIWindowScene else { return }
         connect(scene)

@@ -72,7 +72,7 @@ private struct TextMessageBarHeader: View {
                         .accessibilityFocused(titleFocused)
                     Text(SmsMessages.caption)
                         .font(.caption)
-                        .foregroundStyle(Color.barSecondary)
+                        .foregroundColor(Color.barSecondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
                 }
@@ -83,17 +83,17 @@ private struct TextMessageBarHeader: View {
                     .font(.footnote.weight(.semibold))
                     .frame(width: 32, height: 32)
                     .background(Color(.tertiarySystemFill), in: Circle())
-                    .foregroundStyle(Color.barSecondary)
+                    .foregroundColor(Color.barSecondary)
                     .accessibilityIdentifier("text-message-close")
             }
             HStack(spacing: 6) {
                 Text(SmsMessages.fromLabel)
-                    .foregroundStyle(Color.barSecondary)
+                    .foregroundColor(Color.barSecondary)
                     .accessibilityHidden(true)
                 // No content type: iOS would offer the person's own number.
                 TextField("", text: Binding(
                     get: { state.shownSender }, set: { model.setTextMessageSender($0) }),
-                    prompt: Text(SmsMessages.senderPlaceholder).foregroundStyle(Color.barSecondary))
+                    prompt: Text(SmsMessages.senderPlaceholder).foregroundColor(Color.barSecondary))
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
                     .submitLabel(.next)
@@ -136,9 +136,8 @@ struct TextMessageBar: View {
                 // come to the person's phone.
                 TextField("", text: Binding(
                     get: { state.shownText }, set: { model.setTextMessageText($0) }),
-                    prompt: Text(SmsMessages.name).foregroundStyle(Color.barSecondary),
-                    axis: .vertical)
-                    .lineLimit(1...4)
+                    prompt: Text(SmsMessages.name).foregroundColor(Color.barSecondary))
+                    .lineLimit(4)
                     .textContentType(.oneTimeCode)
                     .focused($focus, equals: .text)
                     .opacity(sending ? 0.5 : 1)
@@ -164,7 +163,6 @@ struct TextMessageBar: View {
                     .frame(width: 30, height: 30)
                 }
                 .buttonStyle(.borderedProminent)
-                .buttonBorderShape(.circle)
                 .disabled(sending || !model.canSendTextMessage)
                 .keyboardShortcut(.return, modifiers: .command)
                 .accessibilityLabel(sending ? SmsMessages.sending : SmsMessages.send)
@@ -194,7 +192,7 @@ struct TextMessageBar: View {
         }
         // A request to take VoiceOver to the status line: a result that was not
         // told yet, asked about again, or the cut-off line.
-        .onChange(of: state.statusFocusRequests) { statusFocused = true }
+        .onChange(of: state.statusFocusRequests) { _ in statusFocused = true }
         .onChange(of: statusFocused) { focused in
             if focused { model.textMessageLineFocused() }
         }
@@ -225,17 +223,17 @@ struct TextMessageBar: View {
             switch status.tone {
             case .good:
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(Color.barGood)
+                    .foregroundColor(Color.barGood)
                     .accessibilityHidden(true)
             case .problem:
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.red)
+                    .foregroundColor(.red)
                     .accessibilityHidden(true)
             case .info:
                 EmptyView()
             }
             Text(status.words)
-                .foregroundStyle(status.tone == .info ? Color.barSecondary : Color.primary)
+                .foregroundColor(status.tone == .info ? Color.barSecondary : Color.primary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .font(.footnote)

@@ -138,7 +138,6 @@ struct ResolutionSheet: View {
                         if let draft { model.chooseResolution(choices.scale(at: draft)) }
                         dismiss()
                     }
-                    .fontWeight(.semibold)
                     .disabled(draft == nil || draft == current)
                     .accessibilityIdentifier("resolution-save")
                 }
@@ -195,9 +194,17 @@ struct DisplayAreaProbe: View {
 
     var body: some View {
         Color.clear
-            .containerCornerOffset(cornerEdges, sizeToFit: true) {
-                size = $0
-                publish()
+            .background {
+                // iOS 15 has no onGeometryChange: a GeometryReader reports the
+                // size as it changes, through iOS 15 onChange.
+                GeometryReader { geo in
+                    Color.clear
+                        .onAppear { size = geo.size; publish() }
+                        .onChange(of: geo.size) { newSize in
+                            size = newSize
+                            publish()
+                        }
+                }
             }
             .background {
                 WindowReader {
@@ -207,7 +214,7 @@ struct DisplayAreaProbe: View {
                     publish()
                 }
             }
-            .onChange(of: model.sessionPlan?.guest.size) { publish() }
+            .onChange(of: model.sessionPlan?.guest.size) { _ in publish() }
             .allowsHitTesting(false)
             .accessibilityHidden(true)
     }

@@ -267,3 +267,14 @@ public struct CompatNavigationLink<Label: View>: View {
         Button { CompatNavigationRouter.shared.send(value) } label: { label }
     }
 }
+
+// MARK: - iOS 26 container corner offset
+
+public extension View {
+    /// `containerCornerOffset(_:sizeToFit:)` is iOS 26+, where window controls
+    /// overlay the content. iOS 15 has no such controls, so the view is kept
+    /// as it is; the edges are accepted for source compatibility.
+    func compatContainerCornerOffset(_ edges: Edge.Set, sizeToFit: Bool = true) -> some View {
+        self
+    }
+}

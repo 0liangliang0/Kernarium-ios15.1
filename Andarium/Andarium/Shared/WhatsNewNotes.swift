@@ -146,7 +146,6 @@ struct WhatsNewEntryRow: View {
                     Label(place.words, systemImage: place.symbol)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
-                        .labelIconToTitleSpacing(5)
                         .padding(.top, 3)
                 }
             }

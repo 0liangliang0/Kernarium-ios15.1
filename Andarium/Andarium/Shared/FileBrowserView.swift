@@ -25,7 +25,6 @@ struct FolderPage: View {
             .background(Color(.systemGroupedBackground))
             .background { FileDateProbe(width: $dateWidth) }
             .navigationTitle(GuestPath.name(of: path))
-            .navigationSubtitle(subtitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar }
             .task(id: LoadKey(path: path, available: model.filesAvailable)) {
@@ -215,8 +214,10 @@ struct FolderPage: View {
         // before Done. It is the bar's Import (`FilesBar`) moved: the same
         // action, the same disabled states, and it gives way to Export, which
         // stays in the bar, while something is selected.
-        if model.foldPose.importIsInToolbar, model.filesAvailable, browser.selection.isEmpty {
-            ToolbarItem(placement: .topBarTrailing) {
+        // iOS 15's ToolbarContentBuilder has no buildIf: the condition moves
+        // inside the item's ViewBuilder instead.
+        ToolbarItem(placement: .topBarTrailing) {
+            if model.foldPose.importIsInToolbar, model.filesAvailable, browser.selection.isEmpty {
                 Button {
                     browser.picking = true
                 } label: {
@@ -226,7 +227,6 @@ struct FolderPage: View {
                 .disabled(browser.busy || !browser.canImport(into: browser.current))
             }
         }
-        ToolbarSpacer(.fixed, placement: .topBarTrailing)
         ToolbarItem(placement: .confirmationAction) {
             Button("Done", systemImage: "checkmark", action: close)
         }
