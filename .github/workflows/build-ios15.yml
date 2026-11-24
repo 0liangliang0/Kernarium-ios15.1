@@ -58,8 +58,12 @@ jobs:
           xcodebuild -version
           cmake --version | head -1
           echo "SDKs:"; xcodebuild -showsdks
-          python3 -c 'import mako, packaging, yaml' || \
-            python3 -m pip install --user --break-system-packages mako packaging pyyaml
+          # The dependency build scripts look for meson/ninja in this venv.
+          python3 -m venv .build/gpu-tools-venv
+          .build/gpu-tools-venv/bin/python -m pip install --quiet \
+            --upgrade pip meson ninja mako packaging pyyaml
+          .build/gpu-tools-venv/bin/meson --version
+          .build/gpu-tools-venv/bin/ninja --version
 
       - name: Verify iOS 15.1 deployment target
         run: |
