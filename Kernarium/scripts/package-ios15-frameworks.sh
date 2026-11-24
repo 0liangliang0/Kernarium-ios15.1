@@ -72,11 +72,31 @@ create_device_xcframework()
 	name=$1 framework_path=$2
 	[ -d "$framework_path" ] || fail "missing framework: $framework_path"
 	dSYM="$framework_path.dSYM"
-	[ -d "$dSYM" ] || fail "missing debug symbols: $dSYM; rebuild $name"
-	"$XCODEBUILD" -create-xcframework \
-		-framework "$framework_path" -debug-symbols "$dSYM" \
-		-output "$STAGE/$name.xcframework" ||
-		fail "could not create $name XCFramework"
+	if [ ! -d "$dSYM" ]; then
+		# The runtime CMake POST_BUILD dsymutil step only runs when the
+		# framework is relinked. On a cached build the framework can be
+		# present without its dSYM, so regenerate it here (the upstream
+		# package-ios-frameworks.sh does the same for its AOT framework).
+		binary="$framework_path/$name"
+		if [ -f "$binary" ]; then
+			"$DSYMUTIL" "$binary" -o "$dSYM" 2>/dev/null || true
+		fi
+	fi
+	if [ -d "$dSYM" ]; then
+		"$XCODEBUILD" -create-xcframework \
+			-framework "$framework_path" -debug-symbols "$dSYM" \
+			-output "$STAGE/$name.xcframework" ||
+			fail "could not create $name XCFramework"
+	else
+		# -debug-symbols is optional; a stripped binary has no usable DWARF.
+		# Package without dSYM rather than blocking the whole IPA build.
+		printf '%s\n' \
+			"package-ios15-frameworks.sh: warning: no dSYM for $name; packaging without debug symbols" >&2
+		"$XCODEBUILD" -create-xcframework \
+			-framework "$framework_path" \
+			-output "$STAGE/$name.xcframework" ||
+			fail "could not create $name XCFramework"
+	fi
 	[ -f "$STAGE/$name.xcframework/Info.plist" ] ||
 		fail "$name XCFramework was not created"
 }
