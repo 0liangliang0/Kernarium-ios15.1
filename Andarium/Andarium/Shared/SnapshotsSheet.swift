@@ -26,7 +26,6 @@ struct SnapshotsSheet: View {
                 }
                 .background(Color(.systemGroupedBackground))
                 .navigationTitle(SnapshotWords.title)
-                .navigationSubtitle(subtitle)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {

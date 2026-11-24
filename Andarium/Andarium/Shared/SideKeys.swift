@@ -154,7 +154,17 @@ struct SideKeysOverlay: View {
                     .onDisappear { tipShown = false }
                     .accessibilityFocused($focus, equals: .closed)
                     .accessibilityAction { setOpen(true) }
-                    .accessibilityActions { closedKeysActions }
+                    // iOS 16's accessibilityActions is replaced by individual
+                    // named actions, which iOS 15 exposes to VoiceOver too.
+                    .accessibilityAction(named: Text(leading ? "Move to the right edge" : "Move to the left edge")) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { leading.toggle() }
+                    }
+                    .accessibilityAction(named: "Move up") {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { fraction = max(0.1, fraction - 0.15) }
+                    }
+                    .accessibilityAction(named: "Move down") {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { fraction = min(0.9, fraction + 0.15) }
+                    }
                     .position(x: edgeX + inward * 18, y: closedY)
                     .gesture(dragKeys(size: size))
                     .onTapGesture { setOpen(true) }
