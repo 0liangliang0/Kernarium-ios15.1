@@ -41,9 +41,9 @@ jobs:
 
       # Cache expensive dependency builds (LLVM + Mesa takes ~45 min). Keyed
       # on the dependency scripts, manifest, patches and LLVM archive pin.
-      - name: Cache dependency builds
+      - name: Restore dependency builds cache
         id: dep-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: |
             .build/dependencies
@@ -78,6 +78,23 @@ jobs:
             --upgrade pip meson ninja mako packaging pyyaml
           .build/gpu-tools-venv/bin/meson --version
           .build/gpu-tools-venv/bin/ninja --version
+          # Autotools are not preinstalled on the xcode-27 image. The network,
+          # storage and compression builders need autoreconf/automake/libtool/
+          # gettext/gperf. Install via Homebrew and expose on PATH for later steps.
+          BREW=""
+          for c in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+            [ -x "$c" ] && BREW="$c" && break
+          done
+          if [ -z "$BREW" ] && command -v brew >/dev/null 2>&1; then BREW=$(command -v brew); fi
+          [ -n "$BREW" ] || { echo "::error::Homebrew not found; cannot install autotools"; exit 1; }
+          "$BREW" install autoconf automake libtool gettext gperf m4
+          BREW_PREFIX=$("$BREW" --prefix)
+          echo "$BREW_PREFIX/bin" >> "$GITHUB_PATH"
+          export PATH="$BREW_PREFIX/bin:$PATH"
+          for t in autoreconf autoconf automake aclocal autopoint glibtoolize gperf; do
+            command -v "$t" >/dev/null 2>&1 || { echo "::error::missing build tool: $t"; exit 1; }
+          done
+          echo "autotools ready"
 
       - name: Verify iOS 15.1 deployment target
         run: |
@@ -251,3 +268,16 @@ jobs:
           path: |
             .build/**/*.log
           if-no-files-found: ignore
+
+      # Save compiled dependencies even when a later step fails, so retries
+      # reuse the ~45 min GPU/LLVM/Mesa build instead of recompiling it.
+      - name: Save dependency builds cache
+        if: ${{ always() && steps.dep-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .build/dependencies
+            .build/dependency-cache
+            .build/dependency-build
+            external/sources
+          key: deps-${{ runner.os }}-${{ hashFiles('dependencies/**', 'CMakePresets.json', 'Kernarium/scripts/package-ios15-frameworks.sh') }}
