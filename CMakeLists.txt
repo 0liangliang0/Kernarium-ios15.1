@@ -12,6 +12,19 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_options("$<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-Wall;-Wextra;-Werror>"
     "$<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>")
 
+# The iOS 15.1 port deliberately builds against an older deployment target
+# than the VideoToolbox/Metal headers describe. Symbols newer than 15.1 are
+# weak-linked and every call site already checks the framework result at
+# runtime (apply()/refuse(), respondsToSelector:, ...). Clang folds
+# -Wunguarded-availability-new into -Wall, and -Werror would turn each of those
+# references into a hard error; downgrade just that diagnostic back to a
+# warning for this platform so the guarded code can compile. All other warnings
+# remain errors.
+if(UML_APPLE_PLATFORM STREQUAL "ios15-device")
+    add_compile_options(
+        "$<$<COMPILE_LANGUAGE:CXX,OBJCXX>:-Wno-error=unguarded-availability-new;-Wno-error=unguarded-availability>")
+endif()
+
 list(APPEND CMAKE_MODULE_PATH
     "${PROJECT_SOURCE_DIR}/cmake"
     "${PROJECT_SOURCE_DIR}/dependencies/cmake")
