@@ -54,8 +54,23 @@ public struct CompatDurationComponents: Sendable {
 /// A monotonic instant backed by `DispatchTime`, which is available on every
 /// supported iOS version. `ContinuousClock.Instant` and
 /// `SuspendingClock.Instant` are iOS 16+.
-public struct CompatClockInstant: Sendable {
+public struct CompatClockInstant: Sendable, Comparable {
     fileprivate let uptimeNanoseconds: UInt64
+
+    public static func < (lhs: CompatClockInstant, rhs: CompatClockInstant) -> Bool {
+        lhs.uptimeNanoseconds < rhs.uptimeNanoseconds
+    }
+
+    public static func + (instant: CompatClockInstant, duration: CompatDuration) -> CompatClockInstant {
+        let delta = duration.isFinite ? max(0, duration) : 0
+        return CompatClockInstant(
+            uptimeNanoseconds: instant.uptimeNanoseconds &+ UInt64(min(delta, 1e9) * 1e9)
+        )
+    }
+
+    public static func - (lhs: CompatClockInstant, rhs: CompatClockInstant) -> CompatDuration {
+        lhs.duration(to: rhs)
+    }
 
     fileprivate init(uptimeNanoseconds: UInt64) {
         self.uptimeNanoseconds = uptimeNanoseconds
