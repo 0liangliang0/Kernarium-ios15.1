@@ -72,8 +72,12 @@ jobs:
       # -------------------------------------------------------------------
       - name: Prepare dependency sources
         run: |
-          dependencies/prepare.sh --product all
-          dependencies/prepare.sh --product all --verify
+          # iOS build only needs these four products. The FEX series (macos /
+          # x86-conformance) has drifted upstream and is not needed here.
+          for product in apple-gpu-vulkan-experiment ios-network ios-storage ios-compression; do
+            dependencies/prepare.sh --product "$product"
+            dependencies/prepare.sh --product "$product" --verify
+          done
 
       # -------------------------------------------------------------------
       # 2) Build the iphoneos/15.1 software-renderer GPU dependency variant:
