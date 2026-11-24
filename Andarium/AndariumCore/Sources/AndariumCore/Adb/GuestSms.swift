@@ -229,10 +229,18 @@ public enum GuestSms {
         guard !bytes.isEmpty, bytes.allSatisfy({ (0x21...0x7E).contains($0) }) else { return nil }
         let text = String(decoding: bytes, as: UTF8.self)
         let fields = text.split(separator: ".", omittingEmptySubsequences: false).map(String.init)
-        func isVersion(_ field: String) -> Bool { field.wholeMatch(of: /0|[1-9][0-9]{0,8}/) != nil }
+        // The regex literals here are iOS 16+; these checks are the same
+        // grammars expressed over UTF-8 bytes.
+        func isVersion(_ field: String) -> Bool {
+            let bytes = Array(field.utf8)
+            guard !bytes.isEmpty, bytes.count <= 9 else { return false }
+            if bytes.count == 1 { return bytes[0] == 48 }
+            guard bytes[0] >= 49 && bytes[0] <= 57 else { return false }
+            return bytes.dropFirst().allSatisfy { $0 >= 48 && $0 <= 57 }
+        }
         func parts(_ field: String) -> Int? {
-            guard field.wholeMatch(of: /[1-9]|1[01]/) != nil else { return nil }
-            return Int(field)
+            guard let value = Int(field), value >= 1, value <= 11, String(value) == field else { return nil }
+            return value
         }
         if fields.count == 2 {
             return isVersion(fields[0]) && fields[1] == "refused-version" ? .refusedVersion : nil
