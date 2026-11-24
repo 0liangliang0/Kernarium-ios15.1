@@ -247,7 +247,20 @@ function(_receipt_expect _field _expected)
 endfunction()
 _receipt_expect(format 2)
 _receipt_expect(product apple-gpu-vulkan-experiment)
-_receipt_expect(platform "${PLATFORM}")
+# The build script writes the software-renderer platform as "ios-software"
+# while CMake calls the same target "ios15-device". Accept either alias.
+set(_expected_platform "${PLATFORM}")
+if(PLATFORM STREQUAL "ios15-device")
+    set(_platform_aliases ios15-device ios-software)
+elseif(PLATFORM STREQUAL "ios-software")
+    set(_platform_aliases ios-software ios15-device)
+else()
+    set(_platform_aliases "${PLATFORM}")
+endif()
+if(NOT _receipt_value_platform IN_LIST _platform_aliases)
+    message(FATAL_ERROR
+        "Apple GPU build receipt platform is ${_receipt_value_platform}, expected ${_expected_platform}")
+endif()
 if(NOT _software)
     string(LENGTH "${_receipt_value_venus_protocol_generated_sha256}" _length)
     if(NOT _receipt_value_venus_protocol_generated_sha256 MATCHES "^[0-9a-f]+$" OR
