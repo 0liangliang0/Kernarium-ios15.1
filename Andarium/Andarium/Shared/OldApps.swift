@@ -239,7 +239,7 @@ extension AppModel {
         state.first = Task { [weak self, weak state] in
             for attempt in 0..<OldAppsState.startAttempts {
                 if attempt > 0, let wait = state?.retryInterval {
-                    try? await compatSleep(for: wait * (1 << (attempt - 1)))
+                    try? await compatSleep(for: wait * Double(1 << (attempt - 1)))
                 }
                 guard let self, let state, !Task.isCancelled, self.session.oldApps === state else { return }
                 if let driver = self.driver, await driver.storageReady() == true {
