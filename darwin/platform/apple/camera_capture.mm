@@ -29,6 +29,17 @@
 #include <sys/sysctl.h>
 #include <time.h>
 
+// The foldable's outer/inner ultra-wide AVCaptureDeviceType constants were
+// added with the iOS 27.1 SDK; the Xcode 27.0 SDK used by this port does not
+// declare them at all. @available() only guards runtime use and cannot hide
+// an undeclared symbol, so gate every reference on an SDK that declares them.
+// They are irrelevant to the iOS 15.1 target in any case.
+#if defined(__IPHONE_27_1)
+#define UML_HAS_FOLDABLE_ULTRAWIDE 1
+#else
+#define UML_HAS_FOLDABLE_ULTRAWIDE 0
+#endif
+
 #include <algorithm>
 #include <atomic>
 #include <cmath>
@@ -202,10 +213,12 @@ CameraDeviceType deviceTypeOf(AVCaptureDeviceType type)
     if ([type isEqualToString:AVCaptureDeviceTypeBuiltInDualWideCamera]) return CameraDeviceType::dualWide;
     if ([type isEqualToString:AVCaptureDeviceTypeBuiltInTripleCamera]) return CameraDeviceType::triple;
     if ([type isEqualToString:AVCaptureDeviceTypeExternal]) return CameraDeviceType::external;
+#if UML_HAS_FOLDABLE_ULTRAWIDE
     if (@available(iOS 27.1, *)) {
         if ([type isEqualToString:AVCaptureDeviceTypeBuiltInOuterUltraWideCamera]) return CameraDeviceType::outerUltraWide;
         if ([type isEqualToString:AVCaptureDeviceTypeBuiltInInnerUltraWideCamera]) return CameraDeviceType::innerUltraWide;
     }
+#endif
     return CameraDeviceType::other;
 }
 
@@ -446,15 +459,18 @@ std::vector<Entry> discover()
         AVCaptureDeviceTypeBuiltInDualCamera, AVCaptureDeviceTypeBuiltInDualWideCamera,
         AVCaptureDeviceTypeBuiltInTripleCamera
     ]];
-    // The foldable's two ultra wide cameras exist from iOS 27.1; on 27.0 the
-    // constants are null, so they are named only where they exist. The
-    // application's Camera row asks the same types for a front camera
-    // (Andarium's SystemCameraSource.hasFrontCamera).
+    // The foldable's two ultra wide cameras exist from iOS 27.1; their
+    // constants are declared only by SDKs that ship them (see
+    // UML_HAS_FOLDABLE_ULTRAWIDE above). The application's Camera row asks
+    // the same types for a front camera (Andarium's
+    // SystemCameraSource.hasFrontCamera).
+#if UML_HAS_FOLDABLE_ULTRAWIDE
     if (@available(iOS 27.1, *)) {
         [types addObjectsFromArray:@[
             AVCaptureDeviceTypeBuiltInOuterUltraWideCamera, AVCaptureDeviceTypeBuiltInInnerUltraWideCamera
         ]];
     }
+#endif
 #endif
     AVCaptureDeviceDiscoverySession* session =
         [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:types
@@ -494,9 +510,11 @@ std::vector<Entry> discover()
         if ([type isEqualToString:AVCaptureDeviceTypeBuiltInWideAngleCamera]) info.lens = CameraLensKind::wide;
 #if TARGET_OS_IOS
         bool ultraWide = [type isEqualToString:AVCaptureDeviceTypeBuiltInUltraWideCamera];
+#if UML_HAS_FOLDABLE_ULTRAWIDE
         if (@available(iOS 27.1, *))
             ultraWide = ultraWide || [type isEqualToString:AVCaptureDeviceTypeBuiltInOuterUltraWideCamera] ||
                 [type isEqualToString:AVCaptureDeviceTypeBuiltInInnerUltraWideCamera];
+#endif
         if (ultraWide) info.lens = CameraLensKind::ultraWide;
         else if ([type isEqualToString:AVCaptureDeviceTypeBuiltInTelephotoCamera]) info.lens = CameraLensKind::telephoto;
         else if (device.virtualDevice) info.lens = CameraLensKind::zoom;
