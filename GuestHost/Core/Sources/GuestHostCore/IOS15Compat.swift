@@ -76,6 +76,12 @@ public struct CompatClockInstant: Sendable, Comparable {
         self.uptimeNanoseconds = uptimeNanoseconds
     }
 
+    /// The `Instant.now` member used by call sites that write `.now` inside
+    /// `duration(to:)`.
+    public static var now: CompatClockInstant {
+        CompatClockInstant(uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds)
+    }
+
     public func duration(to other: CompatClockInstant) -> CompatDuration {
         let a = uptimeNanoseconds
         let b = other.uptimeNanoseconds
@@ -95,7 +101,9 @@ public struct CompatContinuousClock {
         CompatClockInstant(uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds)
     }
 
-    public func duration(to other: CompatClockInstant) -> CompatDuration { now.duration(to: other) }
+    public func duration(to other: CompatClockInstant) -> CompatDuration {
+        CompatClockInstant.now.duration(to: other)
+    }
 }
 
 /// Stands still while the device sleeps. `DispatchTime` is the closest iOS 15
@@ -109,7 +117,9 @@ public struct CompatSuspendingClock {
         CompatClockInstant(uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds)
     }
 
-    public func duration(to other: CompatClockInstant) -> CompatDuration { now.duration(to: other) }
+    public func duration(to other: CompatClockInstant) -> CompatDuration {
+        CompatClockInstant.now.duration(to: other)
+    }
 }
 
 // MARK: - Sleeping
@@ -175,8 +185,8 @@ public struct CompatLocalizedStringResource {
     public init(
         _ key: String,
         table: String? = nil,
-        bundle: (any CompatBundleProviding)? = nil,
         locale: Locale? = nil,
+        bundle: (any CompatBundleProviding)? = nil,
         comment: String? = nil
     ) {
         self.key = key
@@ -193,8 +203,8 @@ public extension String {
     init(
         compatLocalized key: String,
         table: String? = nil,
-        bundle: (any CompatBundleProviding)? = nil,
         locale: Locale? = nil,
+        bundle: (any CompatBundleProviding)? = nil,
         comment: String? = nil
     ) {
         var resolved: Bundle?
