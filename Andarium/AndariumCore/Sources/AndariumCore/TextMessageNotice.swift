@@ -156,7 +156,7 @@ public final class TextMessageNotice: @unchecked Sendable {
             rest.removeFirst()
         }
         guard rest.count <= capacity, Set(rest).count == rest.count,
-              rest.allSatisfy({ $0.wholeMatch(of: /[0-9a-f]{32}/) != nil }) else { return nil }
+              rest.allSatisfy(GuestSms.isIdentifier) else { return nil }
         return (cutOff, rest)
     }
 

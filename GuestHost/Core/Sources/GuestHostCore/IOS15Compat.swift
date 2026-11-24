@@ -72,6 +72,10 @@ public struct CompatClockInstant: Sendable, Comparable {
         lhs.duration(to: rhs)
     }
 
+    public func advanced(by duration: CompatDuration) -> CompatClockInstant {
+        self + duration
+    }
+
     fileprivate init(uptimeNanoseconds: UInt64) {
         self.uptimeNanoseconds = uptimeNanoseconds
     }
@@ -202,18 +206,17 @@ public extension String {
     /// (iOS 16+), backed by `NSLocalizedString` (iOS 2+).
     init(
         compatLocalized key: String,
+        defaultValue: String? = nil,
         table: String? = nil,
         locale: Locale? = nil,
-        bundle: (any CompatBundleProviding)? = nil,
+        bundle: Bundle? = nil,
         comment: String? = nil
     ) {
-        var resolved: Bundle?
-        if let bundle { resolved = bundle.resolvedBundle }
         self = NSLocalizedString(
             key,
             tableName: table,
-            bundle: resolved ?? .main,
-            value: key,
+            bundle: bundle ?? .main,
+            value: defaultValue ?? key,
             comment: comment ?? ""
         )
     }

@@ -53,7 +53,7 @@ public struct SystemInfo: Equatable, Sendable {
         guard parts.count == 3, let year = parts[0], let month = parts[1], let day = parts[2], year >= 2000
         else { return nil }
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "UTC") ?? .gmt
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
         let components = DateComponents(year: year, month: month, day: day)
         // A day the month does not have rolls over in a calendar; it is no date here.
         guard let date = calendar.date(from: components),

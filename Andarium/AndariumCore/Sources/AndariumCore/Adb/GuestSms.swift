@@ -157,7 +157,12 @@ public enum GuestSms {
     }
 
     public static func isIdentifier(_ text: String) -> Bool {
-        text.wholeMatch(of: /[0-9a-f]{32}/) != nil
+        // Regex literals and `wholeMatch(of:)` are iOS 16+; this is the same
+        // 32-character lower-case hexadecimal grammar, checked byte by byte.
+        guard text.utf8.count == 32 else { return false }
+        return text.utf8.allSatisfy { byte in
+            (byte >= 48 && byte <= 57) || (byte >= 97 && byte <= 102)
+        }
     }
 
     // MARK: The request
