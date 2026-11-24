@@ -139,9 +139,12 @@ private struct CompatNavigationDestinationModifier<D, Destination: View>: ViewMo
     let destination: (D) -> Destination
 
     func body(content: Content) -> some View {
+        // Capture the underlying object, not the property wrapper, so the
+        // escaping registration closure does not capture a mutating `self`.
+        let holder = state
         CompatNavigationRouter.shared.register(token) { value in
             guard let typed = value as? D else { return false }
-            state.item = CompatPresentedView(view: AnyView(destination(typed)))
+            holder.item = CompatPresentedView(view: AnyView(destination(typed)))
             return true
         }
         return AnyView(content.sheet(item: $state.item) { $0.view })

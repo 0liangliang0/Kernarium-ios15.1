@@ -136,7 +136,7 @@ public func compatSleep(
     clock: CompatContinuousClock,
     tolerance: CompatDuration? = nil
 ) async throws {
-    try await compatSleep(for: clock.now.duration(to: deadline))
+    try await compatSleep(for: CompatClockInstant.now.duration(to: deadline))
 }
 
 public func compatSleep(
@@ -144,7 +144,7 @@ public func compatSleep(
     clock: CompatSuspendingClock,
     tolerance: CompatDuration? = nil
 ) async throws {
-    try await compatSleep(for: clock.now.duration(to: deadline))
+    try await compatSleep(for: CompatClockInstant.now.duration(to: deadline))
 }
 
 // MARK: - Localization
