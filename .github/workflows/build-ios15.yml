@@ -1,0 +1,227 @@
+name: Build Andarium 1.1 for iOS 15.1 (TrollStore IPA)
+
+# ---------------------------------------------------------------------------
+# Andarium 1.1 - iOS 15.1 real-device port (iPhone 13 Pro Max, A15)
+#
+# Upstream renders the guest with KosmicKrisp, a Metal 4 Vulkan driver that
+# exists only from iOS 26. This port replaces it with Mesa's CPU rasterizer
+# (llvmpipe/softpipe), cross compiled for the iphoneos/15.1 platform. The
+# workflow builds that dependency variant ("ios-software"), then the runtime,
+# then the app, and produces an IPA.
+#
+# The default IPA is UNSIGNED and is meant to be installed with TrollStore.
+# iPhone 13 Pro Max / iOS 15.1.1 is fully supported by TrollStore (CoreTrust),
+# so no paid Apple Developer account and no signing secrets are required.
+# If you do provide signing secrets, a second, properly signed IPA is also
+# exported.
+#
+# Performance note: CPU software rendering of a full Android guest on a phone
+# is slow. This is a functional port, not a performance port.
+# ---------------------------------------------------------------------------
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ ios15.1-port, main, master ]
+
+env:
+  # Upstream release tag carrying the accepted kernel bundle + system image.
+  GUEST_RELEASE_TAG: andarium-1.1
+  # 1 when APPLE_TEAM_ID / signing secrets are configured (optional path).
+  HAVE_SIGNING: ${{ secrets.APPLE_TEAM_ID != '' && '1' || '0' }}
+
+jobs:
+  build:
+    # xcode-27 is the only GitHub image whose Xcode can read this project's
+    # JSON-format .xcproj. It is Apple Silicon only (GitHub public preview).
+    runs-on: xcode-27
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      # The image has several Xcode bundles; Xcode.app points at 27, but pin
+      # by detecting the real path instead of hardcoding a wrong one.
+      - name: Select Xcode 27
+        run: |
+          set -eu
+          XC=""
+          for c in /Applications/Xcode_27.0.app /Applications/Xcode_27.app /Applications/Xcode.app; do
+            if [ -d "$c" ]; then XC="$c"; break; fi
+          done
+          [ -n "$XC" ] || { echo "::error::No Xcode 27 found"; ls -1 /Applications | grep -i xcode || true; exit 1; }
+          echo "Using $XC"
+          echo "DEVELOPER_DIR=$XC/Contents/Developer" >> "$GITHUB_ENV"
+          "$XC/Contents/Developer/usr/bin/xcodebuild" -version
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          cmake --version | head -1
+          echo "SDKs:"; xcodebuild -showsdks
+          python3 -c 'import mako, packaging, yaml' || \
+            python3 -m pip install --user mako packaging pyyaml
+
+      - name: Verify iOS 15.1 deployment target
+        run: |
+          grep -n '"IPHONEOS_DEPLOYMENT_TARGET": "15.1"' Andarium/Andarium.xcodeproj/project.xcproj
+          grep -n '<string>15.1</string>' Andarium/Config/Info.plist
+          grep -n 'ios15-device' CMakePresets.json | head -3
+
+      # -------------------------------------------------------------------
+      # 1) Prepare authenticated third-party sources (network + verify).
+      # -------------------------------------------------------------------
+      - name: Prepare dependency sources
+        run: |
+          dependencies/prepare.sh --product all --verify
+
+      # -------------------------------------------------------------------
+      # 2) Build the iphoneos/15.1 software-renderer GPU dependency variant:
+      #    Mesa llvmpipe + softpipe, libepoxy, virglrenderer (no Vulkan, no
+      #    KosmicKrisp / Metal 4), cross compiled with the iphoneos SDK.
+      # -------------------------------------------------------------------
+      - name: Build GPU deps (iphoneos + software renderer)
+        run: |
+          dependencies/build-apple-gpu.sh \
+            --platform ios-software \
+            --prefix "$PWD/.build/dependencies/apple-gpu-vulkan-experiment/ios-device-software-arm64" \
+            --jobs 8
+
+      - name: Build network deps (iphoneos/15.1)
+        run: |
+          dependencies/build-ios-network.sh \
+            --platform ios \
+            --prefix "$PWD/.build/dependencies/ios15/ios-device-arm64/network" \
+            --jobs 8
+
+      - name: Build storage + compression deps (iphoneos/15.1)
+        run: |
+          # Default prefixes (.build/dependencies/ios-storage, ios-zstd) are
+          # what the packaging step consumes.
+          dependencies/build-ios-storage.sh --jobs 8
+          dependencies/build-ios-zstd.sh --jobs 8
+
+      # -------------------------------------------------------------------
+      # 3) Fetch prebuilt guest artifacts (accepted kernel bundle + system).
+      # -------------------------------------------------------------------
+      - name: Fetch prebuilt guest artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .build/kernel/artifacts .build/android/releases
+          gh release download "$GUEST_RELEASE_TAG" \
+            --repo imxieyi/Kernarium \
+            --pattern 'android-6.18-*.tar.gz' \
+            --dir .build/kernel/artifacts
+          gh release download "$GUEST_RELEASE_TAG" \
+            --repo imxieyi/Kernarium \
+            --pattern 'lineage24-*.tar.gz' \
+            --dir .build/android/releases
+          for a in .build/kernel/artifacts/android-6.18-*.tar.gz; do
+            tar -xzf "$a" -C .build/kernel/artifacts
+          done
+          for a in .build/android/releases/lineage24-*.tar.gz; do
+            case "$a" in *-aot.tar.gz) continue;; esac
+            tar -xzf "$a" -C .build/android/releases
+          done
+
+      # -------------------------------------------------------------------
+      # 4) Build the Kernarium runtime (iOS 15.1 device, Android guest,
+      #    software renderer) and package its frameworks.
+      # -------------------------------------------------------------------
+      - name: Configure + build Kernarium runtime
+        run: |
+          cmake --preset kernarium-ios15-device-android
+          cmake --build --preset kernarium-ios15-device-android
+
+      - name: Package software-renderer XCFrameworks
+        run: |
+          Kernarium/scripts/package-ios15-frameworks.sh
+
+      # -------------------------------------------------------------------
+      # 5) Stage the Android system image and archive the app (unsigned).
+      # -------------------------------------------------------------------
+      - name: Stage Android system image
+        run: |
+          RELEASE=$(find .build/android/releases \
+            -maxdepth 1 -type d -name 'lineage24-*' | head -1)
+          test -n "$RELEASE" || { echo "no staged Android release"; exit 1; }
+          Andarium/scripts/stage-system-image.py --release "$RELEASE"
+
+      - name: Archive Andarium (unsigned)
+        run: |
+          xcodebuild -project Andarium/Andarium.xcodeproj \
+            -scheme Andarium \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath .build/xcode-derived \
+            -archivePath .build/Andarium.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            archive
+
+      # -------------------------------------------------------------------
+      # 6) Pack the unsigned IPA. This is the deliverable for TrollStore:
+      #    TrollStore re-signs it with the CoreTrust bug at install time and
+      #    preserves the entitlements shipped in Entitlements.plist.
+      # -------------------------------------------------------------------
+      - name: Pack unsigned IPA (install with TrollStore)
+        run: |
+          set -eu
+          APP=$(find .build/Andarium.xcarchive/Products/Applications -maxdepth 1 -name 'Andarium.app' | head -1)
+          test -n "$APP" || { echo "::error::no Andarium.app in archive"; exit 1; }
+          rm -rf .build/ipa/Payload
+          mkdir -p .build/ipa/Payload
+          cp -R "$APP" .build/ipa/Payload/
+          if command -v codesign >/dev/null 2>&1; then
+            codesign --remove-signature .build/ipa/Payload/Andarium.app 2>/dev/null || true
+          fi
+          cp Andarium/Config/Andarium.entitlements .build/ipa/Entitlements.plist
+          (cd .build/ipa && zip -qr Andarium-1.1-ios15.1-trollstore.ipa Payload Entitlements.plist)
+          ls -lh .build/ipa/Andarium-1.1-ios15.1-trollstore.ipa
+
+      # -------------------------------------------------------------------
+      # 7) OPTIONAL: a properly signed IPA when signing secrets are present.
+      # -------------------------------------------------------------------
+      - name: Export signed IPA (optional)
+        if: ${{ env.HAVE_SIGNING == '1' }}
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          test -n "$TEAM_ID" || { echo "::error::APPLE_TEAM_ID empty"; exit 1; }
+          cat > .build/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>development</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath .build/Andarium.xcarchive \
+            -exportPath .build/ipa-signed \
+            -exportOptionsPlist .build/ExportOptions.plist
+
+      # -------------------------------------------------------------------
+      # 8) Upload artifacts. The TrollStore IPA is always uploaded when built.
+      # -------------------------------------------------------------------
+      - name: Upload IPA
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Andarium-1.1-ios15.1-IPA
+          path: |
+            .build/ipa/*.ipa
+            .build/ipa-signed/*.ipa
+          if-no-files-found: warn
+
+      - name: Upload diagnostics on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            .build/**/*.log
+          if-no-files-found: ignore
