@@ -7,6 +7,7 @@
 #include <charconv>
 #include <cmath>
 #include <cstddef>
+#include <cstdio>
 #include <vector>
 
 namespace uml::gnss {
@@ -102,14 +103,16 @@ struct Utc final {
     if (std::fabs(value) < 0.5 * std::pow(10.0, -precision))
         value = 0.0;
     std::array<char, 48> buffer {};
-    const auto [end, error] = std::to_chars(
-        buffer.data(),
-        buffer.data() + buffer.size(),
-        value,
-        std::chars_format::fixed,
-        precision);
-    (void)error;
-    return std::string(buffer.data(), end);
+    /* The floating-point overload of std::to_chars is marked unavailable
+     * before iOS 16.3 in Apple's libc++, which is a hard error (not a warning)
+     * at the 15.1 deployment target. snprintf("%.*f") produces the same
+     * fixed notation in the C locale and needs no newer runtime. The integer
+     * std::to_chars used by digits() above is unaffected. */
+    const int written = std::snprintf(
+        buffer.data(), buffer.size(), "%.*f", precision, value);
+    if (written <= 0 || static_cast<std::size_t>(written) >= buffer.size())
+        return {};
+    return std::string(buffer.data(), static_cast<std::size_t>(written));
 }
 
 [[nodiscard]] std::string number(
