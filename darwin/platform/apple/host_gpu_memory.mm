@@ -47,10 +47,13 @@ std::uint64_t hostGraphicsFootprintBytes() noexcept
 namespace {
 
 /* What the retire asks to be made resident: a residency set holding one small
- * buffer, kept for the life of the process and never freed. */
+ * buffer, kept for the life of the process and never freed. Metal 4 residency
+ * sets were introduced in iOS 18, so on the iOS 15.1 deployment target this
+ * whole path is a no-op. Keep the set as `id` so the header's availability
+ * annotations do not trip -Wunguarded-availability-new at the struct level. */
 struct Retirement {
     std::mutex mutex;
-    id<MTLResidencySet> set = nil;
+    id set = nil;
     id<MTLBuffer> buffer = nil;
     bool unavailable = false;
 };
@@ -63,24 +66,28 @@ bool prepare(Retirement& retirement) noexcept
         return true;
     if (retirement.unavailable)
         return false;
+    if (@available(iOS 18.0, *)) {
+        retirement.unavailable = true;
+        id<MTLDevice> const device = systemDevice();
+        if (device == nil ||
+            ![device respondsToSelector:@selector(newResidencySetWithDescriptor:error:)])
+            return false;
+        NSError* error = nil;
+        id const set =
+            [device newResidencySetWithDescriptor:[[MTLResidencySetDescriptor alloc] init]
+                                            error:&error];
+        id<MTLBuffer> const buffer = [device newBufferWithLength:16 * 1024
+                                                         options:MTLResourceStorageModeShared];
+        if (set == nil || buffer == nil)
+            return false;
+        [set addAllocation:buffer];
+        [set commit];
+        retirement.set = set;
+        retirement.buffer = buffer;
+        return true;
+    }
     retirement.unavailable = true;
-    id<MTLDevice> const device = systemDevice();
-    if (device == nil ||
-        ![device respondsToSelector:@selector(newResidencySetWithDescriptor:error:)])
-        return false;
-    NSError* error = nil;
-    id<MTLResidencySet> const set =
-        [device newResidencySetWithDescriptor:[[MTLResidencySetDescriptor alloc] init]
-                                        error:&error];
-    id<MTLBuffer> const buffer = [device newBufferWithLength:16 * 1024
-                                                     options:MTLResourceStorageModeShared];
-    if (set == nil || buffer == nil)
-        return false;
-    [set addAllocation:buffer];
-    [set commit];
-    retirement.set = set;
-    retirement.buffer = buffer;
-    return true;
+    return false;
 }
 
 } // namespace
@@ -93,8 +100,10 @@ void retireFreedGpuMemory(std::chrono::milliseconds wait) noexcept
         std::lock_guard lock(retirement->mutex);
         if (!prepare(*retirement))
             return;
-        [retirement->set requestResidency];
-        [retirement->set endResidency];
+        if (@available(iOS 18.0, *)) {
+            [retirement->set requestResidency];
+            [retirement->set endResidency];
+        }
     }
     /* The footprint falls a few milliseconds after the request. */
     constexpr std::uint64_t fall = 1U << 20;
