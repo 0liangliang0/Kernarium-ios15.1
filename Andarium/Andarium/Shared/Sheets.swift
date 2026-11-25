@@ -12,9 +12,12 @@ struct NewGuestSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var draft: Guest?
 
+    /// The guest as the ruler left it, including the storage the person chose.
+    private var draftGuest: Guest { draft ?? Guest.fresh(on: model.host) }
+
     private var draftBinding: Binding<Guest> {
         Binding(
-            get: { draft ?? Guest.fresh(on: model.host) },
+            get: { draftGuest },
             set: { draft = $0 }
         )
     }
@@ -23,11 +26,11 @@ struct NewGuestSheet: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 22) {
-                    if !model.canCreate {
+                    if !model.hasRoomToCreate(draftGuest) {
                         NoticeCard(
                             symbol: "externaldrive.badge.exclamationmark", color: .orange,
                             title: StartSpaceWords.title,
-                            text: String(compatLocalized: "Setting up the virtual machine needs \(Formats.size(bytes: model.createRequirementBytes)) of free space. This \(model.host.name) has \(Formats.size(bytes: model.host.freeStorageBytes)). Free up space in Settings › General › \(model.host.name) Storage.")
+                            text: String(compatLocalized: "Setting up the virtual machine needs \(Formats.size(bytes: model.bytesToCreate(draftGuest))) of free space. This \(model.host.name) has \(Formats.size(bytes: model.host.freeStorageBytes)). Free up space in Settings › General › \(model.host.name) Storage.")
                         )
                     }
                     StoragePanel(guest: draftBinding, host: model.host, stops: model.capacityStopsGiB)
@@ -53,10 +56,10 @@ struct NewGuestSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create") {
-                        model.create(draft ?? Guest.fresh(on: model.host))
+                        model.create(draftGuest)
                         dismiss()
                     }
-                    .disabled(!model.canCreate)
+                    .disabled(!model.hasRoomToCreate(draftGuest))
                 }
             }
         }

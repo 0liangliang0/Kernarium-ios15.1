@@ -245,6 +245,34 @@ public extension String {
         )
     }
 
+    /// A key whose catalogue entry contains `%@` / `%1$@` placeholders.
+    ///
+    /// `String(localized:)` (iOS 16+) carries the interpolated values as
+    /// `LocalizationValue` substitutions and fills the translated format.
+    /// Our iOS 15 path only had a plain `String`, so a lookup such as
+    /// `storage.of` returned the raw `已使用 %1$@/%2$@` with nothing
+    /// substituted. Callers that use a key with a format pass its arguments
+    /// here; the default value is already interpolated and needs no
+    /// formatting when no translation was found.
+    init(
+        compatLocalized key: String,
+        defaultValue: String,
+        arguments: [CVarArg],
+        table: String? = nil,
+        locale: Locale? = nil,
+        bundle: Bundle? = nil,
+        comment: String? = nil
+    ) {
+        let resolved = NSLocalizedString(
+            key,
+            tableName: table,
+            bundle: bundle ?? .main,
+            value: defaultValue,
+            comment: comment ?? ""
+        )
+        self = arguments.isEmpty ? resolved : String(format: resolved, arguments: arguments)
+    }
+
     init(compatLocalized resource: CompatLocalizedStringResource) {
         var resolved: Bundle?
         if let bundle = resource.bundle { resolved = bundle.resolvedBundle }

@@ -150,10 +150,19 @@ public struct Guest: Equatable, Codable, Sendable {
     /// memory budget is measured for), the default memory at that count, the
     /// default capacity.
     public static func fresh(on host: HostDevice) -> Guest {
-        Guest(
-            cores: host.processorCount,
-            memoryMiB: host.memory.defaultMemoryMiB(vCPUs: host.processorCount),
-            capacityGiB: Limits.defaultCapacityGiB
+        // The iOS 15.1 port has no Metal 4: the guest is drawn by Mesa's CPU
+        // rasteriser and, without a JIT grant, its code runs on gadgets. On a
+        // phone that also has only a few GiB free, the upstream offer of every
+        // core, 4 GiB of RAM and an 8 GiB disk cannot be created or run: the
+        // volume fills during setup and iOS ends the process. Offer a shape
+        // the port can actually boot; the person can still raise it on the
+        // rulers afterwards.
+        let cores = min(host.processorCount, 2)
+        let memory = min(host.memory.defaultMemoryMiB(vCPUs: host.processorCount), 2048)
+        return Guest(
+            cores: cores,
+            memoryMiB: memory,
+            capacityGiB: min(Limits.defaultCapacityGiB, 4)
         )
     }
 

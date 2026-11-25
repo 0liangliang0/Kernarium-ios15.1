@@ -986,6 +986,20 @@ final class AppModel: ObservableObject {
     }
 
     var canCreate: Bool { host.hasRoom(for: createRequirementBytes) }
+
+    /// Free space a guest of this size needs when it is made: the carried
+    /// system and its first start, plus the data disk the person chose on the
+    /// ruler. The old gate counted only the system, so a phone with 6.51 GiB
+    /// free was allowed to Create an 8 GiB disk. The volume filled while the
+    /// disk was being laid out, and iOS ended the process for it.
+    func bytesToCreate(_ guest: Guest) -> UInt64 {
+        let capacity = UInt64(max(0, guest.capacityGiB)) * Limits.bytesPerGiB
+        return createRequirementBytes + capacity
+    }
+
+    /// Whether this guest can be made on the volume as it is now.
+    func hasRoomToCreate(_ guest: Guest) -> Bool { host.hasRoom(for: bytesToCreate(guest)) }
+
     /// Less free space than Android's first start wants: Home says so before
     /// a start would fail.
     var lowSpace: Bool { !host.hasRoom(for: Limits.firstStartReserveBytes) }
