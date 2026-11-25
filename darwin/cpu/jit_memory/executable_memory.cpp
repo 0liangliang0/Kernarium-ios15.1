@@ -6,6 +6,7 @@
 #include <sys/mman.h>
 
 #include <TargetConditionals.h>
+#include <dlfcn.h>
 #include <libkern/OSCacheControl.h>
 #include <os/lock.h>
 #include <pthread.h>
@@ -68,14 +69,16 @@ namespace {
 /* Publication route for MAP_JIT memory.
  *
  * macOS declares pthread_jit_write_protect_np and calls it directly. An iOS
- * device cannot obtain the entitlement, so without the debugger-prepared
- * region (UML_JIT_MEMORY_REGION_ROUTE) its JIT memory reports itself
- * unavailable rather than mapping memory it could never publish into.
+ * device reaches the same range through its signature instead: dynamic-
+ * codesigning, which a storefront signature does not grant but TrollStore's
+ * CoreTrust signature applies from the IPA, so the mapping succeeds there and
+ * fails for a plain sideload. The region route stays for a process no such
+ * signature covers and a debugger prepares instead (UML_JIT_MEMORY_REGION_ROUTE).
  *
- * The Simulator is deliberately held to the same answer even though it runs on
- * macOS and could reach the toggle dynamically. Letting it translate through a
- * path production devices cannot use would make the Simulator unrepresentative
- * of the product it exists to stand in for.
+ * The Simulator is deliberately held to the no-JIT answer even though it runs
+ * on macOS and could reach the toggle dynamically: letting it translate
+ * through a path production devices cannot use would make the Simulator
+ * unrepresentative of the product it exists to stand in for.
  */
 #if UML_JIT_MEMORY_REGION_ROUTE
 /* The region's pages are written through their alias: no write window. */
@@ -85,6 +88,39 @@ constexpr void jit_write_protect(int) {}
 void jit_write_protect(int enable)
 {
 	pthread_jit_write_protect_np(enable);
+}
+
+constexpr bool jit_publication_supported() noexcept
+{
+	return true;
+}
+#elif defined(__APPLE__) && defined(__aarch64__) && defined(MAP_JIT) && \
+	TARGET_OS_IOS && !TARGET_OS_SIMULATOR
+/* An iOS device.
+ *
+ * AMFI maps a MAP_JIT range only for a process whose signature carries
+ * dynamic-codesigning. A plain sideload has none, its mapping fails, and
+ * available() answers false, so the guest stays on the interpreter exactly as
+ * before. TrollStore's CoreTrust signature applies the entitlements the IPA
+ * carries, and this one carries dynamic-codesigning (Config/
+ * Andarium.entitlements), so the range maps and the JIT runs with no debugger
+ * attached and no StikDebug in the launch path.
+ *
+ * iOS publishes a MAP_JIT range writable and executable at once -- the
+ * JavaScriptCore allocator stores its code there the same way -- so no write
+ * window has to be opened. A system that does enforce the split exports the
+ * toggle, which is called when the process has it; one binary then keeps
+ * either behaviour.
+ */
+void jit_write_protect(int enable)
+{
+	using Toggle = void (*)(int);
+	static const Toggle toggle = [] {
+		return reinterpret_cast<Toggle>(
+			dlsym(RTLD_DEFAULT, "pthread_jit_write_protect_np"));
+	}();
+	if (toggle != nullptr)
+		toggle(enable);
 }
 
 constexpr bool jit_publication_supported() noexcept
@@ -780,11 +816,10 @@ bool available() noexcept
 #else
 	static const bool supported = [] {
 #if defined(__APPLE__) && defined(__aarch64__) && defined(MAP_JIT)
-		/* A successful MAP_JIT mapping is necessary but not sufficient:
-		 * without a W^X toggle the first store into it faults. Requiring
-		 * the publication route keeps this from promising an engine that
-		 * would abort on its first translated block.
-		 */
+		/* A successful MAP_JIT mapping is necessary but not sufficient on a
+		 * system that keeps the range write-protected until a toggle opens it:
+		 * the first store into it faults. An iOS device maps it writable and
+		 * executable at once, so there the mapping is the whole test. */
 		if (!jit_publication_supported())
 			return false;
 		void *mapping = mmap(nullptr, 16U * 1024U,

@@ -136,7 +136,8 @@ struct AppEntry {
             ?? (UIDevice.current.userInterfaceIdiom == .phone)
         #if !targetEnvironment(simulator)
         // A build on a device, Debug or Release, can run the guest on the JIT
-        // engine when a debugger prepares its memory.
+        // engine: a debugger prepares its memory, or a TrollStore signature
+        // lets the runtime map it itself.
         model.jitAvailable = true
         #endif
         // The rulers offer no size the carried system's data disk would refuse.

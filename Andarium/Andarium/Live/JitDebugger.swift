@@ -20,9 +20,29 @@ enum JitDebugger {
         #endif
     }
 
-    /// A servicing debugger is attached now.
+    /// A servicing debugger is attached now, or this copy needs none.
+    ///
+    /// Two kinds of process can prepare executable memory. One a debugger is
+    /// attached to (StikDebug, in the release the App Store ships) has the
+    /// debugger bless a region when asked. A TrollStore-installed copy is the
+    /// other: CoreTrust applies the IPA's entitlements, `dynamic-codesigning`
+    /// among them, so the runtime maps MAP_JIT memory itself and no debugger
+    /// ever enters the path. The JIT row has to read as usable in that case, or
+    /// the launch never asks for the memory and the guest stays on gadgets.
+    ///
+    /// A copy with neither still answers as usable here, which costs nothing:
+    /// the mapping is refused, `prepare` answers unsupported, and the start
+    /// falls back to gadgets with the sentence that says so.
     static func attached() -> Bool {
-        serves && kernarium_runtime_loader_debugger_attached() != 0
+        guard serves else { return false }
+        if kernarium_runtime_loader_debugger_attached() != 0 { return true }
+        #if DEBUG
+        // Under Xcode the attached debugger is lldb, which stops at the request
+        // instead of serving it, so a Debug build trusts only the harness.
+        return false
+        #else
+        return true
+        #endif
     }
 
     /// Prepares the executable memory for `shape` when `wanted`, or tells an

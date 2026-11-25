@@ -11,11 +11,14 @@ namespace uml::cpu::arm64 {
 
 using ::uml::cpu::JitMemoryStatus;
 
-/* Prepares the region the whole-process budget `total_bytes` over `executors`
- * needs (the arenas of every executor derive_jit_cache_geometry gives it) and
+/* Prepares what the whole-process budget `total_bytes` over `executors` needs
+ * (the arenas of every executor derive_jit_cache_geometry gives it) and
  * publishes the budget as the process's, so a run that sets the same pair
- * finds both ready. Blocks for the seconds the debugger takes: call it from a
- * worker thread, before any executor exists.
+ * finds both ready. The region route also maps the region a debugger blesses,
+ * and blocks for the seconds that debugger takes; without it the process maps
+ * executable memory itself and only the budget is published. Unsupported when
+ * neither route can provide the memory: the guest then runs on gadgets. Call it
+ * from a worker thread, before any executor exists.
  */
 [[nodiscard]] JitMemoryStatus prepare_jit_memory(std::size_t total_bytes,
 	unsigned executors,
