@@ -497,6 +497,16 @@ final class LiveRuntime: RuntimeDriver {
 
     private func prepareAndLaunch(_ run: PendingRun, generation: Int) async {
         preparing = true
+        // Loading the embedded runtime dlopens the Mesa/LLVM framework and
+        // runs its C++ static initialisers. On a phone that takes seconds and
+        // megabytes; doing it on the main thread is a scene-update watchdog
+        // (0x8badf00d). Warm it on a background task first. `launch` still
+        // calls select, which is then a cheap already-loaded check.
+        let flavor = Self.androidFlavor
+        await Task.detached(priority: .userInitiated) {
+            _ = kernarium_runtime_loader_select(flavor)
+        }.value
+        if launchWasStopped(generation) { return }
         do {
             try await prepareFiles(for: run.guest) { fraction in
                 Task { @MainActor in self.preparingDisk(fraction) }

@@ -17,6 +17,20 @@ final class PreferenceKeeper {
     /// when it ends; a test awaits it.
     private(set) var pending: Task<Void, Never>?
     private var cancellable: AnyCancellable?
+    /// The last value written for each setting. The model publishes every one
+    /// of its fields, so a change to any field re-runs `keep`; without these
+    /// marks that turns one tap into writes of all eight settings on the main
+    /// thread, and a burst of start-up changes into hundreds of writes. A
+    /// mark is only a short-circuit for a value already stored: the writer
+    /// still runs for every change, so a launch that decides a value (and so
+    /// publishes `nil`) leaves what the person stored alone.
+    private var keptDisplayOptions: DisplayOptions?
+    private var keptShowStats: Bool?
+    private var keptPointerAsTouch: Bool?
+    private var keptHeatLimit: Bool?
+    private var keptHighRefresh: Bool?
+    private var keptTranslatedLibraries: Bool?
+    private var keptJit: Bool?
 
     init(model: AppModel, defaults: UserDefaults = .standard) {
         self.model = model
@@ -27,16 +41,37 @@ final class PreferenceKeeper {
         observe()
     }
 
-    /// Writes what the model says is the person's.
+    /// Writes what the model says is the person's, and only what has changed.
     func keep() {
         guard let model else { return }
-        if let options = model.displayOptionsToKeep { DisplayOptionsStore.save(options, to: defaults) }
-        if let on = model.showStatsToKeep { StatsPreference(defaults: defaults).keep(on) }
-        if let on = model.pointerAsTouchToKeep { PointerPreference(defaults: defaults).keep(on) }
-        if let on = model.heatLimitToKeep { HeatLimitPreference(defaults: defaults).keep(on) }
-        if let on = model.highRefreshToKeep { HighRefreshPreference(defaults: defaults).keep(on) }
-        if let on = model.translatedLibrariesToKeep { TranslatedLibrariesPreference(defaults: defaults).keep(on) }
-        if let on = model.jitToKeep { JitPreference(defaults: defaults).keep(on) }
+        if let options = model.displayOptionsToKeep, options != keptDisplayOptions {
+            DisplayOptionsStore.save(options, to: defaults)
+            keptDisplayOptions = options
+        }
+        if let on = model.showStatsToKeep, on != keptShowStats {
+            StatsPreference(defaults: defaults).keep(on)
+            keptShowStats = on
+        }
+        if let on = model.pointerAsTouchToKeep, on != keptPointerAsTouch {
+            PointerPreference(defaults: defaults).keep(on)
+            keptPointerAsTouch = on
+        }
+        if let on = model.heatLimitToKeep, on != keptHeatLimit {
+            HeatLimitPreference(defaults: defaults).keep(on)
+            keptHeatLimit = on
+        }
+        if let on = model.highRefreshToKeep, on != keptHighRefresh {
+            HighRefreshPreference(defaults: defaults).keep(on)
+            keptHighRefresh = on
+        }
+        if let on = model.translatedLibrariesToKeep, on != keptTranslatedLibraries {
+            TranslatedLibrariesPreference(defaults: defaults).keep(on)
+            keptTranslatedLibraries = on
+        }
+        if let on = model.jitToKeep, on != keptJit {
+            JitPreference(defaults: defaults).keep(on)
+            keptJit = on
+        }
     }
 
     /// The Observation framework is absent on iOS 15. The model is an
