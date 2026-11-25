@@ -256,9 +256,14 @@ jobs:
 
       # -------------------------------------------------------------------
       # 8) Upload artifacts. The TrollStore IPA is always uploaded when built.
+      #    The IPA is ~1.1 GB; GitHub's results service occasionally times out
+      #    on CreateArtifact. Allow one delayed retry so a transient outage
+      #    does not fail a build whose archive and packaging both succeeded.
       # -------------------------------------------------------------------
       - name: Upload IPA
+        id: upload_ipa
         if: ${{ always() }}
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: Andarium-1.1-ios15.1-IPA
@@ -266,6 +271,27 @@ jobs:
             .build/ipa/*.ipa
             .build/ipa-signed/*.ipa
           if-no-files-found: warn
+          # The IPA is already a zip; recompressing 1.1 GB only wastes time.
+          compression-level: 0
+          overwrite: true
+
+      - name: Wait before retrying IPA upload
+        if: ${{ always() && steps.upload_ipa.outcome == 'failure' }}
+        run: |
+          echo "Artifact service timed out on CreateArtifact; waiting before one retry."
+          sleep 60
+
+      - name: Upload IPA (retry)
+        if: ${{ always() && steps.upload_ipa.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Andarium-1.1-ios15.1-IPA
+          path: |
+            .build/ipa/*.ipa
+            .build/ipa-signed/*.ipa
+          if-no-files-found: warn
+          compression-level: 0
+          overwrite: true
 
       - name: Upload diagnostics on failure
         if: ${{ failure() }}
