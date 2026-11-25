@@ -80,10 +80,6 @@
           ],
         }, {
           "path": "AppShortcuts.xcstrings",
-          "target-membership": [
-            "Andarium/resources",
-            "AndariumPreview/resources",
-          ],
         },
       ],
     }, {
