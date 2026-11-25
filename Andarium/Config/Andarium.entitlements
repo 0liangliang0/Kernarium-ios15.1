@@ -6,5 +6,12 @@
 	<true/>
 	<key>com.apple.developer.kernel.increased-memory-limit</key>
 	<true/>
+	<!-- JIT: Mesa's llvmpipe compiles shaders to AArch64 at run time, and the
+	     guest's own JIT engine needs executable memory too. TrollStore signs
+	     the IPA with the entitlements it carries, so this grant is what makes
+	     either JIT possible in a sideloaded build. Without it the launch probe
+	     keeps softpipe, which needs no executable memory. -->
+	<key>dynamic-codesigning</key>
+	<true/>
 </dict>
 </plist>

@@ -17,15 +17,25 @@ final class AndariumApp: UIResponder, UIApplicationDelegate {
         // creates the guest's screen, so set them before any scene/runtime.
         //
         // LIBGL_ALWAYS_SOFTWARE forces Mesa's software device.
-        // GALLIUM_DRIVER=softpipe selects the pure interpreter, which needs no
-        // LLVM JIT (iOS forbids JIT memory in a sideloaded app). Set
-        // GALLIUM_DRIVER=llvmpipe in the launch environment only if a JIT
-        // entitlement is available and the extra speed is worth it.
+        //
+        // GALLIUM_DRIVER picks the rasteriser. softpipe is a single-threaded
+        // interpreter and needs no executable memory, so it always works;
+        // llvmpipe is a JIT over LLVM's AArch64 back end and rasterises on
+        // every core, which is roughly an order of magnitude faster but needs
+        // the process to turn writable memory executable. iOS grants that only
+        // to a process holding dynamic-codesigning (TrollStore applies the
+        // IPA's entitlements) or to one a debugger prepares. Probe it here and
+        // fall back to softpipe, so a device without the grant renders exactly
+        // as it did before instead of failing to create a screen.
         if setenv("LIBGL_ALWAYS_SOFTWARE", "true", 1) != 0 {
             NSLog("Andarium: failed to set LIBGL_ALWAYS_SOFTWARE")
         }
         if getenv("GALLIUM_DRIVER") == nil {
-            setenv("GALLIUM_DRIVER", "softpipe", 1)
+            let canJIT = Self.canMakeWritableMemoryExecutable()
+            setenv("GALLIUM_DRIVER", canJIT ? "llvmpipe" : "softpipe", 1)
+            NSLog(
+                "Andarium: GALLIUM_DRIVER=%@ (executable memory %@)",
+                canJIT ? "llvmpipe" : "softpipe", canJIT ? "granted" : "refused")
         }
         // Mesa reads its disk cache's location and limit from the process
         // environment when the runtime thread creates the guest's screen.
@@ -41,6 +51,20 @@ final class AndariumApp: UIResponder, UIApplicationDelegate {
         let configuration = UISceneConfiguration(name: "Andarium", sessionRole: session.role)
         configuration.delegateClass = AndariumSceneDelegate.self
         return configuration
+    }
+
+    /// Whether this process may turn memory it wrote executable, which is what
+    /// an LLVM JIT needs. The probe repeats what a JIT does — map a page
+    /// writable, then ask for execute permission — and frees it immediately.
+    /// It writes nothing and runs nothing, so a refusal answers false instead
+    /// of crashing the launch.
+    private static func canMakeWritableMemoryExecutable() -> Bool {
+        let page = Int(getpagesize())
+        guard let memory = mmap(nil, page, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0),
+              Int(bitPattern: memory) != -1
+        else { return false }
+        defer { munmap(memory, page) }
+        return mprotect(memory, page, PROT_READ | PROT_EXEC) == 0
     }
 }
 
