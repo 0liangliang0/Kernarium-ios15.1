@@ -191,6 +191,12 @@ jobs:
           Andarium/scripts/stage-system-image.py --release "$RELEASE"
 
       - name: Archive Andarium (unsigned)
+        env:
+          # This repository is a re-initialised git history, so the recorded
+          # Android input trees are not in its last 400 commits. The upstream
+          # check-embedded-artifacts.py exposes PENDING_INPUTS_DECISION for
+          # exactly this: accept shipping the prebuilt release as it is.
+          PENDING_INPUTS_DECISION: "20261121-los24-r29,aot-20261121-los24-r29"
         run: |
           xcodebuild -project Andarium/Andarium.xcodeproj \
             -scheme Andarium \
@@ -202,6 +208,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             PROVISIONING_PROFILE_SPECIFIER="" \
+            PENDING_INPUTS_DECISION="20261121-los24-r29,aot-20261121-los24-r29" \
             archive
 
       # -------------------------------------------------------------------
