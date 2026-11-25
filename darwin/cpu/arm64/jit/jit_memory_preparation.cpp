@@ -23,13 +23,13 @@ std::size_t jit_memory_region_bytes(std::size_t total_bytes,
 JitMemoryStatus prepare_jit_memory(std::size_t total_bytes,
 	unsigned executors, std::size_t per_executor_bytes) noexcept
 {
-	/* Without the debugger route the process maps its own executable memory:
-	 * macOS through MAP_JIT, and an iOS device through the same call once its
-	 * signature carries dynamic-codesigning, which TrollStore applies from the
-	 * IPA. Nothing has to be prepared then, but the cache budget is still
-	 * published, since the arena sizes itself from it and a boot that asks for
-	 * the JIT reads it back; a process whose mapping fails (a plain sideload)
-	 * keeps the no-JIT answer. */
+	/* Without the debugger route the process maps its own executable memory,
+	 * as macOS does and as an iOS device does once its signature carries
+	 * dynamic-codesigning (which TrollStore applies from the IPA). Nothing has
+	 * to be prepared then, but the cache budget is still published, since the
+	 * arena sizes itself from it and a boot that asks for the JIT reads it
+	 * back; a process whose mapping fails (a plain sideload) keeps the no-JIT
+	 * answer. */
 	if (!jit_memory::debugger_route()) {
 		if (!jit_memory::available())
 			return JitMemoryStatus::unsupported;
